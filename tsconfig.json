@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"strict": true,
+		"verbatimModuleSyntax": true,
+		"skipLibCheck": true,
+		"types": ["node"],
+		"jsx": "react-jsx",
+		"paths": {
+			"@/*": ["src/*"],
+			"@ops/*": ["src/services/ops/*"]
+		},
+		"baseUrl": ".",
+		"jsxImportSource": "hono/jsx",
+		"outDir": "./dist",
+		"rootDir": "src",
+		"resolveJsonModule": true,
+		"esModuleInterop": true
+	},
+	"exclude": ["packages/**/*", "node_modules", "dist", "logs", "src/lib/prisma/**/*"]
+}
