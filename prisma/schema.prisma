@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,165 +13,170 @@ datasource db {
 }
 
 /* =========================
-  1) CORE / USERS
+  1) NÚCLEO / USUARIOS
 ========================= */
-model User {
-  id                   String   @id @default(cuid()) @db.Text
-  name                 String
-  email                String   @unique @db.Citext
-  password_hash        String
-  onboarding_completed Boolean  @default(false)
-  created_at           DateTime @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime @default(now()) @db.Timestamptz(6)
+model Usuarios {
+  Id                   String   @id @default(uuid()) @db.Uuid
+  Nombre               String
+  Apellido             String
+  Correo               String   @unique @db.Citext
+  contrasena           String
+  CreadoEn             DateTime @default(now()) @db.Timestamptz(6)
+  ActualizadoEn        DateTime @updatedAt
 
-  preferences UserPreferences?
-  receipts    Receipt[]
-  userPromos  UserPromo[]
+  Preferencias  PreferenciasUsuarios?
+  Boletas       Boletas[]
+  PromosUsuario PromocionesUsuarios[]
 }
 
 /* Preferencias (JSONB arrays) */
-model UserPreferences {
-  id                     String   @id @default(cuid()) @db.Text
-  user_id                String   @unique @db.Text
-  goals                  Json     @default("[]")
-  lifestyles             Json     @default("[]")
-  ingredients_to_avoid   Json     @default("[]")
-  updated_at             DateTime @default(now()) @db.Timestamptz(6)
+model PreferenciasUsuarios {
+  Id                   String   @id @default(uuid()) @db.Uuid
+  UsuarioId            String   @unique @db.Uuid
+  Objetivos            Json     @default("[]")
+  EstilosVida          Json     @default("[]")
+  IngredientesEvitar   Json     @default("[]")
+  ActualizadoEn        DateTime @updatedAt
 
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Usuario Usuarios @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
 }
 
 /* =========================
-  2) STORES + ALIASES
+  2) TIENDAS 
 ========================= */
-model Store {
-  id         String   @id @default(cuid()) @db.Text
-  name       String   @unique
-  logo_path  String?
-  category   String?
-  created_at DateTime @default(now()) @db.Timestamptz(6)
+model Tiendas {
+  Id         String   @id @default(uuid()) @db.Uuid
+  Nombre     String   @unique
+  UrlLogo   String?
+  Categoria  String?  //enum pendiente
+  CreadoEn   DateTime @default(now()) @db.Timestamptz(6)
 
-  receipts Receipt[]
-  promos   Promo[]
-  aliases  StoreAlias[]
-}
-
-model StoreAlias {
-  id       String @id @default(cuid()) @db.Text
-  store_id String @db.Text
-  alias    String @unique
-
-  store Store @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  Boletas Boletas[]
+  Promos  Promociones[]
 }
 
 /* =========================
-  3) RECEIPTS + ITEMS
+  3) BOLETAS + Productos 
 ========================= */
-model Receipt {
-  id              String   @id @default(cuid()) @db.Text
-  user_id         String   @db.Text
-  store_id        String?  @db.Text
-  store_name_raw  String?
-  receipt_date    DateTime? @db.Date
-  currency_code   String   @default("PEN") @db.Char(3)
-  subtotal        Decimal? @db.Decimal(12, 2)
-  tax             Decimal? @db.Decimal(12, 2)
-  tax_rate        Decimal? @db.Decimal(5, 4)
-  total           Decimal? @db.Decimal(12, 2)
-  payment_method  String?
-  payment_last4   String?
-  scanned_text    String?
-  image_uri       String?
-  storage         String   @default("local")
-  status          String   @default("procesando") // procesando|listo|error
-  error_message   String?
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+model Boletas {
+  Id             String    @id @default(uuid()) @db.Uuid
+  UsuarioId      String    @db.Uuid
+  TiendaId       String?   @db.Uuid
+  NombreTienda   String?
+  FechaBoleta    DateTime? @db.Date
+  CodigoMoneda   String    @default("PEN") @db.Char(3)
+  Subtotal       Decimal?  @db.Decimal(12, 2)
+  Impuesto       Decimal?  @db.Decimal(12, 2)
+  TasaImpuesto   Decimal?  @db.Decimal(5, 4)
+  Total          Decimal?  @db.Decimal(12, 2)
+  MetodoPago     String? // enum pendiente
+  TextoEscaneado String?
+  UrlImagen      String?
+  CreadoEn       DateTime  @default(now()) @db.Timestamptz(6)
 
-  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  store  Store? @relation(fields: [store_id], references: [id])
-  items  ReceiptItem[]
+  Usuario Usuarios @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
+  Tienda  Tiendas? @relation(fields: [TiendaId], references: [Id])
+  Items   Productos[]
 
-  @@index([user_id, receipt_date(sort: Desc)])
-  @@index([store_id])
+  @@index([UsuarioId, FechaBoleta(sort: Desc)])
+  @@index([TiendaId])
 }
 
-model ReceiptItem {
-  id                String   @id @default(cuid()) @db.Text
-  receipt_id        String   @db.Text
-  line_number       Int?
-  original_text     String?
-  product_name      String?
-  quantity          Decimal? @db.Decimal(12, 3)
-  unit              String?  // 'un', 'kg', 'l', etc.
-  unit_price        Decimal? @db.Decimal(12, 2)
-  total_price       Decimal? @db.Decimal(12, 2)
-  matched           Boolean  @default(false)
-  match_score       Decimal? @db.Decimal(6, 4)
-  qdrant_collection String?
-  qdrant_point_id   String?
-  brand             String?
-  category          String?
-  subcategory       String?
-  // Snapshot del factor
-  factor_co2_per_unit Decimal? @db.Decimal(12, 4)
-  factor_unit         String?
-  factor_source       String?
-  factor_version      String?
-  is_eco_flag         Boolean  @default(false)
-  flags               Json     @default("{}")
+model Productos {
+  Id                  String   @id @default(uuid()) @db.Uuid
+  BoletaId            String   @db.Uuid
+  NumeroLinea         Int?
+  TextoOriginal       String?
+  NombreProducto      String?
+  Cantidad            Decimal? @db.Decimal(12, 3)
+  Unidad              String?  // enum pendiente (un, kg, l)
+  PrecioUnitario      Decimal? @db.Decimal(12, 2)
+  PrecioTotal         Decimal? @db.Decimal(12, 2)
+  Coincidido          Boolean  @default(false)
+  PuntajeCoincidencia Decimal? @db.Decimal(6, 4)
+  ColeccionQdrant     String?
+  PuntoQdrantId       String?
 
-  receipt Receipt @relation(fields: [receipt_id], references: [id], onDelete: Cascade)
+  // --- Catálogos normalizados ---
+  MarcaId        String? @db.Uuid
+  CategoriaId    String? @db.Uuid
+  SubcategoriaId String? @db.Uuid
+  
+  // --- Huella de carbono ---
+  FactorCo2PorUnidad Decimal? @db.Decimal(12, 4)
+  FactorUnidad       String?
+  FactorFuente       String?
+  EsEco              Boolean  @default(false)
 
-  @@index([receipt_id])
-  @@index([qdrant_collection, qdrant_point_id])
+  Boleta       Boletas       @relation(fields: [BoletaId], references: [Id], onDelete: Cascade)
+  Marca        Marcas?        @relation(fields: [MarcaId], references: [Id])
+  Categoria    Categorias?    @relation(fields: [CategoriaId], references: [Id])
+  Subcategoria Subcategorias? @relation(fields: [SubcategoriaId], references: [Id])
+
+  @@index([BoletaId])
+  @@index([ColeccionQdrant, PuntoQdrantId])
+  @@index([MarcaId])
+  @@index([CategoriaId])
+  @@index([SubcategoriaId])
 }
 
 /* =========================
-  4) PROMOS
+  CÁTALOGOS
 ========================= */
-model Promo {
-  id                 String   @id @default(cuid()) @db.Text
-  title              String
-  description        String?
-  promo_type         String   // descuento|producto_gratis|2x1|vale|taller
-  store_id           String?  @db.Text
-  icon_name          String?
-  receipts_required  Int      @default(0)
-  validity_start     DateTime? @db.Date
-  validity_end       DateTime? @db.Date
-  is_active          Boolean  @default(true)
-  created_at         DateTime @default(now()) @db.Timestamptz(6)
-
-  store      Store?      @relation(fields: [store_id], references: [id])
-  userPromos UserPromo[]
+model Marcas {
+  Id     String        @id @default(uuid()) @db.Uuid
+  Nombre String        @unique
+  Items  Productos[]
 }
 
-model UserPromo {
-  id           String   @id @default(cuid()) @db.Text
-  user_id      String   @db.Text
-  promo_id     String   @db.Text
-  is_available Boolean  @default(false)
-  redeemed_at  DateTime?
-  payload      Json     @default("{}")
+model Categorias {
+  Id             String           @id @default(uuid()) @db.Uuid
+  Nombre         String           @unique
+  Subcategorias  Subcategorias[]
+  Items          Productos[]
+}
 
-  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  promo Promo @relation(fields: [promo_id], references: [id], onDelete: Cascade)
+model Subcategorias {
+  Id          String   @id @default(uuid()) @db.Uuid
+  Nombre      String
+  CategoriaId String?   @db.Uuid
 
-  @@unique([user_id, promo_id])
+  Categoria Categorias? @relation(fields: [CategoriaId], references: [Id], onDelete: Cascade)
+  Items     Productos[]
+
+  @@unique([Nombre, CategoriaId])
+  @@index([CategoriaId])
 }
 
 /* =========================
-  5) AUDIT
+  4) PROMOCIONES
 ========================= */
-model AuditEvent {
-  id         String   @id @default(cuid()) @db.Text
-  user_id    String?  @db.Text
-  entity     String
-  entity_id  String?  @db.Text
-  action     String
-  data       Json?
-  created_at DateTime @default(now()) @db.Timestamptz(6)
+model Promociones {
+  Id                  String    @id @default(uuid()) @db.Uuid
+  Titulo              String
+  Descripcion         String?
+  TipoPromocion       String    // enum pendiente
+  TiendaId            String?   @db.Uuid
+  BoletasRequeridas   Int       @default(0)
+  ValidezInicio       DateTime? @db.Date
+  ValidezFin          DateTime? @db.Date
+  Activa              Boolean   @default(true)
+  CreadoEn            DateTime  @default(now()) @db.Timestamptz(6)
 
-  // (sin relaciones estrictas por ser log flexible)
+  Tienda        Tiendas? @relation(fields: [TiendaId], references: [Id])
+  PromosUsuario PromocionesUsuarios[]
+}
+
+model PromocionesUsuarios {
+  Id           String   @id @default(uuid()) @db.Uuid
+  UsuarioId    String   @db.Text
+  PromocionId  String   @db.Text
+  Disponible   Boolean  @default(false)
+  FechaUso     DateTime?
+  Detalles     Json     @default("{}")
+
+  Usuario   Usuarios     @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
+  Promocion Promociones  @relation(fields: [PromocionId], references: [Id], onDelete: Cascade)
+
+  @@unique([UsuarioId, PromocionId])
 }

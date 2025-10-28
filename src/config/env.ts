@@ -15,6 +15,7 @@ const envSchema = z.object({
     JWT_SECRET: z.string(),
     JWT_EXPIRES_IN: z.string().default('7d'),
     BCRYPT_SALT_ROUNDS: z.string().transform(Number).default(10),
+    JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
     
     // LLM APIs
     DEEPSEEK_API_KEY: z.string(),
@@ -36,6 +37,7 @@ export const env = {
         secret: _env.JWT_SECRET,
         expiresIn: _env.JWT_EXPIRES_IN,
         bcryptSaltRounds: _env.BCRYPT_SALT_ROUNDS,
+        refreshExpiresIn: _env.JWT_REFRESH_EXPIRES_IN,
     },
     
     llm: {

@@ -32,3 +32,11 @@ export class NotFoundError extends AppError {
 		this.isOperational = true;
 	}
 }
+
+
+export class ConflictError extends AppError {
+    constructor(message = 'Conflicto de recursos') {
+        super(message, 409);
+        this.isOperational = true;
+    }
+}
