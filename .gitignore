@@ -105,3 +105,8 @@ Thumbs.db
 
 # Prisma (based on tsconfig exclude)
 src/lib/prisma/migrations/
+
+
+src/lib/prisma/zod/
+
+src/lib/prisma/migrations/
