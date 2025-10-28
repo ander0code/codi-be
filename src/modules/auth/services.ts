@@ -1,9 +1,11 @@
+
 import type { ServiceResponse } from '@/types/service.js';
 import { AuthRepository } from './repository.js';
 import { hashPassword, comparePassword } from '@/lib/hash.js';
-import { signToken } from '@/lib/jwt.js';
+import { signToken, signRefreshToken, verifyToken } from '@/lib/jwt.js';
+import logger from '@/config/logger.js';
 import { AuthError, ConflictError } from '@/config/errors/errors.js';
-import type { RegisterInput, LoginInput, AuthResponse } from './schemas.js';
+import type { RegisterInput, LoginInput, RefreshTokenInput, AuthResponse } from './schemas.js';
 
 async function register(input: RegisterInput): Promise<ServiceResponse<AuthResponse>> {
     const existingUser = await AuthRepository.findUserByEmail(input.email);
