@@ -26,6 +26,11 @@ export const UserResponseSchema = z.object({
 export const AuthResponseSchema = z.object({
     user: UserResponseSchema,
     token: z.string(),
+    refreshToken: z.string(),
+});
+
+export const RefreshTokenSchema = z.object({
+    refreshToken: z.string().min(1, 'El token de refresco es requerido'),
 });
 
 // Exportar tipos para usarlos en el código
@@ -33,3 +38,4 @@ export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type UserResponse = z.infer<typeof UserResponseSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
