@@ -35,6 +35,7 @@ model Usuarios {
   Apellido      String   @db.VarChar(80)
   Correo        String   @unique @db.Citext
   contrasena    String   @db.Text
+  PuntosVerdes  Int      @default(0) @db.Integer
   CreadoEn      DateTime @default(now()) @db.Timestamptz(6)
   ActualizadoEn DateTime @updatedAt
 
