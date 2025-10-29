@@ -51,5 +51,4 @@ export type BoletaCompletaConTienda = BoletaConItems & {
     NombreTienda: string | null;
     FechaBoleta: Date | null;
     Total: any;
-    
 };
