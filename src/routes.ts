@@ -3,6 +3,7 @@ import express from 'express';
 import testRouter from './modules/test/router.js';
 import authRouter from './modules/auth/router.js';
 import inicioRouter from './modules/inicio/router.js';
+import historialRouter from './modules/historial/router.js';	
 
 const router = express.Router();
 
@@ -10,6 +11,7 @@ const router = express.Router();
 router.use('/test', testRouter);
 router.use('/inicio', inicioRouter);
 router.use('/auth', authRouter);
+router.use('/historial', historialRouter);
 
 // Health check endpoint
 router.get('/health', (req, res) => {
