@@ -1,0 +1,148 @@
+{
+  "paths": {
+    "/inicio/{userId}": {
+      "get": {
+        "summary": "Obtener datos de inicio del usuario",
+        "description": "Obtiene los datos principales para la pantalla de inicio: última boleta, CO2 acumulado, puntos verdes y promociones activas.",
+        "tags": ["Inicio"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID del usuario en formato UUID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos de inicio obtenidos exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Datos de inicio obtenidos exitosamente" },
+                    "data": { "$ref": "#/components/schemas/InicioResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación en el ID del usuario",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "schemas": {
+    "InicioUltimaBoleta": {
+      "type": "object",
+      "nullable": true,
+      "properties": {
+        "nombreTienda": { 
+          "type": "string", 
+          "nullable": true,
+          "example": "Supermercado Líder" 
+        },
+        "categoriaTienda": { 
+          "type": "string", 
+          "nullable": true,
+          "example": "Supermercados" 
+        },
+        "logoTienda": { 
+          "type": "string", 
+          "nullable": true,
+          "format": "uri",
+          "example": "https://example.com/logos/lider.png" 
+        },
+        "co2Total": { 
+          "type": "number", 
+          "format": "float",
+          "example": 12.5,
+          "description": "Total de CO2 de la boleta en kg"
+        },
+        "fechaBoleta": { 
+          "type": "string", 
+          "format": "date-time",
+          "nullable": true,
+          "example": "2024-01-15T14:30:00Z" 
+        },
+        "precioTotal": { 
+          "type": "number", 
+          "format": "float",
+          "nullable": true,
+          "example": 45990.50,
+          "description": "Precio total de la boleta"
+        }
+      }
+    },
+    "InicioPromocion": {
+      "type": "object",
+      "properties": {
+        "titulo": { 
+          "type": "string", 
+          "example": "20% de descuento en productos sustentables" 
+        },
+        "tipoPromocion": { 
+          "type": "string", 
+          "example": "Descuento" 
+        }
+      },
+      "required": ["titulo", "tipoPromocion"]
+    },
+    "InicioResponse": {
+      "type": "object",
+      "properties": {
+        "puntosVerdes": { 
+          "type": "number", 
+          "format": "int32",
+          "example": 850,
+          "description": "Puntos verdes acumulados del usuario"
+        },
+        "co2Acumulado": { 
+          "type": "number", 
+          "format": "float",
+          "example": 125.75,
+          "description": "Total de CO2 acumulado de todas las boletas del usuario en kg"
+        },
+        "ultimaBoleta": { 
+          "$ref": "#/components/schemas/InicioUltimaBoleta",
+          "description": "Datos de la última boleta del usuario"
+        },
+        "promociones": { 
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/InicioPromocion" },
+          "maxItems": 2,
+          "description": "Las 2 promociones más recientes que están activas"
+        }
+      },
+      "required": ["puntosVerdes", "co2Acumulado", "ultimaBoleta", "promociones"]
+    }
+  },
+  "tags": [
+    {
+      "name": "Inicio",
+      "description": "Endpoints para obtener datos de la pantalla de inicio del usuario"
+    }
+  ]
+}
