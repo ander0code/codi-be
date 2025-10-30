@@ -13,7 +13,8 @@ const MODULES = [
   'test',
   'auth',
   'inicio',
-  'historial'
+  'historial',
+  'perfil'
 ];
 
 // ==========================================

@@ -2,6 +2,7 @@ import type { ServiceResponse } from '@/types/service.js';
 import { HistorialRepository } from './repository.js';
 import { NotFoundError } from '@/config/errors/errors.js';
 import logger from '@/config/logger.js';
+import { calcularCo2DeItems } from '@/utils/boletas.js';
 import type { 
     GetHistorialParams, 
     HistorialResponse, 
@@ -9,12 +10,6 @@ import type {
     CompraReciente,
     BoletaConDetalles 
 } from './schemas.js';
-
-function calcularCo2DeItems(items: Array<{ FactorCo2PorUnidad: any }>): number {
-    return items.reduce((sum: number, item) => {
-        return sum + (item.FactorCo2PorUnidad ? Number(item.FactorCo2PorUnidad) : 0);
-    }, 0);
-}
 
 function calcularResumenActividad(boletas: BoletaConDetalles[]): ResumenActividad {
     const cantidadBoletas = boletas.length;
@@ -24,7 +19,7 @@ function calcularResumenActividad(boletas: BoletaConDetalles[]): ResumenActivida
     const cantidadBoletasAmarillas = boletas.filter(b => b.TipoAmbiental === 'AMARILLO').length;
     const cantidadBoletasRojas = boletas.filter(b => b.TipoAmbiental === 'ROJO').length;
     
-    // Calcular CO2 total
+    // Calcular CO2 total usando la función compartida
     const co2Total = boletas.reduce((total: number, boleta) => {
         return total + calcularCo2DeItems(boleta.Items);
     }, 0);
