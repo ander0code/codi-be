@@ -4,7 +4,7 @@ import testRouter from './modules/test/router.js';
 import authRouter from './modules/auth/router.js';
 import inicioRouter from './modules/inicio/router.js';
 import historialRouter from './modules/historial/router.js';	
-import perfilRouter from './modules/Perfil/router.js';
+import perfilRouter from './modules/perfil/router.js';
 
 const router = express.Router();
 
