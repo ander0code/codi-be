@@ -120,7 +120,7 @@
         "summary": "Registrar un nuevo usuario",
         "description": "Crea una nueva cuenta de usuario y devuelve los datos del usuario junto con un token JWT de autenticación.",
         "tags": [
-          "Auth"
+          "Auth - Tradicional"
         ],
         "requestBody": {
           "required": true,
@@ -157,7 +157,7 @@
             }
           },
           "400": {
-            "description": "Error de validación en los datos de entrada",
+            "description": "Error de validación",
             "content": {
               "application/json": {
                 "schema": {
@@ -167,7 +167,7 @@
             }
           },
           "409": {
-            "description": "Conflicto, el correo electrónico ya está registrado",
+            "description": "Correo ya registrado",
             "content": {
               "application/json": {
                 "schema": {
@@ -182,9 +182,9 @@
     "/auth/login": {
       "post": {
         "summary": "Iniciar sesión",
-        "description": "Autentica a un usuario con su correo y contraseña. Devuelve los datos del usuario y un token JWT.",
+        "description": "Autentica a un usuario con su correo y contraseña.",
         "tags": [
-          "Auth"
+          "Auth - Tradicional"
         ],
         "requestBody": {
           "required": true,
@@ -221,7 +221,7 @@
             }
           },
           "400": {
-            "description": "Error de validación en los datos de entrada",
+            "description": "Error de validación",
             "content": {
               "application/json": {
                 "schema": {
@@ -231,7 +231,7 @@
             }
           },
           "401": {
-            "description": "No autorizado, credenciales inválidas",
+            "description": "Credenciales inválidas",
             "content": {
               "application/json": {
                 "schema": {
@@ -246,9 +246,9 @@
     "/auth/refresh-token": {
       "post": {
         "summary": "Refrescar token de acceso",
-        "description": "Obtiene un nuevo par de tokens (acceso y refresco) utilizando un refresh token válido.",
+        "description": "Obtiene un nuevo par de tokens utilizando un refresh token válido.",
         "tags": [
-          "Auth"
+          "Auth - Tradicional"
         ],
         "requestBody": {
           "required": true,
@@ -285,7 +285,7 @@
             }
           },
           "401": {
-            "description": "Refresh token inválido o expirado",
+            "description": "Refresh token inválido",
             "content": {
               "application/json": {
                 "schema": {
@@ -297,66 +297,33 @@
         }
       }
     },
-    "/inicio/{userId}": {
+    "/auth/signin/google": {
       "get": {
-        "summary": "Obtener datos de inicio del usuario",
-        "description": "Obtiene los datos principales para la pantalla de inicio: última boleta, CO2 acumulado, puntos verdes y promociones activas.",
+        "summary": "🔐 Iniciar sesión con Google",
+        "description": "**IMPORTANTE:** Este endpoint NO devuelve JSON. Redirige (HTTP 302) a la página de autorización de Google. Úsalo desde el navegador con `window.location.href` o un botón `<a>`.",
         "tags": [
-          "Inicio"
+          "Auth - OAuth"
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "userId",
-            "required": true,
+            "name": "callbackUrl",
+            "in": "query",
+            "required": false,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "example": "/dashboard"
             },
-            "description": "ID del usuario en formato UUID",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
+            "description": "URL a la que redirigir después del login exitoso"
           }
         ],
         "responses": {
-          "200": {
-            "description": "Datos de inicio obtenidos exitosamente",
-            "content": {
-              "application/json": {
+          "302": {
+            "description": "Redirección a Google",
+            "headers": {
+              "Location": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Datos de inicio obtenidos exitosamente"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/InicioResponse"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error de validación en el ID del usuario",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Usuario no encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "string",
+                  "example": "https://accounts.google.com/o/oauth2/v2/auth?..."
                 }
               }
             }
@@ -364,66 +331,55 @@
         }
       }
     },
-    "/historial/{userId}": {
+    "/auth/callback/google": {
       "get": {
-        "summary": "Obtener historial de compras del usuario",
-        "description": "Obtiene el resumen de actividad (cantidad de boletas, CO2 total y promedio) y el listado completo de compras recientes del usuario.",
+        "summary": "Callback de Google (NO llamar directamente)",
+        "description": "Google redirige aquí después de la autorización. Auth.js procesa el code automáticamente.",
         "tags": [
-          "Historial"
+          "Auth - OAuth"
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "userId",
+            "name": "code",
+            "in": "query",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "ID del usuario en formato UUID",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
+          "302": {
+            "description": "Redirección después de login exitoso"
+          },
+          "401": {
+            "description": "Error de autenticación"
+          }
+        }
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "summary": "Obtener sesión OAuth actual",
+        "description": "Devuelve la información de la sesión del usuario autenticado con OAuth.",
+        "tags": [
+          "Auth - OAuth"
+        ],
+        "responses": {
           "200": {
-            "description": "Historial obtenido exitosamente",
+            "description": "Sesión del usuario",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Historial obtenido exitosamente"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/HistorialResponse"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error de validación en el ID del usuario",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Usuario no encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/OAuthSession"
                 }
               }
             }
@@ -431,141 +387,51 @@
         }
       }
     },
-    "/perfil/{userId}": {
-      "get": {
-        "summary": "Obtener perfil del usuario",
-        "description": "Obtiene los datos personales del usuario (nombre, apellido, correo) y sus estadísticas de compras (cantidad de recibos, recibos verdes, CO2 total y promedio).",
+    "/auth/signout": {
+      "post": {
+        "summary": "Cerrar sesión OAuth",
+        "description": "Cierra la sesión del usuario autenticado con OAuth.",
         "tags": [
-          "Perfil"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "userId",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "ID del usuario en formato UUID",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          }
+          "Auth - OAuth"
         ],
         "responses": {
-          "200": {
-            "description": "Perfil obtenido exitosamente",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Perfil obtenido exitosamente"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/PerfilResponse"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error de validación en el ID del usuario",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Usuario no encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+          "302": {
+            "description": "Redirección después de cerrar sesión"
           }
         }
-      },
-      "put": {
-        "summary": "Actualizar perfil del usuario",
-        "description": "Actualiza el nombre y apellido del usuario. La fecha de actualización se registra automáticamente.",
+      }
+    },
+    "/auth/providers": {
+      "get": {
+        "summary": "Listar providers OAuth disponibles",
+        "description": "Devuelve Google, GitHub, etc. configurados.",
         "tags": [
-          "Perfil"
+          "Auth - OAuth"
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "userId",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "ID del usuario en formato UUID",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PerfilUpdateInput"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Perfil actualizado exitosamente",
+            "description": "Lista de providers",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Perfil actualizado exitosamente"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/PerfilUpdateResponse"
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "signinUrl": {
+                        "type": "string"
+                      }
                     }
                   }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error de validación en los datos enviados",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Usuario no encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -610,16 +476,10 @@
             "example": false
           },
           "message": {
-            "type": "string"
-          },
-          "error": {
-            "type": "string"
+            "type": "string",
+            "example": "Error message"
           }
-        },
-        "required": [
-          "success",
-          "message"
-        ]
+        }
       },
       "TestEchoInput": {
         "type": "object",
@@ -712,13 +572,7 @@
             "type": "string",
             "format": "email"
           }
-        },
-        "required": [
-          "id",
-          "nombre",
-          "apellido",
-          "email"
-        ]
+        }
       },
       "AuthResponse": {
         "type": "object",
@@ -734,12 +588,7 @@
             "type": "string",
             "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
-        },
-        "required": [
-          "user",
-          "token",
-          "refreshToken"
-        ]
+        }
       },
       "AuthRefreshTokenInput": {
         "type": "object",
@@ -753,349 +602,33 @@
           "refreshToken"
         ]
       },
-      "InicioUltimaBoleta": {
+      "OAuthSession": {
         "type": "object",
-        "nullable": true,
         "properties": {
-          "nombreTienda": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "apellido": {
+                "type": "string"
+              }
+            }
+          },
+          "expires": {
             "type": "string",
-            "nullable": true,
-            "example": "Supermercado Líder"
-          },
-          "categoriaTienda": {
-            "type": "string",
-            "nullable": true,
-            "example": "Supermercados"
-          },
-          "logoTienda": {
-            "type": "string",
-            "nullable": true,
-            "format": "uri",
-            "example": "https://example.com/logos/lider.png"
-          },
-          "co2Total": {
-            "type": "number",
-            "format": "float",
-            "example": 12.5,
-            "description": "Total de CO2 de la boleta en kg"
-          },
-          "fechaBoleta": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true,
-            "example": "2024-01-15T14:30:00Z"
-          },
-          "precioTotal": {
-            "type": "number",
-            "format": "float",
-            "nullable": true,
-            "example": 45990.5,
-            "description": "Precio total de la boleta"
+            "format": "date-time"
           }
         }
-      },
-      "InicioPromocion": {
-        "type": "object",
-        "properties": {
-          "titulo": {
-            "type": "string",
-            "example": "20% de descuento en productos sustentables"
-          },
-          "tipoPromocion": {
-            "type": "string",
-            "example": "Descuento"
-          }
-        },
-        "required": [
-          "titulo",
-          "tipoPromocion"
-        ]
-      },
-      "InicioResponse": {
-        "type": "object",
-        "properties": {
-          "puntosVerdes": {
-            "type": "number",
-            "format": "int32",
-            "example": 850,
-            "description": "Puntos verdes acumulados del usuario"
-          },
-          "co2Acumulado": {
-            "type": "number",
-            "format": "float",
-            "example": 125.75,
-            "description": "Total de CO2 acumulado de todas las boletas del usuario en kg"
-          },
-          "ultimaBoleta": {
-            "$ref": "#/components/schemas/InicioUltimaBoleta",
-            "description": "Datos de la última boleta del usuario"
-          },
-          "promociones": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InicioPromocion"
-            },
-            "maxItems": 2,
-            "description": "Las 2 promociones más recientes que están activas"
-          }
-        },
-        "required": [
-          "puntosVerdes",
-          "co2Acumulado",
-          "ultimaBoleta",
-          "promociones"
-        ]
-      },
-      "HistorialResumenActividad": {
-        "type": "object",
-        "properties": {
-          "cantidadBoletas": {
-            "type": "integer",
-            "format": "int32",
-            "example": 24,
-            "description": "Total de boletas del usuario"
-          },
-          "cantidadBoletasVerdes": {
-            "type": "integer",
-            "format": "int32",
-            "example": 15,
-            "description": "Cantidad de boletas con tipo ambiental VERDE"
-          },
-          "cantidadBoletasAmarillas": {
-            "type": "integer",
-            "format": "int32",
-            "example": 7,
-            "description": "Cantidad de boletas con tipo ambiental AMARILLO"
-          },
-          "cantidadBoletasRojas": {
-            "type": "integer",
-            "format": "int32",
-            "example": 2,
-            "description": "Cantidad de boletas con tipo ambiental ROJO"
-          },
-          "co2Total": {
-            "type": "number",
-            "format": "float",
-            "example": 125.75,
-            "description": "Total de CO2 acumulado de todas las boletas en kg"
-          },
-          "co2Promedio": {
-            "type": "number",
-            "format": "float",
-            "example": 5.24,
-            "description": "Promedio de CO2 por boleta en kg"
-          }
-        },
-        "required": [
-          "cantidadBoletas",
-          "cantidadBoletasVerdes",
-          "cantidadBoletasAmarillas",
-          "cantidadBoletasRojas",
-          "co2Total",
-          "co2Promedio"
-        ]
-      },
-      "HistorialCompraReciente": {
-        "type": "object",
-        "properties": {
-          "fechaBoleta": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true,
-            "example": "2024-01-15T14:30:00Z",
-            "description": "Fecha de la compra"
-          },
-          "logoTienda": {
-            "type": "string",
-            "format": "uri",
-            "nullable": true,
-            "example": "https://example.com/logos/lider.png",
-            "description": "URL del logo de la tienda"
-          },
-          "nombreTienda": {
-            "type": "string",
-            "nullable": true,
-            "example": "Supermercado Líder",
-            "description": "Nombre de la tienda"
-          },
-          "tipoBoleta": {
-            "type": "string",
-            "enum": [
-              "VERDE",
-              "AMARILLO",
-              "ROJO"
-            ],
-            "example": "VERDE",
-            "description": "Tipo de boleta según impacto ambiental"
-          },
-          "co2Boleta": {
-            "type": "number",
-            "format": "float",
-            "example": 4.5,
-            "description": "CO2 total de esta boleta específica en kg"
-          },
-          "cantidadProductos": {
-            "type": "integer",
-            "format": "int32",
-            "example": 12,
-            "description": "Número de productos en la boleta"
-          }
-        },
-        "required": [
-          "fechaBoleta",
-          "logoTienda",
-          "nombreTienda",
-          "tipoBoleta",
-          "co2Boleta",
-          "cantidadProductos"
-        ]
-      },
-      "HistorialResponse": {
-        "type": "object",
-        "properties": {
-          "resumenActividad": {
-            "$ref": "#/components/schemas/HistorialResumenActividad",
-            "description": "Resumen estadístico de la actividad del usuario"
-          },
-          "comprasRecientes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/HistorialCompraReciente"
-            },
-            "description": "Listado completo de todas las compras del usuario ordenadas por fecha descendente"
-          }
-        },
-        "required": [
-          "resumenActividad",
-          "comprasRecientes"
-        ]
-      },
-      "PerfilDatosUsuario": {
-        "type": "object",
-        "properties": {
-          "nombre": {
-            "type": "string",
-            "example": "Juan",
-            "description": "Nombre del usuario"
-          },
-          "apellido": {
-            "type": "string",
-            "example": "Pérez",
-            "description": "Apellido del usuario"
-          },
-          "correo": {
-            "type": "string",
-            "format": "email",
-            "example": "juan.perez@example.com",
-            "description": "Correo electrónico del usuario"
-          }
-        },
-        "required": [
-          "nombre",
-          "apellido",
-          "correo"
-        ]
-      },
-      "PerfilEstadisticas": {
-        "type": "object",
-        "properties": {
-          "cantidadRecibos": {
-            "type": "integer",
-            "format": "int32",
-            "example": 24,
-            "description": "Total de recibos del usuario"
-          },
-          "cantidadRecibosVerdes": {
-            "type": "integer",
-            "format": "int32",
-            "example": 15,
-            "description": "Cantidad de recibos con tipo ambiental VERDE"
-          },
-          "co2Total": {
-            "type": "number",
-            "format": "float",
-            "example": 125.75,
-            "description": "Total de CO2 acumulado de todos los recibos en kg"
-          },
-          "co2Promedio": {
-            "type": "number",
-            "format": "float",
-            "example": 5.24,
-            "description": "Promedio de CO2 por recibo en kg"
-          }
-        },
-        "required": [
-          "cantidadRecibos",
-          "cantidadRecibosVerdes",
-          "co2Total",
-          "co2Promedio"
-        ]
-      },
-      "PerfilResponse": {
-        "type": "object",
-        "properties": {
-          "datosUsuario": {
-            "$ref": "#/components/schemas/PerfilDatosUsuario",
-            "description": "Información personal del usuario"
-          },
-          "estadisticas": {
-            "$ref": "#/components/schemas/PerfilEstadisticas",
-            "description": "Estadísticas de compras del usuario"
-          }
-        },
-        "required": [
-          "datosUsuario",
-          "estadisticas"
-        ]
-      },
-      "PerfilUpdateInput": {
-        "type": "object",
-        "properties": {
-          "nombre": {
-            "type": "string",
-            "minLength": 3,
-            "maxLength": 80,
-            "example": "Juan Carlos",
-            "description": "Nuevo nombre del usuario"
-          },
-          "apellido": {
-            "type": "string",
-            "minLength": 3,
-            "maxLength": 80,
-            "example": "Pérez García",
-            "description": "Nuevo apellido del usuario"
-          }
-        },
-        "required": [
-          "nombre",
-          "apellido"
-        ]
-      },
-      "PerfilUpdateResponse": {
-        "type": "object",
-        "properties": {
-          "nombre": {
-            "type": "string",
-            "example": "Juan Carlos",
-            "description": "Nombre actualizado"
-          },
-          "apellido": {
-            "type": "string",
-            "example": "Pérez García",
-            "description": "Apellido actualizado"
-          },
-          "actualizadoEn": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2024-01-15T14:30:00Z",
-            "description": "Fecha y hora de la última actualización"
-          }
-        },
-        "required": [
-          "nombre",
-          "apellido",
-          "actualizadoEn"
-        ]
       }
     }
   },
@@ -1105,20 +638,12 @@
       "description": "Endpoints de prueba"
     },
     {
-      "name": "Auth",
-      "description": "Endpoints para registro e inicio de sesión de usuarios"
+      "name": "Auth - Tradicional",
+      "description": "Autenticación con email y contraseña"
     },
     {
-      "name": "Inicio",
-      "description": "Endpoints para obtener datos de la pantalla de inicio del usuario"
-    },
-    {
-      "name": "Historial",
-      "description": "Endpoints para obtener el historial completo de compras y estadísticas del usuario"
-    },
-    {
-      "name": "Perfil",
-      "description": "Endpoints para gestionar el perfil del usuario y visualizar sus estadísticas"
+      "name": "Auth - OAuth",
+      "description": "Autenticación con Google (gestionado por Auth.js)"
     }
   ]
 }

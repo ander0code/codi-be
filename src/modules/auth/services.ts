@@ -40,6 +40,10 @@ async function login(input: LoginInput): Promise<ServiceResponse<AuthResponse>> 
         throw new AuthError('Credenciales inválidas');
     }
 
+    if (!user.contrasena) {
+        throw new AuthError('Credenciales inválidas');
+    }
+
     const isPasswordValid = await comparePassword(input.password, user.contrasena);
     if (!isPasswordValid) {
         throw new AuthError('Credenciales inválidas');
@@ -64,7 +68,6 @@ async function login(input: LoginInput): Promise<ServiceResponse<AuthResponse>> 
         data: { user: publicUser, token, refreshToken },
     };
 }
-
 
 async function refreshToken(input: RefreshTokenInput): Promise<ServiceResponse<AuthResponse>> {
     try {
