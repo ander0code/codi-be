@@ -11,7 +11,10 @@ const __dirname = path.dirname(__filename);
 // ==========================================
 const MODULES = [
   'test',
-  'auth'
+  'auth',
+  'inicio',
+  'historial',
+  'perfil'
 ];
 
 // ==========================================

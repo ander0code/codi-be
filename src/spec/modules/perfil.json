@@ -1,0 +1,234 @@
+{
+  "paths": {
+    "/perfil/{userId}": {
+      "get": {
+        "summary": "Obtener perfil del usuario",
+        "description": "Obtiene los datos personales del usuario (nombre, apellido, correo) y sus estadísticas de compras (cantidad de recibos, recibos verdes, CO2 total y promedio).",
+        "tags": ["Perfil"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID del usuario en formato UUID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil obtenido exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Perfil obtenido exitosamente" },
+                    "data": { "$ref": "#/components/schemas/PerfilResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación en el ID del usuario",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Actualizar perfil del usuario",
+        "description": "Actualiza el nombre y apellido del usuario. La fecha de actualización se registra automáticamente.",
+        "tags": ["Perfil"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID del usuario en formato UUID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerfilUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Perfil actualizado exitosamente" },
+                    "data": { "$ref": "#/components/schemas/PerfilUpdateResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación en los datos enviados",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "schemas": {
+    "PerfilDatosUsuario": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "example": "Juan",
+          "description": "Nombre del usuario"
+        },
+        "apellido": {
+          "type": "string",
+          "example": "Pérez",
+          "description": "Apellido del usuario"
+        },
+        "correo": {
+          "type": "string",
+          "format": "email",
+          "example": "juan.perez@example.com",
+          "description": "Correo electrónico del usuario"
+        }
+      },
+      "required": ["nombre", "apellido", "correo"]
+    },
+    "PerfilEstadisticas": {
+      "type": "object",
+      "properties": {
+        "cantidadRecibos": {
+          "type": "integer",
+          "format": "int32",
+          "example": 24,
+          "description": "Total de recibos del usuario"
+        },
+        "cantidadRecibosVerdes": {
+          "type": "integer",
+          "format": "int32",
+          "example": 15,
+          "description": "Cantidad de recibos con tipo ambiental VERDE"
+        },
+        "co2Total": {
+          "type": "number",
+          "format": "float",
+          "example": 125.75,
+          "description": "Total de CO2 acumulado de todos los recibos en kg"
+        },
+        "co2Promedio": {
+          "type": "number",
+          "format": "float",
+          "example": 5.24,
+          "description": "Promedio de CO2 por recibo en kg"
+        }
+      },
+      "required": ["cantidadRecibos", "cantidadRecibosVerdes", "co2Total", "co2Promedio"]
+    },
+    "PerfilResponse": {
+      "type": "object",
+      "properties": {
+        "datosUsuario": {
+          "$ref": "#/components/schemas/PerfilDatosUsuario",
+          "description": "Información personal del usuario"
+        },
+        "estadisticas": {
+          "$ref": "#/components/schemas/PerfilEstadisticas",
+          "description": "Estadísticas de compras del usuario"
+        }
+      },
+      "required": ["datosUsuario", "estadisticas"]
+    },
+    "PerfilUpdateInput": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 80,
+          "example": "Juan Carlos",
+          "description": "Nuevo nombre del usuario"
+        },
+        "apellido": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 80,
+          "example": "Pérez García",
+          "description": "Nuevo apellido del usuario"
+        }
+      },
+      "required": ["nombre", "apellido"]
+    },
+    "PerfilUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "example": "Juan Carlos",
+          "description": "Nombre actualizado"
+        },
+        "apellido": {
+          "type": "string",
+          "example": "Pérez García",
+          "description": "Apellido actualizado"
+        },
+        "actualizadoEn": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2024-01-15T14:30:00Z",
+          "description": "Fecha y hora de la última actualización"
+        }
+      },
+      "required": ["nombre", "apellido", "actualizadoEn"]
+    }
+  },
+  "tags": [
+    {
+      "name": "Perfil",
+      "description": "Endpoints para gestionar el perfil del usuario y visualizar sus estadísticas"
+    }
+  ]
+}

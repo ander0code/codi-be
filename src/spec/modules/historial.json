@@ -1,0 +1,180 @@
+{
+  "paths": {
+    "/historial/{userId}": {
+      "get": {
+        "summary": "Obtener historial de compras del usuario",
+        "description": "Obtiene el resumen de actividad (cantidad de boletas, CO2 total y promedio) y el listado completo de compras recientes del usuario.",
+        "tags": ["Historial"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID del usuario en formato UUID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historial obtenido exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Historial obtenido exitosamente" },
+                    "data": { "$ref": "#/components/schemas/HistorialResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación en el ID del usuario",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "schemas": {
+    "HistorialResumenActividad": {
+      "type": "object",
+      "properties": {
+        "cantidadBoletas": {
+          "type": "integer",
+          "format": "int32",
+          "example": 24,
+          "description": "Total de boletas del usuario"
+        },
+        "cantidadBoletasVerdes": {
+          "type": "integer",
+          "format": "int32",
+          "example": 15,
+          "description": "Cantidad de boletas con tipo ambiental VERDE"
+        },
+        "cantidadBoletasAmarillas": {
+          "type": "integer",
+          "format": "int32",
+          "example": 7,
+          "description": "Cantidad de boletas con tipo ambiental AMARILLO"
+        },
+        "cantidadBoletasRojas": {
+          "type": "integer",
+          "format": "int32",
+          "example": 2,
+          "description": "Cantidad de boletas con tipo ambiental ROJO"
+        },
+        "co2Total": {
+          "type": "number",
+          "format": "float",
+          "example": 125.75,
+          "description": "Total de CO2 acumulado de todas las boletas en kg"
+        },
+        "co2Promedio": {
+          "type": "number",
+          "format": "float",
+          "example": 5.24,
+          "description": "Promedio de CO2 por boleta en kg"
+        }
+      },
+      "required": [
+        "cantidadBoletas",
+        "cantidadBoletasVerdes",
+        "cantidadBoletasAmarillas",
+        "cantidadBoletasRojas",
+        "co2Total",
+        "co2Promedio"
+      ]
+    },
+    "HistorialCompraReciente": {
+      "type": "object",
+      "properties": {
+        "fechaBoleta": {
+          "type": "string",
+          "format": "date-time",
+          "nullable": true,
+          "example": "2024-01-15T14:30:00Z",
+          "description": "Fecha de la compra"
+        },
+        "logoTienda": {
+          "type": "string",
+          "format": "uri",
+          "nullable": true,
+          "example": "https://example.com/logos/lider.png",
+          "description": "URL del logo de la tienda"
+        },
+        "nombreTienda": {
+          "type": "string",
+          "nullable": true,
+          "example": "Supermercado Líder",
+          "description": "Nombre de la tienda"
+        },
+        "tipoBoleta": {
+          "type": "string",
+          "enum": ["VERDE", "AMARILLO", "ROJO"],
+          "example": "VERDE",
+          "description": "Tipo de boleta según impacto ambiental"
+        },
+        "co2Boleta": {
+          "type": "number",
+          "format": "float",
+          "example": 4.5,
+          "description": "CO2 total de esta boleta específica en kg"
+        },
+        "cantidadProductos": {
+          "type": "integer",
+          "format": "int32",
+          "example": 12,
+          "description": "Número de productos en la boleta"
+        }
+      },
+      "required": [
+        "fechaBoleta",
+        "logoTienda",
+        "nombreTienda",
+        "tipoBoleta",
+        "co2Boleta",
+        "cantidadProductos"
+      ]
+    },
+    "HistorialResponse": {
+      "type": "object",
+      "properties": {
+        "resumenActividad": {
+          "$ref": "#/components/schemas/HistorialResumenActividad",
+          "description": "Resumen estadístico de la actividad del usuario"
+        },
+        "comprasRecientes": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/HistorialCompraReciente" },
+          "description": "Listado completo de todas las compras del usuario ordenadas por fecha descendente"
+        }
+      },
+      "required": ["resumenActividad", "comprasRecientes"]
+    }
+  },
+  "tags": [
+    {
+      "name": "Historial",
+      "description": "Endpoints para obtener el historial completo de compras y estadísticas del usuario"
+    }
+  ]
+}
