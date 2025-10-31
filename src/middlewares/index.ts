@@ -25,21 +25,6 @@ export const configureMiddlewares = (app: express.Application): void => {
 		helmet({
 			contentSecurityPolicy: {
 				directives: {
-					formAction: ["'self'", "http://localhost:8000/auth/signin/google"],  // Especifica la URL exacta
-					defaultSrc: ["'self'"],
-					scriptSrc: ["'self'", "'unsafe-inline'"],
-					// Para Swagger
-					styleSrc: ["'self'", "'unsafe-inline'"],
-					imgSrc: ["'self'", 'data:', 'https:'],
-				},
-			},
-			crossOriginEmbedderPolicy: false,
-		})
-	);
-	app.use(
-		helmet({
-			contentSecurityPolicy: {
-				directives: {
 					formAction: ["'self'"],
 					defaultSrc: ["'self'"],
 					scriptSrc: ["'self'", "'unsafe-inline'"],

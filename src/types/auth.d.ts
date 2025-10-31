@@ -8,6 +8,8 @@ declare module '@auth/core/types' {
       email: string;
       nombre: string;
       apellido: string;
+      authProvider: string;
+
     };
   }
 
@@ -16,6 +18,7 @@ declare module '@auth/core/types' {
     email: string;
     nombre: string;
     apellido: string;
+    authProvider: string;
   }
 }
 
@@ -25,5 +28,6 @@ declare module '@auth/core/jwt' {
     email?: string;
     nombre?: string;
     apellido?: string;
+    authProvider?: string;
   }
 }

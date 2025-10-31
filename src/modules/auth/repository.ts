@@ -12,6 +12,7 @@ async function findUserByEmail(email: string): Promise<(UserResponse & { contras
         apellido: user.Apellido,
         email: user.Correo,
         contrasena: user.contrasena,
+        proveedorAuth: user.ProveedorAuth ?? undefined,
     };
 }
 
@@ -22,6 +23,7 @@ async function createUser(data: RegisterInput & { passwordHash: string }): Promi
             Apellido: data.apellido,
             Correo: data.email,
             contrasena: data.passwordHash,
+            ProveedorAuth: 'email', // <-- aquí
         },
     });
     return {
@@ -29,6 +31,7 @@ async function createUser(data: RegisterInput & { passwordHash: string }): Promi
         nombre: user.Nombre,
         apellido: user.Apellido,
         email: user.Correo,
+        proveedorAuth: user.ProveedorAuth ?? undefined, // <-- aquí
     };
 }
 
@@ -51,6 +54,7 @@ async function findOrCreateGoogleUser(data: {
     email: string;
     nombre: string;
     apellido: string;
+    proveedorAuth: string;
 }): Promise<UserResponse> {
     // Primero intentar encontrar por googleId
     let user = await prisma.usuarios.findUnique({
@@ -78,6 +82,7 @@ async function findOrCreateGoogleUser(data: {
                     Correo: data.email,
                     googleId: data.googleId,
                     contrasena: null, // Usuario OAuth no necesita contraseña
+                    ProveedorAuth: data.proveedorAuth,
                 },
             });
         }
@@ -88,6 +93,7 @@ async function findOrCreateGoogleUser(data: {
         nombre: user.Nombre,
         apellido: user.Apellido,
         email: user.Correo,
+        proveedorAuth: user.ProveedorAuth ?? undefined,
     };
 }
 

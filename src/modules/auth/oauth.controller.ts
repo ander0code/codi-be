@@ -23,6 +23,7 @@ export async function oauthSuccessController(req: Request, res: Response) {
             email: userData.email,
             nombre: userData.nombre,
             apellido: userData.apellido,
+            provider: userData.authProvider,
         };
 
         const token = signToken(payload);
@@ -39,6 +40,7 @@ export async function oauthSuccessController(req: Request, res: Response) {
                 nombre: userData.nombre,
                 apellido: userData.apellido,
                 email: userData.email,
+                provider: userData.authProvider
             },
             token,
             refreshToken,

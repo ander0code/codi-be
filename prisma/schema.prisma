@@ -37,6 +37,7 @@ model Usuarios {
   contrasena    String?  @db.Text
   googleId      String?  @unique
   PuntosVerdes  Int      @default(0) @db.Integer
+  ProveedorAuth String?  @default("email")
   CreadoEn      DateTime @default(now()) @db.Timestamptz(6)
   ActualizadoEn DateTime @updatedAt
 

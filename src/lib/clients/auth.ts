@@ -2,11 +2,12 @@ import { ExpressAuth } from '@auth/express';
 import Google from '@auth/express/providers/google';
 import { env } from '@/config/env.js';
 import { AuthRepository } from '@/modules/auth/repository.js';
-import { signToken, signRefreshToken } from '@/lib/jwt.js';
 import logger from '@/config/logger.js';
 
+
 // Variable temporal para almacenar datos del usuario después del OAuth
-let tempUserData: { id: string; email: string; nombre: string; apellido: string } | null = null;
+let tempUserData: { id: string; email: string; nombre: string; apellido: string , authProvider: string } | null = null;
+
 
 export const expressAuth = ExpressAuth({
     providers: [
@@ -56,25 +57,29 @@ export const expressAuth = ExpressAuth({
                         email,
                         nombre,
                         apellido,
+                        proveedorAuth: 'google',
                     });
 
                     logger.info('✅ Usuario creado/encontrado en DB', { 
                         userId: user.id,
                         email: user.email 
                     });
-
-                    // Guardar datos temporalmente para usarlos en el endpoint /oauth/success
+                                        // Guardar datos temporalmente para usarlos en el endpoint /oauth/success
                     tempUserData = {
                         id: user.id,
                         email: user.email,
                         nombre: user.nombre,
                         apellido: user.apellido,
+                        authProvider: user.proveedorAuth ?? 'google',
                     };
 
+
+                    // Guardar en el token de Auth.js para poder recuperarlo
                     token.uid = user.id;
                     token.email = user.email;
                     token.nombre = user.nombre;
                     token.apellido = user.apellido;
+                    token.authProvider = user.proveedorAuth;
                 } catch (error) {
                     logger.error('❌ Error en findOrCreateGoogleUser', { 
                         error: error instanceof Error ? error.message : error 
@@ -99,6 +104,7 @@ export const expressAuth = ExpressAuth({
                     email: token.email as string,
                     nombre: token.nombre as string,
                     apellido: token.apellido as string,
+                    authProvider: token.authProvider as string,
                 };
                 
                 logger.info('✅ Sesión creada', { 
@@ -147,6 +153,7 @@ export const expressAuth = ExpressAuth({
         },
     },
 });
+
 
 // Función para obtener y limpiar los datos temporales del usuario
 export function getTempUserData() {

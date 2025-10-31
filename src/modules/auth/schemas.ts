@@ -20,6 +20,7 @@ export const UserResponseSchema = z.object({
     nombre: z.string(),
     apellido: z.string(),
     email: z.email(),
+    proveedorAuth: z.string().optional(),
 });
 
 // Schema para la respuesta de autenticación completa
