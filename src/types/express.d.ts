@@ -11,6 +11,9 @@ declare global {
 			setSecureCookie(name: string, value: string, options?: CookieOptions): this;
 			removeCookie(name: string, options?: CookieOptions): this;
 		}
+		interface Request {
+            user?: import('@/lib/jwt.js').JwtPayload;
+        }
 	}
 }
 

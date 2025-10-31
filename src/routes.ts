@@ -5,15 +5,19 @@ import authRouter from './modules/auth/router.js';
 import inicioRouter from './modules/inicio/router.js';
 import historialRouter from './modules/historial/router.js';	
 import perfilRouter from './modules/perfil/router.js';
+import { expressAuth } from './lib/clients/auth.js';
 
 const router = express.Router();
 
-// Acá se añadirán todos los routers de los modules que se creen
+router.use('/auth', authRouter);
+router.use('/auth', expressAuth);
 router.use('/test', testRouter);
 router.use('/perfil', perfilRouter);
 router.use('/inicio', inicioRouter);
 router.use('/auth', authRouter);
 router.use('/historial', historialRouter);
+
+
 
 // Health check endpoint
 router.get('/health', (req, res) => {
