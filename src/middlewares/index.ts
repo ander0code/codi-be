@@ -2,6 +2,7 @@ import bodyParser from 'body-parser';
 import compression from 'compression';
 import cors from 'cors';
 import type express from 'express';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 
@@ -21,19 +22,10 @@ export const configureMiddlewares = (app: express.Application): void => {
 	// Middlewares de seguridad
 	app.use(limiter);
 	app.use(
-		compression({
-			filter: (req: express.Request, res: express.Response) => {
-				if (req.headers['x-no-compression']) return false;
-				return compression.filter(req, res);
-			},
-			level: 6,
-			threshold: 1024,
-		})
-	);
-	app.use(
 		helmet({
 			contentSecurityPolicy: {
 				directives: {
+					formAction: ["'self'"],
 					defaultSrc: ["'self'"],
 					scriptSrc: ["'self'", "'unsafe-inline'"],
 					// Para Swagger
@@ -54,6 +46,7 @@ export const configureMiddlewares = (app: express.Application): void => {
 	);
 
 	// Middlewares de parsing
+	app.use(cookieParser());
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({ extended: true }));
 

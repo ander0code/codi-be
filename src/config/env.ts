@@ -14,8 +14,6 @@ const envSchema = z.object({
     // Google OAuth
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
-    GOOGLE_REDIRECT_URI: z.string().url(),
-    FRONTEND_URL: z.string().url(),
     
     // Auth
     JWT_SECRET: z.string(),
@@ -39,11 +37,9 @@ export const env = {
         url: _env.DATABASE_URL,
     },
     google: {
-        clientId: _env.GOOGLE_CLIENT_ID,
-        clientSecret: _env.GOOGLE_CLIENT_SECRET,
-        redirectUri: _env.GOOGLE_REDIRECT_URI,
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET
     },
-    frontendUrl: _env.FRONTEND_URL,
     jwt: {
         secret: _env.JWT_SECRET,
         expiresIn: _env.JWT_EXPIRES_IN,
