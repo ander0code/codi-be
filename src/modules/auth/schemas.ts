@@ -34,9 +34,14 @@ export const RefreshTokenSchema = z.object({
     refreshToken: z.string().min(1, 'El token de refresco es requerido'),
 });
 
+export const GoogleLoginSchema = z.object({
+    idToken: z.string().min(1, 'El idToken de Google es requerido'),
+});
+
 // Exportar tipos para usarlos en el código
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type UserResponse = z.infer<typeof UserResponseSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
+export type GoogleLoginInput = z.infer<typeof GoogleLoginSchema>;

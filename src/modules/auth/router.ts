@@ -1,14 +1,11 @@
 import { Router } from 'express';
-import { ExpressAuth } from '@auth/express';
-import Google from '@auth/express/providers/google';
-import { env } from '@/config/env.js';
-import { AuthRepository } from './repository.js';
 import { 
     registerController, 
     loginController, 
     refreshTokenController
 } from './controller.js';
 import { oauthSuccessController } from './oauth.controller.js';
+import { googleLoginController } from './google-oauth.controller.js'; // ✅ NUEVO
 
 const router = Router();
 
@@ -19,12 +16,14 @@ router.post('/register', registerController);
 router.post('/login', loginController);
 router.post('/refresh-token', refreshTokenController);
 
-// OAuth success endpoint (recibe la redirección después del OAuth)
+// ============================================
+// AUTENTICACIÓN OAUTH
+// ============================================
+
+// ✅ NUEVO: Endpoint para aplicación móvil
+router.post('/google', googleLoginController);
+
+// OAuth Web (mantener para web)
 router.get('/oauth/success', oauthSuccessController);
-
-// ============================================
-// AUTENTICACIÓN OAUTH (Google)
-// ============================================
-
 
 export default router;
