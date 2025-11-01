@@ -5,6 +5,8 @@ import authRouter from './modules/auth/router.js';
 import inicioRouter from './modules/inicio/router.js';
 import historialRouter from './modules/historial/router.js';	
 import perfilRouter from './modules/perfil/router.js';
+import boletasRouter from './modules/boletas/router.js';
+
 import { expressAuth } from './lib/clients/auth.js';
 
 const router = express.Router();
@@ -16,6 +18,7 @@ router.use('/perfil', perfilRouter);
 router.use('/inicio', inicioRouter);
 router.use('/auth', authRouter);
 router.use('/historial', historialRouter);
+router.use('/boletas', boletasRouter);
 
 
 

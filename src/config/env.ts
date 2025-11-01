@@ -24,6 +24,16 @@ const envSchema = z.object({
     // LLM APIs
     DEEPSEEK_API_KEY: z.string(),
     OPENAI_API_KEY: z.string(),
+
+    // Qdrant (sin collectionName)
+    QDRANT_URL: z.string().default('http://localhost:6333'),
+    QDRANT_API_KEY: z.string().optional(),
+    
+    
+    // OCR
+    OCR_LANGUAGE: z.string().default('spa'),
+    MAX_FILE_SIZE: z.string().transform(Number) // .default('10485760'), 10MB
+
 });
 
 const _env = envSchema.parse(process.env);
@@ -50,5 +60,14 @@ export const env = {
     llm: {
         deepseekApiKey: _env.DEEPSEEK_API_KEY,
         openaiApiKey: _env.OPENAI_API_KEY,
+    },
+    qdrant: {
+        url: _env.QDRANT_URL,
+        apiKey: _env.QDRANT_API_KEY,
+    },
+    
+    ocr: {
+        language: _env.OCR_LANGUAGE,
+        maxFileSize: _env.MAX_FILE_SIZE,
     },
 };
