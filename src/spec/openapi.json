@@ -868,6 +868,219 @@
           }
         }
       }
+    },
+    "/promociones": {
+      "get": {
+        "summary": "Obtener promociones",
+        "description": "Obtiene todas las promociones activas o las promociones específicas del usuario si se proporciona el userId. Si se incluye userId, también retorna los puntos verdes del usuario.",
+        "tags": [
+          "Promociones"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "userId",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID del usuario en formato UUID (opcional). Si se proporciona, retorna solo las promociones del usuario.",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Promociones obtenidas exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Promociones obtenidas exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PromocionesGetResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación en el userId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado (solo si se proporciona userId)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/promociones/{promocionId}/usuario/{userId}": {
+      "get": {
+        "summary": "Obtener detalle de promoción",
+        "description": "Obtiene el detalle completo de una promoción específica para un usuario, incluyendo disponibilidad, fecha de uso y detalles adicionales.",
+        "tags": [
+          "Promociones"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "promocionId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de la promoción en formato UUID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID del usuario en formato UUID",
+            "example": "987fcdeb-51a2-43d7-9876-ba0987654321"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de promoción obtenido exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Detalle de promoción obtenido exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PromocionDetalle"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación en los parámetros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o promoción no encontrados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/promociones/canjear": {
+      "post": {
+        "summary": "Canjear promoción",
+        "description": "Canjea una promoción descontando automáticamente los puntos verdes requeridos del usuario. Valida que el usuario tenga suficientes puntos y que la promoción esté activa.",
+        "tags": [
+          "Promociones"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CanjearPromocionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Promoción canjeada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Promoción canjeada exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CanjearPromocionResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación o puntos insuficientes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse",
+                  "example": {
+                    "success": false,
+                    "message": "Puntos insuficientes. Necesitas 100 puntos y tienes 50"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o promoción no encontrados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1418,6 +1631,201 @@
           "apellido",
           "actualizadoEn"
         ]
+      },
+      "PromocionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "ID único de la promoción"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "20% de descuento en productos sustentables",
+            "description": "Título de la promoción"
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true,
+            "example": "Obtén un 20% de descuento en todos los productos con certificación ecológica",
+            "description": "Descripción detallada de la promoción"
+          },
+          "tipoPromocion": {
+            "type": "string",
+            "example": "Descuento",
+            "description": "Tipo de promoción (Descuento, Puntos, Cupón, etc.)"
+          },
+          "boletasRequeridas": {
+            "type": "integer",
+            "format": "int32",
+            "example": 50,
+            "description": "Cantidad de puntos (boletas verdes) requeridos para canjear"
+          },
+          "validezInicio": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-01-01T00:00:00Z",
+            "description": "Fecha de inicio de validez de la promoción"
+          },
+          "validezFin": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-12-31T23:59:59Z",
+            "description": "Fecha de fin de validez de la promoción"
+          },
+          "activa": {
+            "type": "boolean",
+            "example": true,
+            "description": "Indica si la promoción está activa"
+          },
+          "tienda": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "nombre": {
+                "type": "string",
+                "example": "Wong",
+                "description": "Nombre de la tienda asociada"
+              },
+              "urlLogo": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true,
+                "example": "https://example.com/logos/wong.png",
+                "description": "URL del logo de la tienda"
+              }
+            },
+            "description": "Información de la tienda asociada a la promoción"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "tipoPromocion",
+          "boletasRequeridas",
+          "activa"
+        ]
+      },
+      "PromocionDetalle": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PromocionItem"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "disponible": {
+                "type": "boolean",
+                "example": true,
+                "description": "Indica si el usuario ya canjeó esta promoción (true = ya canjeada)"
+              },
+              "fechaUso": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "example": "2024-01-20T10:30:00Z",
+                "description": "Fecha en la que el usuario usó la promoción"
+              },
+              "detalles": {
+                "type": "string",
+                "nullable": true,
+                "example": "Código de descuento: VERDE20",
+                "description": "Detalles adicionales de la promoción canjeada"
+              }
+            },
+            "required": [
+              "disponible",
+              "fechaUso",
+              "detalles"
+            ]
+          }
+        ]
+      },
+      "PromocionesGetResponse": {
+        "type": "object",
+        "properties": {
+          "puntosUsuario": {
+            "type": "integer",
+            "format": "int32",
+            "example": 150,
+            "description": "Puntos verdes del usuario (solo si se proporciona userId)"
+          },
+          "promociones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromocionItem"
+            },
+            "description": "Lista de promociones activas o del usuario"
+          }
+        },
+        "required": [
+          "promociones"
+        ]
+      },
+      "CanjearPromocionInput": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "ID del usuario que canjea la promoción"
+          },
+          "promocionId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "987fcdeb-51a2-43d7-9876-ba0987654321",
+            "description": "ID de la promoción a canjear"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "Quiero usar este cupón en la tienda Wong de Miraflores",
+            "description": "Descripción o notas adicionales del canje (opcional)"
+          }
+        },
+        "required": [
+          "userId",
+          "promocionId"
+        ]
+      },
+      "CanjearPromocionResponse": {
+        "type": "object",
+        "properties": {
+          "promocionUsuarioId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "abc12345-6789-def0-1234-567890abcdef",
+            "description": "ID del registro del canje en PromocionesUsuarios"
+          },
+          "puntosRestantes": {
+            "type": "integer",
+            "format": "int32",
+            "example": 100,
+            "description": "Puntos verdes restantes del usuario después del canje"
+          },
+          "fechaCanje": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-25T15:45:00Z",
+            "description": "Fecha y hora del canje"
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true,
+            "example": "Código de descuento: VERDE20",
+            "description": "Descripción guardada del canje"
+          }
+        },
+        "required": [
+          "promocionUsuarioId",
+          "puntosRestantes",
+          "fechaCanje"
+        ]
       }
     }
   },
@@ -1453,6 +1861,10 @@
     {
       "name": "Perfil",
       "description": "Endpoints para gestionar el perfil del usuario y visualizar sus estadísticas"
+    },
+    {
+      "name": "Promociones",
+      "description": "Endpoints para gestionar promociones: consultar, ver detalles y canjear con puntos verdes"
     }
   ]
 }

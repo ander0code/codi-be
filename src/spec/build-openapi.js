@@ -14,7 +14,8 @@ const MODULES = [
   'auth',
   'inicio',
   'historial',
-  'perfil'
+  'perfil',
+  'promociones'
 ];
 
 // ==========================================
