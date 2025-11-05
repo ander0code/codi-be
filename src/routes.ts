@@ -16,12 +16,12 @@ const router = express.Router();
 router.use('/auth', authRouter);
 router.use('/auth', expressAuth);
 router.use('/test', testRouter);
-router.use('/perfil', perfilRouter, authMiddleware);
-router.use('/inicio', inicioRouter, authMiddleware);
+router.use('/perfil', authMiddleware, perfilRouter);
+router.use('/inicio', authMiddleware, inicioRouter);
 router.use('/auth', authRouter);
-router.use('/historial', historialRouter, authMiddleware);
-router.use('/boletas', boletasRouter, authMiddleware);
-router.use('/promociones', promocionesRouter, authMiddleware);
+router.use('/historial', authMiddleware, historialRouter);
+router.use('/boletas', authMiddleware, boletasRouter );
+router.use('/promociones',authMiddleware, promocionesRouter);
 
 
 // Health check endpoint
