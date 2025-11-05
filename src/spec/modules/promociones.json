@@ -307,12 +307,6 @@
           "format": "uuid",
           "example": "987fcdeb-51a2-43d7-9876-ba0987654321",
           "description": "ID de la promoción a canjear"
-        },
-        "descripcion": {
-          "type": "string",
-          "maxLength": 500,
-          "example": "Quiero usar este cupón en la tienda Wong de Miraflores",
-          "description": "Descripción o notas adicionales del canje (opcional)"
         }
       },
       "required": ["userId", "promocionId"]
@@ -337,12 +331,6 @@
           "format": "date-time",
           "example": "2024-01-25T15:45:00Z",
           "description": "Fecha y hora del canje"
-        },
-        "descripcion": {
-          "type": "string",
-          "nullable": true,
-          "example": "Código de descuento: VERDE20",
-          "description": "Descripción guardada del canje"
         }
       },
       "required": ["promocionUsuarioId", "puntosRestantes", "fechaCanje"]

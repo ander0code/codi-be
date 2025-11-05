@@ -40,7 +40,7 @@ async function getPromocionesDelUsuario(userId: string) {
                 },
             },
         },
-        orderBy: { CreadoEn: 'desc' }, 
+        orderBy: { CreadoEn: 'desc' },
     });
 }
 
@@ -70,10 +70,9 @@ async function getPromocionDetalle(promocionId: string, userId: string) {
 }
 
 async function canjearPromocion(
-    userId: string, 
-    promocionId: string, 
-    puntosRequeridos: number,
-    descripcion?: string
+    userId: string,
+    promocionId: string,
+    puntosRequeridos: number
 ) {
     return await prisma.$transaction(async (tx) => {
         // 1. Descontar puntos del usuario
@@ -96,15 +95,13 @@ async function canjearPromocion(
                 PromocionId: promocionId,
                 FechaUso: new Date(),
                 Disponible: true,
-                Detalles: descripcion ?? null, // ✅ NUEVO: Guardar descripción
             },
         });
 
         return {
             promocionUsuarioId: promocionUsuario.Id,
             puntosRestantes: usuario.PuntosVerdes,
-            fechaCanje: promocionUsuario.FechaUso,
-            descripcion: promocionUsuario.Detalles, // ✅ NUEVO: Retornar descripción
+            fechaCanje: promocionUsuario.FechaUso!, // ✅ Non-null assertion operator
         };
     });
 }

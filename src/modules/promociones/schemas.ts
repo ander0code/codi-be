@@ -15,7 +15,6 @@ export const GetPromocionDetalleParamsSchema = z.object({
 export const CanjearPromocionSchema = z.object({
     userId: z.string().uuid('El ID del usuario debe ser un UUID válido'),
     promocionId: z.string().uuid('El ID de la promoción debe ser un UUID válido'),
-    descripcion: z.string().min(1, 'La descripción no puede estar vacía').max(500, 'La descripción no puede exceder 500 caracteres').optional(), // ✅ NUEVO
 });
 
 // Schema para promoción en lista
@@ -52,7 +51,6 @@ export const CanjearPromocionResponseSchema = z.object({
     promocionUsuarioId: z.string().uuid(),
     puntosRestantes: z.number().int(),
     fechaCanje: z.date(),
-    descripcion: z.string().nullable(), 
 });
 
 // Exportar tipos

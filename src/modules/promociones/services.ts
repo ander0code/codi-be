@@ -116,7 +116,11 @@ async function getPromocionDetalle(
         } : null,
         disponible: promocionUsuario !== null,
         fechaUso: promocionUsuario?.FechaUso ?? null,
-        detalles: promocionUsuario?.Detalles ?? null,
+        detalles: promocionUsuario?.Detalles 
+            ? (typeof promocionUsuario.Detalles === 'string' 
+                ? promocionUsuario.Detalles 
+                : JSON.stringify(promocionUsuario.Detalles))
+            : null, // ✅ CORREGIDO: Convertir JsonValue a string
     };
 
     logger.info('Detalle de promoción obtenido', { promocionId: params.promocionId, userId: params.userId });
@@ -160,8 +164,7 @@ async function canjearPromocion(
     const canje = await PromocionesRepository.canjearPromocion(
         input.userId,
         input.promocionId,
-        promocion.BoletasRequeridas,
-        input.descripcion 
+        promocion.BoletasRequeridas
     );
 
     logger.info('Promoción canjeada exitosamente', {
@@ -169,7 +172,6 @@ async function canjearPromocion(
         promocionId: input.promocionId,
         puntosDescontados: promocion.BoletasRequeridas,
         puntosRestantes: canje.puntosRestantes,
-        descripcion: input.descripcion, 
     });
 
     return {

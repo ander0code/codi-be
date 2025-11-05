@@ -1,15 +1,28 @@
-import { SUPERMERCADO_TO_COLLECTION, COLECCION_POR_DEFECTO } from '../constants.js';
 import logger from '@/config/logger.js';
 
 /**
+ * Mapeo de nombres de supermercados a colecciones de Qdrant
+ */
+const SUPERMERCADO_TO_COLLECTION: Record<string, string> = {
+    'wong': 'wong',
+    'vivanda': 'vivanda',
+    'tottus': 'tottus',
+    'plazavea': 'plazavea',
+    'plaza vea': 'plazavea',
+    'metro': 'metro',
+    'flora_y_fauna': 'flora_y_fauna',
+};
+
+const COLECCION_POR_DEFECTO = 'tottus';
+
+/**
  * Patrones de búsqueda para cada supermercado
- * Incluye variaciones, errores comunes del OCR y aliases
  */
 const PATRONES_SUPERMERCADOS: Record<string, RegExp[]> = {
     'wong': [
         /\bwong\b/i,
-        /\bw0ng\b/i, // OCR puede confundir O con 0
-        /\bw.?o.?n.?g\b/i, // Espacios o caracteres raros
+        /\bw0ng\b/i,
+        /\bw.?o.?n.?g\b/i,
     ],
     'vivanda': [
         /\bvivanda\b/i,
@@ -40,19 +53,14 @@ const PATRONES_SUPERMERCADOS: Record<string, RegExp[]> = {
     ],
 };
 
-/**
- * Detecta el supermercado usando patrones de texto (SIN IA)
- */
 function detectSupermercado(textoOCR: string): string {
     logger.info('🏪 Detectando supermercado con patrones regex...');
     
-    // Normalizar texto (eliminar acentos, convertir a minúsculas)
     const textoNormalizado = textoOCR
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, ''); // Quitar acentos
+        .replace(/[\u0300-\u036f]/g, '');
     
-    // Buscar patrones de cada supermercado
     for (const [supermercado, patrones] of Object.entries(PATRONES_SUPERMERCADOS)) {
         for (const patron of patrones) {
             if (patron.test(textoNormalizado)) {
@@ -71,9 +79,6 @@ function detectSupermercado(textoOCR: string): string {
     return COLECCION_POR_DEFECTO;
 }
 
-/**
- * Normaliza el nombre del supermercado a su colección correspondiente
- */
 function normalizeSupermercado(nombre: string): string {
     const normalized = nombre.toLowerCase().trim();
     return SUPERMERCADO_TO_COLLECTION[normalized] || COLECCION_POR_DEFECTO;
