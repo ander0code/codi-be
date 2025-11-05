@@ -1,0 +1,273 @@
+{
+  "paths": {
+    "/boletas/{userId}/upload": {
+      "post": {
+        "summary": "Subir y procesar una boleta",
+        "description": "Procesa una imagen de boleta mediante OCR, detecta el supermercado, clasifica productos, calcula impacto ambiental y genera sugerencias ecológicas. Actualiza puntos verdes si es recibo verde.",
+        "tags": ["Boletas"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID del usuario en formato UUID",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "boleta": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Archivo de imagen de la boleta (JPEG, PNG o PDF, máximo 10MB)"
+                  }
+                },
+                "required": ["boleta"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Boleta procesada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Boleta procesada exitosamente" },
+                    "data": { "$ref": "#/components/schemas/ProcesarBoletaResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación (archivo no válido o sin productos detectados)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "sinArchivo": {
+                    "summary": "No se subió archivo",
+                    "value": {
+                      "success": false,
+                      "message": "No se ha subido ninguna imagen"
+                    }
+                  },
+                  "sinProductos": {
+                    "summary": "No se detectaron productos",
+                    "value": {
+                      "success": false,
+                      "message": "No se detectaron productos en la imagen"
+                    }
+                  },
+                  "tipoInvalido": {
+                    "summary": "Tipo de archivo no permitido",
+                    "value": {
+                      "success": false,
+                      "message": "Tipo de archivo no permitido. Solo JPEG, PNG o PDF"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario no autenticado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "schemas": {
+    "ProductoClasificado": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "example": "Leche Gloria Entera 1L",
+          "description": "Nombre del producto identificado"
+        },
+        "precio": {
+          "type": "number",
+          "format": "float",
+          "example": 3.50,
+          "description": "Precio unitario del producto"
+        },
+        "cantidad": {
+          "type": "integer",
+          "format": "int32",
+          "example": 1,
+          "description": "Cantidad de unidades compradas"
+        },
+        "categoria": {
+          "type": "string",
+          "example": "Lácteos y Frescos",
+          "description": "Categoría normalizada del producto"
+        },
+        "subcategoria": {
+          "type": "string",
+          "nullable": true,
+          "example": "Leches",
+          "description": "Subcategoría del producto (opcional)"
+        },
+        "marcaId": {
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "example": "789e4567-e89b-12d3-a456-426614174003",
+          "description": "ID de la marca del producto (opcional)"
+        },
+        "factorCo2": {
+          "type": "number",
+          "format": "float",
+          "example": 2.5,
+          "description": "Factor de CO2 del producto en kg CO2e"
+        },
+        "esLocal": {
+          "type": "boolean",
+          "example": false,
+          "description": "Indica si el producto es de origen local"
+        },
+        "tieneEmpaqueEcologico": {
+          "type": "boolean",
+          "example": false,
+          "description": "Indica si el producto tiene empaque ecológico"
+        },
+        "confianza": {
+          "type": "number",
+          "format": "float",
+          "minimum": 0,
+          "maximum": 1,
+          "example": 0.89,
+          "description": "Nivel de confianza de la clasificación (0-1)"
+        }
+      },
+      "required": [
+        "nombre",
+        "precio",
+        "cantidad",
+        "categoria",
+        "factorCo2",
+        "esLocal",
+        "tieneEmpaqueEcologico",
+        "confianza"
+      ]
+    },
+    "AnalisisBoleta": {
+      "type": "object",
+      "properties": {
+        "totalProductos": {
+          "type": "integer",
+          "format": "int32",
+          "example": 12,
+          "description": "Total de productos en la boleta"
+        },
+        "productosVerdes": {
+          "type": "integer",
+          "format": "int32",
+          "example": 8,
+          "description": "Cantidad de productos clasificados como ecológicos"
+        },
+        "porcentajeVerde": {
+          "type": "number",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 100,
+          "example": 67,
+          "description": "Porcentaje de productos verdes sobre el total"
+        },
+        "co2Total": {
+          "type": "number",
+          "format": "float",
+          "example": 45.75,
+          "description": "Total de CO2 de todos los productos en kg"
+        },
+        "co2Promedio": {
+          "type": "number",
+          "format": "float",
+          "example": 3.81,
+          "description": "Promedio de CO2 por producto en kg"
+        },
+        "tipoAmbiental": {
+          "type": "string",
+          "enum": ["VERDE", "AMARILLA", "ROJA"],
+          "example": "VERDE",
+          "description": "Clasificación ambiental de la boleta. VERDE: ≥60% productos verdes y CO2 promedio <4.0. AMARILLA: ≥30% productos verdes y CO2 promedio <7.0. ROJA: resto de casos"
+        },
+        "esReciboVerde": {
+          "type": "boolean",
+          "example": true,
+          "description": "Indica si la boleta califica como recibo verde (otorga +1 punto verde al usuario)"
+        }
+      },
+      "required": [
+        "totalProductos",
+        "productosVerdes",
+        "porcentajeVerde",
+        "co2Total",
+        "co2Promedio",
+        "tipoAmbiental",
+        "esReciboVerde"
+      ]
+    },
+    "ProcesarBoletaResponse": {
+      "type": "object",
+      "properties": {
+        "boletaId": {
+          "type": "string",
+          "format": "uuid",
+          "example": "a3f2c1e0-b4d5-4321-8765-1234567890ab",
+          "description": "ID único de la boleta procesada y guardada en BD"
+        },
+        "analisis": {
+          "$ref": "#/components/schemas/AnalisisBoleta",
+          "description": "Análisis del impacto ambiental de la boleta"
+        },
+        "productos": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/ProductoClasificado" },
+          "description": "Listado de productos extraídos y clasificados de la boleta"
+        },
+        "sugerencias": {
+          "type": "array",
+          "items": { 
+            "type": "string",
+            "example": "Prioriza productos locales y de temporada"
+          },
+          "description": "Sugerencias ecológicas personalizadas generadas por IA",
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "required": ["boletaId", "analisis", "productos", "sugerencias"]
+    }
+  },
+  "tags": [
+    {
+      "name": "Boletas",
+      "description": "Endpoints para procesar boletas de compra: extracción OCR, clasificación de productos, análisis de impacto ambiental y generación de sugerencias ecológicas"
+    }
+  ]
+}

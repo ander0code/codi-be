@@ -869,92 +869,14 @@
         }
       }
     },
-    "/promociones": {
-      "get": {
-        "summary": "Obtener promociones",
-        "description": "Obtiene todas las promociones activas o las promociones específicas del usuario si se proporciona el userId. Si se incluye userId, también retorna los puntos verdes del usuario.",
+    "/boletas/{userId}/upload": {
+      "post": {
+        "summary": "Subir y procesar una boleta",
+        "description": "Procesa una imagen de boleta mediante OCR, detecta el supermercado, clasifica productos, calcula impacto ambiental y genera sugerencias ecológicas. Actualiza puntos verdes si es recibo verde.",
         "tags": [
-          "Promociones"
+          "Boletas"
         ],
         "parameters": [
-          {
-            "in": "query",
-            "name": "userId",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "ID del usuario en formato UUID (opcional). Si se proporciona, retorna solo las promociones del usuario.",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Promociones obtenidas exitosamente",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Promociones obtenidas exitosamente"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/PromocionesGetResponse"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error de validación en el userId",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Usuario no encontrado (solo si se proporciona userId)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/promociones/{promocionId}/usuario/{userId}": {
-      "get": {
-        "summary": "Obtener detalle de promoción",
-        "description": "Obtiene el detalle completo de una promoción específica para un usuario, incluyendo disponibilidad, fecha de uso y detalles adicionales.",
-        "tags": [
-          "Promociones"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "promocionId",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "ID de la promoción en formato UUID",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
           {
             "in": "path",
             "name": "userId",
@@ -964,76 +886,32 @@
               "format": "uuid"
             },
             "description": "ID del usuario en formato UUID",
-            "example": "987fcdeb-51a2-43d7-9876-ba0987654321"
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Detalle de promoción obtenido exitosamente",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Detalle de promoción obtenido exitosamente"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/PromocionDetalle"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error de validación en los parámetros",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Usuario o promoción no encontrados",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/promociones/canjear": {
-      "post": {
-        "summary": "Canjear promoción",
-        "description": "Canjea una promoción descontando automáticamente los puntos verdes requeridos del usuario. Valida que el usuario tenga suficientes puntos y que la promoción esté activa.",
-        "tags": [
-          "Promociones"
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/CanjearPromocionInput"
+                "type": "object",
+                "properties": {
+                  "boleta": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Archivo de imagen de la boleta (JPEG, PNG o PDF, máximo 10MB)"
+                  }
+                },
+                "required": [
+                  "boleta"
+                ]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Promoción canjeada exitosamente",
+            "description": "Boleta procesada exitosamente",
             "content": {
               "application/json": {
                 "schema": {
@@ -1045,10 +923,10 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "Promoción canjeada exitosamente"
+                      "example": "Boleta procesada exitosamente"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/CanjearPromocionResponse"
+                      "$ref": "#/components/schemas/ProcesarBoletaResponse"
                     }
                   }
                 }
@@ -1056,21 +934,40 @@
             }
           },
           "400": {
-            "description": "Error de validación o puntos insuficientes",
+            "description": "Error de validación (archivo no válido o sin productos detectados)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse",
-                  "example": {
-                    "success": false,
-                    "message": "Puntos insuficientes. Necesitas 100 puntos y tienes 50"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "sinArchivo": {
+                    "summary": "No se subió archivo",
+                    "value": {
+                      "success": false,
+                      "message": "No se ha subido ninguna imagen"
+                    }
+                  },
+                  "sinProductos": {
+                    "summary": "No se detectaron productos",
+                    "value": {
+                      "success": false,
+                      "message": "No se detectaron productos en la imagen"
+                    }
+                  },
+                  "tipoInvalido": {
+                    "summary": "Tipo de archivo no permitido",
+                    "value": {
+                      "success": false,
+                      "message": "Tipo de archivo no permitido. Solo JPEG, PNG o PDF"
+                    }
                   }
                 }
               }
             }
           },
-          "404": {
-            "description": "Usuario o promoción no encontrados",
+          "401": {
+            "description": "Usuario no autenticado",
             "content": {
               "application/json": {
                 "schema": {
@@ -1079,7 +976,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     }
   },
@@ -1632,187 +1534,177 @@
           "actualizadoEn"
         ]
       },
-      "PromocionItem": {
+      "ProductoClasificado": {
         "type": "object",
         "properties": {
-          "id": {
+          "nombre": {
             "type": "string",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "description": "ID único de la promoción"
+            "example": "Leche Gloria Entera 1L",
+            "description": "Nombre del producto identificado"
           },
-          "titulo": {
-            "type": "string",
-            "example": "20% de descuento en productos sustentables",
-            "description": "Título de la promoción"
+          "precio": {
+            "type": "number",
+            "format": "float",
+            "example": 3.5,
+            "description": "Precio unitario del producto"
           },
-          "descripcion": {
-            "type": "string",
-            "nullable": true,
-            "example": "Obtén un 20% de descuento en todos los productos con certificación ecológica",
-            "description": "Descripción detallada de la promoción"
-          },
-          "tipoPromocion": {
-            "type": "string",
-            "example": "Descuento",
-            "description": "Tipo de promoción (Descuento, Puntos, Cupón, etc.)"
-          },
-          "boletasRequeridas": {
+          "cantidad": {
             "type": "integer",
             "format": "int32",
-            "example": 50,
-            "description": "Cantidad de puntos (boletas verdes) requeridos para canjear"
+            "example": 1,
+            "description": "Cantidad de unidades compradas"
           },
-          "validezInicio": {
+          "categoria": {
             "type": "string",
-            "format": "date-time",
-            "nullable": true,
-            "example": "2024-01-01T00:00:00Z",
-            "description": "Fecha de inicio de validez de la promoción"
+            "example": "Lácteos y Frescos",
+            "description": "Categoría normalizada del producto"
           },
-          "validezFin": {
+          "subcategoria": {
             "type": "string",
-            "format": "date-time",
             "nullable": true,
-            "example": "2024-12-31T23:59:59Z",
-            "description": "Fecha de fin de validez de la promoción"
+            "example": "Leches",
+            "description": "Subcategoría del producto (opcional)"
           },
-          "activa": {
+          "marcaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": "789e4567-e89b-12d3-a456-426614174003",
+            "description": "ID de la marca del producto (opcional)"
+          },
+          "factorCo2": {
+            "type": "number",
+            "format": "float",
+            "example": 2.5,
+            "description": "Factor de CO2 del producto en kg CO2e"
+          },
+          "esLocal": {
+            "type": "boolean",
+            "example": false,
+            "description": "Indica si el producto es de origen local"
+          },
+          "tieneEmpaqueEcologico": {
+            "type": "boolean",
+            "example": false,
+            "description": "Indica si el producto tiene empaque ecológico"
+          },
+          "confianza": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.89,
+            "description": "Nivel de confianza de la clasificación (0-1)"
+          }
+        },
+        "required": [
+          "nombre",
+          "precio",
+          "cantidad",
+          "categoria",
+          "factorCo2",
+          "esLocal",
+          "tieneEmpaqueEcologico",
+          "confianza"
+        ]
+      },
+      "AnalisisBoleta": {
+        "type": "object",
+        "properties": {
+          "totalProductos": {
+            "type": "integer",
+            "format": "int32",
+            "example": 12,
+            "description": "Total de productos en la boleta"
+          },
+          "productosVerdes": {
+            "type": "integer",
+            "format": "int32",
+            "example": 8,
+            "description": "Cantidad de productos clasificados como ecológicos"
+          },
+          "porcentajeVerde": {
+            "type": "number",
+            "format": "int32",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 67,
+            "description": "Porcentaje de productos verdes sobre el total"
+          },
+          "co2Total": {
+            "type": "number",
+            "format": "float",
+            "example": 45.75,
+            "description": "Total de CO2 de todos los productos en kg"
+          },
+          "co2Promedio": {
+            "type": "number",
+            "format": "float",
+            "example": 3.81,
+            "description": "Promedio de CO2 por producto en kg"
+          },
+          "tipoAmbiental": {
+            "type": "string",
+            "enum": [
+              "VERDE",
+              "AMARILLA",
+              "ROJA"
+            ],
+            "example": "VERDE",
+            "description": "Clasificación ambiental de la boleta. VERDE: ≥60% productos verdes y CO2 promedio <4.0. AMARILLA: ≥30% productos verdes y CO2 promedio <7.0. ROJA: resto de casos"
+          },
+          "esReciboVerde": {
             "type": "boolean",
             "example": true,
-            "description": "Indica si la promoción está activa"
-          },
-          "tienda": {
-            "type": "object",
-            "nullable": true,
-            "properties": {
-              "nombre": {
-                "type": "string",
-                "example": "Wong",
-                "description": "Nombre de la tienda asociada"
-              },
-              "urlLogo": {
-                "type": "string",
-                "format": "uri",
-                "nullable": true,
-                "example": "https://example.com/logos/wong.png",
-                "description": "URL del logo de la tienda"
-              }
-            },
-            "description": "Información de la tienda asociada a la promoción"
+            "description": "Indica si la boleta califica como recibo verde (otorga +1 punto verde al usuario)"
           }
         },
         "required": [
-          "id",
-          "titulo",
-          "tipoPromocion",
-          "boletasRequeridas",
-          "activa"
+          "totalProductos",
+          "productosVerdes",
+          "porcentajeVerde",
+          "co2Total",
+          "co2Promedio",
+          "tipoAmbiental",
+          "esReciboVerde"
         ]
       },
-      "PromocionDetalle": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PromocionItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "disponible": {
-                "type": "boolean",
-                "example": true,
-                "description": "Indica si el usuario ya canjeó esta promoción (true = ya canjeada)"
-              },
-              "fechaUso": {
-                "type": "string",
-                "format": "date-time",
-                "nullable": true,
-                "example": "2024-01-20T10:30:00Z",
-                "description": "Fecha en la que el usuario usó la promoción"
-              },
-              "detalles": {
-                "type": "string",
-                "nullable": true,
-                "example": "Código de descuento: VERDE20",
-                "description": "Detalles adicionales de la promoción canjeada"
-              }
-            },
-            "required": [
-              "disponible",
-              "fechaUso",
-              "detalles"
-            ]
-          }
-        ]
-      },
-      "PromocionesGetResponse": {
+      "ProcesarBoletaResponse": {
         "type": "object",
         "properties": {
-          "puntosUsuario": {
-            "type": "integer",
-            "format": "int32",
-            "example": 150,
-            "description": "Puntos verdes del usuario (solo si se proporciona userId)"
+          "boletaId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a3f2c1e0-b4d5-4321-8765-1234567890ab",
+            "description": "ID único de la boleta procesada y guardada en BD"
           },
-          "promociones": {
+          "analisis": {
+            "$ref": "#/components/schemas/AnalisisBoleta",
+            "description": "Análisis del impacto ambiental de la boleta"
+          },
+          "productos": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PromocionItem"
+              "$ref": "#/components/schemas/ProductoClasificado"
             },
-            "description": "Lista de promociones activas o del usuario"
+            "description": "Listado de productos extraídos y clasificados de la boleta"
+          },
+          "sugerencias": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "Prioriza productos locales y de temporada"
+            },
+            "description": "Sugerencias ecológicas personalizadas generadas por IA",
+            "minItems": 3,
+            "maxItems": 3
           }
         },
         "required": [
-          "promociones"
-        ]
-      },
-      "CanjearPromocionInput": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "description": "ID del usuario que canjea la promoción"
-          },
-          "promocionId": {
-            "type": "string",
-            "format": "uuid",
-            "example": "987fcdeb-51a2-43d7-9876-ba0987654321",
-            "description": "ID de la promoción a canjear"
-          }
-        },
-        "required": [
-          "userId",
-          "promocionId"
-        ]
-      },
-      "CanjearPromocionResponse": {
-        "type": "object",
-        "properties": {
-          "promocionUsuarioId": {
-            "type": "string",
-            "format": "uuid",
-            "example": "abc12345-6789-def0-1234-567890abcdef",
-            "description": "ID del registro del canje en PromocionesUsuarios"
-          },
-          "puntosRestantes": {
-            "type": "integer",
-            "format": "int32",
-            "example": 100,
-            "description": "Puntos verdes restantes del usuario después del canje"
-          },
-          "fechaCanje": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2024-01-25T15:45:00Z",
-            "description": "Fecha y hora del canje"
-          }
-        },
-        "required": [
-          "promocionUsuarioId",
-          "puntosRestantes",
-          "fechaCanje"
+          "boletaId",
+          "analisis",
+          "productos",
+          "sugerencias"
         ]
       }
     }
@@ -1851,8 +1743,8 @@
       "description": "Endpoints para gestionar el perfil del usuario y visualizar sus estadísticas"
     },
     {
-      "name": "Promociones",
-      "description": "Endpoints para gestionar promociones: consultar, ver detalles y canjear con puntos verdes"
+      "name": "Boletas",
+      "description": "Endpoints para procesar boletas de compra: extracción OCR, clasificación de productos, análisis de impacto ambiental y generación de sugerencias ecológicas"
     }
   ]
 }

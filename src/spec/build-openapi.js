@@ -16,6 +16,8 @@ const MODULES = [
   'historial',
   'perfil',
   'promociones'
+  'perfil',
+  'boletas'
 ];
 
 // ==========================================
