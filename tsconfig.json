@@ -1,22 +1,43 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "NodeNext",
-		"strict": true,
-		"verbatimModuleSyntax": true,
-		"skipLibCheck": true,
-		"types": ["node"],
-		"jsx": "react-jsx",
-		"paths": {
-			"@/*": ["src/*"],
-			"@ops/*": ["src/services/ops/*"]
-		},
-		"baseUrl": ".",
-		"jsxImportSource": "hono/jsx",
-		"outDir": "./dist",
-		"rootDir": "src",
-		"resolveJsonModule": true,
-		"esModuleInterop": true
-	},
-	"exclude": ["packages/**/*", "node_modules", "dist", "logs", "src/lib/prisma/**/*"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    
+    // ✅ NUEVOS: Performance
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    
+    // ✅ NUEVO: Reducir análisis de tipos
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node"],
+    
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["src/*"],
+      "@ops/*": ["src/services/ops/*"]
+    },
+    "baseUrl": ".",
+    "jsxImportSource": "hono/jsx",
+    "outDir": "./dist",
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts"  // ✅ AGREGAR ESTO
+  ],
+  "exclude": [
+    "packages/**/*",
+    "node_modules",
+    "dist",
+    "logs",
+    "src/lib/prisma/zod/**/*",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

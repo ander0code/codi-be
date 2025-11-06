@@ -17,9 +17,9 @@ datasource db {
 ========================= */
 enum BoletaTipoAmbiental {
   VERDE
-  AMARILLA
-  ROJA
-}
+  AMARILLO
+  ROJO
+} 
 
 enum MonedaTipo {
   PEN
@@ -93,7 +93,7 @@ model Boletas {
   Total           Decimal?            @db.Decimal(12, 2)
   MetodoPago      String?             @db.VarChar(50)
   UrlImagen       String?             @db.Text
-  TipoAmbiental   BoletaTipoAmbiental @default(AMARILLA)
+  TipoAmbiental   BoletaTipoAmbiental @default(AMARILLO)
   CreadoEn        DateTime            @default(now()) @db.Timestamptz(6)
 
   Usuario Usuarios @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)

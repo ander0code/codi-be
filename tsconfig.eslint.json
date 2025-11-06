@@ -1,5 +1,24 @@
-// {
-// 	"extends": "./tsconfig.json",
-// 	"include": ["src/**/*.ts", "test/**/*.ts", "*.config.ts", "eslint.config.js"],
-// 	"exclude": ["dist", "node_modules", "logs", "packages", "src/lib/prisma/**/*"]
-// }
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "*.config.ts",
+    "eslint.config.js"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "logs",
+    "packages",
+    "src/lib/prisma/**/*",
+    "**/*.d.ts",
+    "**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
+  }
+}

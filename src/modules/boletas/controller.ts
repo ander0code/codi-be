@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { BoletasService } from './services.js';
 import { customParse } from '@/lib/zod.js';
 import { ValidationError } from '@/config/errors/errors.js';
-import { SubirBoletaSchema } from './schemas.js';
+import { SubirBoletaSchema, GetBoletaParamsSchema } from './schemas.js';
 import logger from '@/config/logger.js';
 
 export async function uploadBoleta(req: Request, res: Response) {
@@ -33,5 +33,18 @@ export async function uploadBoleta(req: Request, res: Response) {
         req.file.originalname
     );
     
+    res.success(data, message);
+}
+
+export async function getBoleta(req: Request, res: Response) {
+    const validation = customParse(GetBoletaParamsSchema, { 
+        boletaId: req.params.boletaId 
+    });
+    
+    if (!validation.success) {
+        throw new ValidationError(validation.message);
+    }
+    
+    const { data, message } = await BoletasService.getBoletaDetalle(validation.data);
     res.success(data, message);
 }

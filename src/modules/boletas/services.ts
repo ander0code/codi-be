@@ -5,14 +5,17 @@ import { ProductMatcher } from './ai/product-matcher.js';
 import { SupermarketDetector } from './ai/supermarket-detector.js';
 import { DeepSeekClientService } from '@/lib/clients/deepseek.js';
 import { clasificarImpactoProducto } from './utils/impactClassifier.js';
-import { ValidationError } from '@/config/errors/errors.js';
+import { ValidationError, NotFoundError } from '@/config/errors/errors.js';
 import logger from '@/config/logger.js';
 import type { BoletaTipoAmbiental } from '@prisma/client';
 import type { 
     ProcesarBoletaResponse,
     ProductoExtraido,
     ProductoClasificado,
-    AnalisisBoleta
+    AnalisisBoleta,
+    GetBoletaParams,
+    DetalleBoletaResponse,
+    ProductoDetalle
 } from './schemas.js';
 
 function esProductoVerde(producto: ProductoClasificado, supermercado: string): boolean {
@@ -72,7 +75,6 @@ async function matchProductos(
 
     return productosClasificados;
 }
-
 function analizarBoleta(productos: ProductoClasificado[], supermercado: string): AnalisisBoleta {
     const totalProductos = productos.length;
     const productosVerdes = productos.filter((p) => esProductoVerde(p, supermercado)).length;
@@ -81,13 +83,13 @@ function analizarBoleta(productos: ProductoClasificado[], supermercado: string):
     const co2Total = productos.reduce((sum, p) => sum + p.factorCo2 * p.cantidad, 0);
     const co2Promedio = co2Total / totalProductos;
 
-    let tipoAmbiental: 'VERDE' | 'AMARILLA' | 'ROJA';
+    let tipoAmbiental: 'VERDE' | 'AMARILLO' | 'ROJO';
     if (porcentajeVerde >= 60 && co2Promedio < 4.0) {
         tipoAmbiental = 'VERDE';
     } else if (porcentajeVerde >= 30 && co2Promedio < 7.0) {
-        tipoAmbiental = 'AMARILLA';
+        tipoAmbiental = 'AMARILLO';
     } else {
-        tipoAmbiental = 'ROJA';
+        tipoAmbiental = 'ROJO';
     }
 
     const esReciboVerde = porcentajeVerde >= 60 && co2Promedio < 4.0;
@@ -181,6 +183,58 @@ async function procesarBoleta(
     }
 }
 
+async function getBoletaDetalle(
+    params: GetBoletaParams
+): Promise<ServiceResponse<DetalleBoletaResponse>> {
+    const boleta = await BoletasRepository.getBoletaById(params.boletaId);
+    
+    if (!boleta) {
+        throw new NotFoundError('Boleta no encontrada');
+    }
+    
+    // Transformar productos
+    const productos: ProductoDetalle[] = boleta.Items.map(item => ({
+        id: item.Id,
+        nombre: item.NombreProducto,
+        cantidad: Number(item.Cantidad),
+        precioUnitario: Number(item.PrecioUnitario),
+        precioTotal: Number(item.PrecioTotal),
+        factorCo2: Number(item.FactorCo2PorUnidad),
+        categoria: item.Categoria?.Nombre ?? null,
+        subcategoria: item.Subcategoria?.Nombre ?? null,
+        marca: item.Marca?.Nombre ?? null,
+    }));
+    
+    // Calcular análisis
+    const totalProductos = productos.length;
+    const co2Total = productos.reduce((sum, p) => sum + (p.factorCo2 * p.cantidad), 0);
+    const co2Promedio = totalProductos > 0 ? co2Total / totalProductos : 0;
+    
+    const detalle: DetalleBoletaResponse = {
+        id: boleta.Id,
+        fechaBoleta: boleta.FechaBoleta,
+        nombreTienda: boleta.Tienda?.Nombre ?? boleta.NombreTienda,
+        logoTienda: boleta.Tienda?.UrlLogo ?? null,
+        total: Number(boleta.Total),
+        tipoAmbiental: boleta.TipoAmbiental,
+        urlImagen: boleta.UrlImagen,
+        productos,
+        analisis: {
+            totalProductos,
+            co2Total: Math.round(co2Total * 100) / 100,
+            co2Promedio: Math.round(co2Promedio * 100) / 100,
+        },
+    };
+    
+    logger.info('Detalle de boleta obtenido', { boletaId: params.boletaId });
+    
+    return {
+        message: 'Detalle de boleta obtenido exitosamente',
+        data: detalle,
+    };
+}
+
 export const BoletasService = {
     procesarBoleta,
+    getBoletaDetalle
 };
