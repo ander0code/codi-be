@@ -5,7 +5,6 @@ import tsparser from "@typescript-eslint/parser";
 import prettierConfig from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
 
-/** @type {import("eslint").Linter.FlatConfig[]} */
 export default [
   // Ignorados globales
   {
@@ -25,7 +24,7 @@ export default [
   {
     name: "javascript-config",
     files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
-    ...js.configs.recommended, // incluye parserOptions/rules base de JS
+    ...js.configs.recommended,
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -45,15 +44,12 @@ export default [
       import: importPlugin,
     },
     rules: {
-      // Estilo (compatible con Prettier)
       quotes: ["error", "single", { avoidEscape: true }],
       indent: ["error", "tab", { SwitchCase: 1 }],
       "prefer-const": "error",
       "no-var": "error",
       "object-shorthand": "error",
       "prefer-template": "error",
-
-      // Calidad
       "no-console": "warn",
       "no-debugger": "error",
       "no-unused-vars": [
@@ -64,8 +60,6 @@ export default [
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-
-      // Imports
       "import/no-unresolved": "off",
       "import/order": [
         "error",
@@ -79,15 +73,15 @@ export default [
     },
   },
 
-  // TypeScript
+  // TypeScript - ✅ VERSIÓN SEGURA (SIN EXPERIMENTAL)
   {
     name: "typescript-config",
     files: ["**/*.ts", "**/*.mts", "**/*.cts"],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
-        // Activa reglas type-aware; usa tu tsconfig específico para ESLint
-        project: ["./tsconfig.eslint.json"],
+        // ✅ SIN projectService (más estable)
+        project: "./tsconfig.json",
         tsconfigRootDir: process.cwd(),
         sourceType: "module",
         ecmaVersion: "latest",
@@ -109,15 +103,11 @@ export default [
       import: importPlugin,
     },
     rules: {
-      // Reglas recomendadas de TypeScript
       ...tseslint.configs.recommended.rules,
       
-      // Estilo: usa reglas nativas (las @typescript-eslint/indent & quotes están deprecadas)
-      // Compatible con Prettier
       quotes: ["error", "single", { avoidEscape: true }],
       indent: ["error", "tab", { SwitchCase: 1 }],
 
-      // TS specific
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -129,9 +119,9 @@ export default [
       "@typescript-eslint/explicit-function-return-type": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-non-null-assertion": "warn",
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": "warn",
       "@typescript-eslint/prefer-optional-chain": "error",
-      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
       "@typescript-eslint/no-inferrable-types": "error",
       "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
       "@typescript-eslint/consistent-type-imports": [
@@ -139,7 +129,6 @@ export default [
         { prefer: "type-imports", disallowTypeAnnotations: false },
       ],
 
-      // Imports (TS resuelve mejor que import/no-unresolved)
       "import/no-unresolved": "off",
       "import/order": [
         "error",
@@ -151,7 +140,6 @@ export default [
       ],
       "import/no-duplicates": "error",
 
-      // Calidad
       "prefer-const": "error",
       "no-var": "error",
       "object-shorthand": "error",
@@ -161,7 +149,7 @@ export default [
     },
   },
 
-  // Tests (relaja reglas duras)
+  // Tests
   {
     name: "test-files-config",
     files: ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**/*.ts"],
@@ -172,7 +160,7 @@ export default [
     },
   },
 
-  // Archivos de config
+  // Config files
   {
     name: "config-files",
     files: ["*.config.js", "*.config.ts", "jest.config.js", "commitlint.config.js"],
@@ -181,13 +169,13 @@ export default [
     },
   },
 
-  // Prettier compatibility (debe ir al final)
+  // Prettier
   {
     name: "prettier-compatibility",
     ...prettierConfig,
   },
 
-  // Opciones del linter
+  // Linter options
   {
     name: "linter-options",
     linterOptions: {

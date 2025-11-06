@@ -98,6 +98,68 @@
           }
         ]
       }
+    },
+    "/boletas/{boletaId}": {
+      "get": {
+        "summary": "Obtener detalle de una boleta procesada",
+        "description": "Retorna la información completa de una boleta previamente procesada, incluyendo productos, análisis de impacto ambiental y datos de la tienda.",
+        "tags": ["Boletas"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boletaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de la boleta en formato UUID",
+            "example": "a3f2c1e0-b4d5-4321-8765-1234567890ab"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de boleta obtenido exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Detalle de boleta obtenido exitosamente" },
+                    "data": { "$ref": "#/components/schemas/DetalleBoletaResponse" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Boleta no encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "Boleta no encontrada"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario no autenticado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "schemas": {
@@ -175,6 +237,76 @@
         "confianza"
       ]
     },
+    "ProductoDetalle": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "example": "prod-uuid-123",
+          "description": "ID único del producto en la base de datos"
+        },
+        "nombre": {
+          "type": "string",
+          "nullable": true,
+          "example": "Leche Gloria Entera 1L",
+          "description": "Nombre del producto"
+        },
+        "cantidad": {
+          "type": "number",
+          "format": "float",
+          "example": 2,
+          "description": "Cantidad de unidades compradas"
+        },
+        "precioUnitario": {
+          "type": "number",
+          "format": "float",
+          "example": 3.50,
+          "description": "Precio por unidad del producto"
+        },
+        "precioTotal": {
+          "type": "number",
+          "format": "float",
+          "example": 7.00,
+          "description": "Precio total (cantidad × precio unitario)"
+        },
+        "factorCo2": {
+          "type": "number",
+          "format": "float",
+          "example": 2.5,
+          "description": "Factor de CO2 del producto en kg CO2e por unidad"
+        },
+        "categoria": {
+          "type": "string",
+          "nullable": true,
+          "example": "Lácteos y Frescos",
+          "description": "Categoría del producto"
+        },
+        "subcategoria": {
+          "type": "string",
+          "nullable": true,
+          "example": "Leches",
+          "description": "Subcategoría del producto"
+        },
+        "marca": {
+          "type": "string",
+          "nullable": true,
+          "example": "Gloria",
+          "description": "Nombre de la marca del producto"
+        }
+      },
+      "required": [
+        "id",
+        "nombre",
+        "cantidad",
+        "precioUnitario",
+        "precioTotal",
+        "factorCo2",
+        "categoria",
+        "subcategoria",
+        "marca"
+      ]
+    },
     "AnalisisBoleta": {
       "type": "object",
       "properties": {
@@ -212,9 +344,9 @@
         },
         "tipoAmbiental": {
           "type": "string",
-          "enum": ["VERDE", "AMARILLA", "ROJA"],
+          "enum": ["VERDE", "AMARILLO", "ROJO"],
           "example": "VERDE",
-          "description": "Clasificación ambiental de la boleta. VERDE: ≥60% productos verdes y CO2 promedio <4.0. AMARILLA: ≥30% productos verdes y CO2 promedio <7.0. ROJA: resto de casos"
+          "description": "Clasificación ambiental de la boleta. VERDE: ≥60% productos verdes y CO2 promedio <4.0. AMARILLO: ≥30% productos verdes y CO2 promedio <7.0. ROJO: resto de casos"
         },
         "esReciboVerde": {
           "type": "boolean",
@@ -230,6 +362,98 @@
         "co2Promedio",
         "tipoAmbiental",
         "esReciboVerde"
+      ]
+    },
+    "AnalisisDetalleSimplificado": {
+      "type": "object",
+      "properties": {
+        "totalProductos": {
+          "type": "integer",
+          "format": "int32",
+          "example": 5,
+          "description": "Cantidad total de productos en la boleta"
+        },
+        "co2Total": {
+          "type": "number",
+          "format": "float",
+          "example": 23.45,
+          "description": "Total de CO2 de todos los productos en kg"
+        },
+        "co2Promedio": {
+          "type": "number",
+          "format": "float",
+          "example": 4.69,
+          "description": "Promedio de CO2 por producto en kg"
+        }
+      },
+      "required": ["totalProductos", "co2Total", "co2Promedio"]
+    },
+    "DetalleBoletaResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "example": "a3f2c1e0-b4d5-4321-8765-1234567890ab",
+          "description": "ID único de la boleta"
+        },
+        "fechaBoleta": {
+          "type": "string",
+          "format": "date",
+          "nullable": true,
+          "example": "2025-01-05",
+          "description": "Fecha de emisión de la boleta"
+        },
+        "nombreTienda": {
+          "type": "string",
+          "nullable": true,
+          "example": "Tottus",
+          "description": "Nombre de la tienda donde se realizó la compra"
+        },
+        "logoTienda": {
+          "type": "string",
+          "nullable": true,
+          "example": "https://example.com/tottus-logo.png",
+          "description": "URL del logo de la tienda"
+        },
+        "total": {
+          "type": "number",
+          "format": "float",
+          "example": 34.70,
+          "description": "Monto total de la boleta en soles (PEN)"
+        },
+        "tipoAmbiental": {
+          "type": "string",
+          "enum": ["VERDE", "AMARILLO", "ROJO"],
+          "example": "VERDE",
+          "description": "Clasificación ambiental de la boleta según el impacto de los productos"
+        },
+        "urlImagen": {
+          "type": "string",
+          "nullable": true,
+          "example": "boleta_2025_01_05.jpg",
+          "description": "Nombre del archivo de imagen de la boleta original"
+        },
+        "productos": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/ProductoDetalle" },
+          "description": "Listado de productos comprados en la boleta"
+        },
+        "analisis": {
+          "$ref": "#/components/schemas/AnalisisDetalleSimplificado",
+          "description": "Análisis simplificado del impacto ambiental de la boleta"
+        }
+      },
+      "required": [
+        "id",
+        "fechaBoleta",
+        "nombreTienda",
+        "logoTienda",
+        "total",
+        "tipoAmbiental",
+        "urlImagen",
+        "productos",
+        "analisis"
       ]
     },
     "ProcesarBoletaResponse": {

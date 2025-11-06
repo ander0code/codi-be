@@ -112,3 +112,6 @@ src/lib/prisma/zod/
 src/lib/prisma/migrations/
 
 prisma/migrations/
+
+*.tsbuildinfo
+.eslintcache

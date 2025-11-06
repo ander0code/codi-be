@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadBoleta } from './controller.js';
+import { uploadBoleta, getBoleta } from './controller.js';
 import { authMiddleware } from '@/middlewares/auth.js';
 import { env } from '@/config/env.js';
 
@@ -34,5 +34,12 @@ router.post(
     upload.single('boleta'), // Campo 'boleta' en FormData
     uploadBoleta
 );
+
+router.get(
+    '/:boletaId',
+    authMiddleware, // Autenticación requerida
+    getBoleta
+);
+
 
 export default router;

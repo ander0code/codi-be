@@ -5,6 +5,11 @@ export const SubirBoletaSchema = z.object({
     userId: z.uuid('El ID del usuario debe ser un UUID válido'),
 });
 
+// Schema para validad boletaId en params
+export const GetBoletaParamsSchema = z.object({
+    boletaId: z.uuid('El ID de la boleta debe ser un UUID válido'),
+});
+
 // Schema para producto extraído del OCR
 export const ProductoExtraidoSchema = z.object({
     nombre: z.string().min(2, 'El nombre del producto es muy corto'),
@@ -31,7 +36,8 @@ export const AnalisisBoletaSchema = z.object({
     porcentajeVerde: z.number().min(0).max(100),
     co2Total: z.number().nonnegative(),
     co2Promedio: z.number().nonnegative(),
-    tipoAmbiental: z.enum(['VERDE', 'AMARILLA', 'ROJA']),
+    // ✅ CORRECCIÓN: Cambiar "AMARILLA" → "AMARILLO"
+    tipoAmbiental: z.enum(['VERDE', 'AMARILLO', 'ROJO']),
     esReciboVerde: z.boolean(),
 });
 
@@ -43,9 +49,43 @@ export const ProcesarBoletaResponseSchema = z.object({
     sugerencias: z.array(z.string()),
 });
 
+// Schema para item de producto en detalle de boleta
+export const ProductoDetalleSchema = z.object({
+    id: z.uuid(),
+    nombre: z.string().nullable(), // ✅ Permitir null desde la BD
+    cantidad: z.number(),
+    precioUnitario: z.number(),
+    precioTotal: z.number(),
+    factorCo2: z.number(),
+    categoria: z.string().nullable(),
+    subcategoria: z.string().nullable(),
+    marca: z.string().nullable(),
+});
+
+// Schema para respuesta de detalle de boleta
+export const DetalleBoletaResponseSchema = z.object({
+    id: z.uuid(),
+    fechaBoleta: z.date().nullable(),
+    nombreTienda: z.string().nullable(),
+    logoTienda: z.string().nullable(),
+    total: z.number(),
+    // ✅ CORRECCIÓN: Cambiar "AMARILLA" → "AMARILLO"
+    tipoAmbiental: z.enum(['VERDE', 'AMARILLO', 'ROJO']),
+    urlImagen: z.string().nullable(),
+    productos: z.array(ProductoDetalleSchema),
+    analisis: z.object({
+        totalProductos: z.number().int(),
+        co2Total: z.number(),
+        co2Promedio: z.number(),
+    }),
+});
+
 // Exportar tipos
 export type SubirBoletaInput = z.infer<typeof SubirBoletaSchema>;
+export type GetBoletaParams = z.infer<typeof GetBoletaParamsSchema>;
 export type ProductoExtraido = z.infer<typeof ProductoExtraidoSchema>;
 export type ProductoClasificado = z.infer<typeof ProductoClasificadoSchema>;
 export type AnalisisBoleta = z.infer<typeof AnalisisBoletaSchema>;
 export type ProcesarBoletaResponse = z.infer<typeof ProcesarBoletaResponseSchema>;
+export type ProductoDetalle = z.infer<typeof ProductoDetalleSchema>;
+export type DetalleBoletaResponse = z.infer<typeof DetalleBoletaResponseSchema>;

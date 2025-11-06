@@ -71,20 +71,44 @@ async function createBoletaItems(boletaId: string, items: Array<{
 }
 
 async function getBoletaById(boletaId: string) {
+    
     try {
         const boleta = await prisma.boletas.findUnique({
             where: { Id: boletaId },
             include: {
                 Items: {
                     include: {
-                        Marca: true,
-                        Categoria: true,
-                        Subcategoria: true,
+                        Marca: {
+                            select: {
+                                Nombre: true,
+                            },
+                        },
+                        Categoria: {
+                            select: {
+                                Nombre: true,
+                            },
+                        },
+                        Subcategoria: {
+                            select: {
+                                Nombre: true,
+                            },
+                        },
                     },
                 },
-                Tienda: true,
+                Tienda: {
+                    select: {
+                        Nombre: true,
+                        UrlLogo: true,
+                    },
+                },
             },
         });
+        
+        if (boleta) {
+            logger.info('✅ Boleta obtenida de DB', { boletaId });
+        } else {
+            logger.warn('⚠️ Boleta no encontrada', { boletaId });
+        }
         
         return boleta;
     } catch (error) {
