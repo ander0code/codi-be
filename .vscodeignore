@@ -1,6 +1,0 @@
-src/lib/prisma/zod/**
-node_modules/**
-dist/**
-logs/**
-*.log
-.tsbuildinfo

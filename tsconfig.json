@@ -10,6 +10,8 @@
     "skipDefaultLibCheck": true,
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "disableSourceOfProjectReferenceRedirect": true,
+    "disableSolutionSearching": true,
     
     // ✅ NUEVO: Reducir análisis de tipos
     "typeRoots": ["./node_modules/@types"],
