@@ -62,6 +62,34 @@ export const ProductoDetalleSchema = z.object({
     marca: z.string().nullable(),
 });
 
+export const RecomendacionItemSchema = z.object({
+    id: z.uuid(),
+    productoOriginal: z.object({
+        id: z.uuid(),
+        nombre: z.string(),
+        co2: z.number(),
+    }),
+    productoRecomendado: z.object({
+        nombre: z.string(),
+        marca: z.string().nullable(),
+        categoria: z.string().nullable(),
+        tienda: z.string(),
+        co2: z.number(),
+    }),
+    mejora: z.object({
+        porcentaje: z.number(), // Ej: 35.50
+        co2Ahorrado: z.number(), // kg CO2e ahorrados
+    }),
+    tipo: z.enum([
+        'ALTERNATIVA_MISMA_TIENDA',
+        'ALTERNATIVA_OTRA_TIENDA',
+        'PRODUCTO_ECO_EQUIVALENTE',
+        'MARCA_SOSTENIBLE',
+    ]),
+    scoreSimilitud: z.number().min(0).max(1),
+});
+
+
 // Schema para respuesta de detalle de boleta
 export const DetalleBoletaResponseSchema = z.object({
     id: z.uuid(),
@@ -69,7 +97,6 @@ export const DetalleBoletaResponseSchema = z.object({
     nombreTienda: z.string().nullable(),
     logoTienda: z.string().nullable(),
     total: z.number(),
-    // ✅ CORRECCIÓN: Cambiar "AMARILLA" → "AMARILLO"
     tipoAmbiental: z.enum(['VERDE', 'AMARILLO', 'ROJO']),
     urlImagen: z.string().nullable(),
     productos: z.array(ProductoDetalleSchema),
@@ -77,6 +104,13 @@ export const DetalleBoletaResponseSchema = z.object({
         totalProductos: z.number().int(),
         co2Total: z.number(),
         co2Promedio: z.number(),
+    }),
+    // ✅ NUEVO: Recomendaciones
+    recomendaciones: z.array(RecomendacionItemSchema),
+    resumenRecomendaciones: z.object({
+        totalRecomendaciones: z.number().int(),
+        co2TotalAhorrable: z.number(),
+        porcentajeMejoraPromedio: z.number(),
     }),
 });
 
@@ -89,3 +123,4 @@ export type AnalisisBoleta = z.infer<typeof AnalisisBoletaSchema>;
 export type ProcesarBoletaResponse = z.infer<typeof ProcesarBoletaResponseSchema>;
 export type ProductoDetalle = z.infer<typeof ProductoDetalleSchema>;
 export type DetalleBoletaResponse = z.infer<typeof DetalleBoletaResponseSchema>;
+export type RecomendacionItem = z.infer<typeof RecomendacionItemSchema>;

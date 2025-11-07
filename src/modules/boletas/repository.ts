@@ -71,7 +71,6 @@ async function createBoletaItems(boletaId: string, items: Array<{
 }
 
 async function getBoletaById(boletaId: string) {
-    
     try {
         const boleta = await prisma.boletas.findUnique({
             where: { Id: boletaId },
@@ -93,6 +92,25 @@ async function getBoletaById(boletaId: string) {
                                 Nombre: true,
                             },
                         },
+                        // ✅ NUEVO: Incluir recomendaciones del producto
+                        Recomendaciones: {
+                            include: {
+                                Marca: {
+                                    select: {
+                                        Nombre: true,
+                                    },
+                                },
+                                Categoria: {
+                                    select: {
+                                        Nombre: true,
+                                    },
+                                },
+                            },
+                            orderBy: {
+                                PorcentajeMejora: 'desc', // Mejores recomendaciones primero
+                            },
+                            take: 3, // Máximo 3 recomendaciones por producto
+                        },
                     },
                 },
                 Tienda: {
@@ -103,13 +121,13 @@ async function getBoletaById(boletaId: string) {
                 },
             },
         });
-        
+
         if (boleta) {
-            logger.info('✅ Boleta obtenida de DB', { boletaId });
+            logger.info('✅ Boleta obtenida de DB con recomendaciones', { boletaId });
         } else {
             logger.warn('⚠️ Boleta no encontrada', { boletaId });
         }
-        
+
         return boleta;
     } catch (error) {
         logger.error('❌ Error obteniendo boleta', { boletaId, error });
@@ -135,9 +153,80 @@ async function updatePuntosVerdes(usuarioId: string, puntos: number) {
     }
 }
 
+async function createRecomendaciones(
+    boletaId: string,
+    recomendaciones: Array<{
+        productoOriginalId: string;
+        productoRecomendadoNombre: string;
+        productoRecomendadoMarcaId?: string;
+        productoRecomendadoCategoriaId?: string;
+        tiendaOrigen: string;
+        co2Original: number;
+        co2Recomendado: number;
+        porcentajeMejora: number;
+        tipoRecomendacion: 'ALTERNATIVA_MISMA_TIENDA' | 'ALTERNATIVA_OTRA_TIENDA' | 'PRODUCTO_ECO_EQUIVALENTE' | 'MARCA_SOSTENIBLE';
+        scoreSimilitud: number;
+    }>
+) {
+    try {
+        const recomendacionesCreadas = await prisma.recomendaciones.createMany({
+            data: recomendaciones.map(rec => ({
+                BoletaId: boletaId,
+                ProductoOriginalId: rec.productoOriginalId,
+                ProductoRecomendadoNombre: rec.productoRecomendadoNombre,
+                ProductoRecomendadoMarcaId: rec.productoRecomendadoMarcaId,
+                ProductoRecomendadoCategoriaId: rec.productoRecomendadoCategoriaId,
+                TiendaOrigen: rec.tiendaOrigen,
+                Co2Original: new Prisma.Decimal(rec.co2Original),
+                Co2Recomendado: new Prisma.Decimal(rec.co2Recomendado),
+                PorcentajeMejora: new Prisma.Decimal(rec.porcentajeMejora),
+                TipoRecomendacion: rec.tipoRecomendacion,
+                ScoreSimilitud: new Prisma.Decimal(rec.scoreSimilitud),
+            })),
+        });
+
+        logger.info('✅ Recomendaciones guardadas', {
+            boletaId,
+            cantidad: recomendacionesCreadas.count,
+        });
+
+        return recomendacionesCreadas;
+    } catch (error) {
+        logger.error('❌ Error guardando recomendaciones', { boletaId, error });
+        throw error;
+    }
+}
+
+async function getProductosByBoletaId(boletaId: string) {
+    try {
+        const productos = await prisma.productos.findMany({
+            where: { BoletaId: boletaId },
+            select: { 
+                Id: true, 
+                NombreProducto: true,
+                FactorCo2PorUnidad: true,
+                Cantidad: true,
+            },
+        });
+
+        logger.info('✅ Productos obtenidos de boleta', { 
+            boletaId, 
+            cantidad: productos.length 
+        });
+
+        return productos;
+    } catch (error) {
+        logger.error('❌ Error obteniendo productos de boleta', { boletaId, error });
+        throw error;
+    }
+}
+
+
 export const BoletasRepository = {
     createBoleta,
     createBoletaItems,
+    createRecomendaciones,
+    getProductosByBoletaId,
     getBoletaById,
     updatePuntosVerdes,
 };

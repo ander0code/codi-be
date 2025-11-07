@@ -3,7 +3,7 @@
     "/boletas/{userId}/upload": {
       "post": {
         "summary": "Subir y procesar una boleta",
-        "description": "Procesa una imagen de boleta mediante OCR, detecta el supermercado, clasifica productos, calcula impacto ambiental y genera sugerencias ecológicas. Actualiza puntos verdes si es recibo verde.",
+        "description": "Procesa una imagen de boleta mediante OCR, detecta el supermercado, clasifica productos, calcula impacto ambiental, genera sugerencias ecológicas y crea recomendaciones de productos alternativos con menor huella de carbono. Actualiza puntos verdes si es recibo verde.",
         "tags": ["Boletas"],
         "parameters": [
           {
@@ -38,7 +38,7 @@
         },
         "responses": {
           "200": {
-            "description": "Boleta procesada exitosamente",
+            "description": "Boleta procesada exitosamente con recomendaciones generadas",
             "content": {
               "application/json": {
                 "schema": {
@@ -101,8 +101,8 @@
     },
     "/boletas/{boletaId}": {
       "get": {
-        "summary": "Obtener detalle de una boleta procesada",
-        "description": "Retorna la información completa de una boleta previamente procesada, incluyendo productos, análisis de impacto ambiental y datos de la tienda.",
+        "summary": "Obtener detalle de una boleta procesada con recomendaciones",
+        "description": "Retorna la información completa de una boleta previamente procesada, incluyendo productos, análisis de impacto ambiental, datos de la tienda, y recomendaciones de productos alternativos con menor huella de carbono basadas en la base de datos vectorial Qdrant.",
         "tags": ["Boletas"],
         "parameters": [
           {
@@ -119,7 +119,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Detalle de boleta obtenido exitosamente",
+            "description": "Detalle de boleta obtenido exitosamente con recomendaciones incluidas",
             "content": {
               "application/json": {
                 "schema": {
@@ -128,6 +128,70 @@
                     "success": { "type": "boolean", "example": true },
                     "message": { "type": "string", "example": "Detalle de boleta obtenido exitosamente" },
                     "data": { "$ref": "#/components/schemas/DetalleBoletaResponse" }
+                  }
+                },
+                "examples": {
+                  "boletaConRecomendaciones": {
+                    "summary": "Boleta con recomendaciones de productos",
+                    "value": {
+                      "success": true,
+                      "message": "Detalle de boleta obtenido exitosamente",
+                      "data": {
+                        "id": "a3f2c1e0-b4d5-4321-8765-1234567890ab",
+                        "fechaBoleta": "2025-01-06",
+                        "nombreTienda": "Tottus",
+                        "logoTienda": "https://example.com/tottus-logo.png",
+                        "total": 50.00,
+                        "tipoAmbiental": "VERDE",
+                        "urlImagen": "boleta_2025_01_06.jpg",
+                        "productos": [
+                          {
+                            "id": "prod-uuid-1",
+                            "nombre": "Leche Gloria Entera 1L",
+                            "cantidad": 2,
+                            "precioUnitario": 5.50,
+                            "precioTotal": 11.00,
+                            "factorCo2": 4.2,
+                            "categoria": "Lácteos y Frescos",
+                            "subcategoria": "Leches",
+                            "marca": "Gloria"
+                          }
+                        ],
+                        "analisis": {
+                          "totalProductos": 5,
+                          "co2Total": 23.45,
+                          "co2Promedio": 4.69
+                        },
+                        "recomendaciones": [
+                          {
+                            "id": "rec-uuid-1",
+                            "productoOriginal": {
+                              "id": "prod-uuid-1",
+                              "nombre": "Leche Gloria Entera 1L",
+                              "co2": 4.2
+                            },
+                            "productoRecomendado": {
+                              "nombre": "Leche Laive Light 1L",
+                              "marca": "Laive",
+                              "categoria": "Lácteos",
+                              "tienda": "tottus",
+                              "co2": 2.8
+                            },
+                            "mejora": {
+                              "porcentaje": 33.33,
+                              "co2Ahorrado": 1.4
+                            },
+                            "tipo": "ALTERNATIVA_MISMA_TIENDA",
+                            "scoreSimilitud": 0.92
+                          }
+                        ],
+                        "resumenRecomendaciones": {
+                          "totalRecomendaciones": 3,
+                          "co2TotalAhorrable": 5.2,
+                          "porcentajeMejoraPromedio": 28.5
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -307,6 +371,152 @@
         "marca"
       ]
     },
+    "RecomendacionItem": {
+      "type": "object",
+      "description": "Recomendación de producto alternativo con menor huella de carbono",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "example": "rec-uuid-123",
+          "description": "ID único de la recomendación"
+        },
+        "productoOriginal": {
+          "type": "object",
+          "description": "Información del producto original de la boleta",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "example": "prod-uuid-456",
+              "description": "ID del producto original"
+            },
+            "nombre": {
+              "type": "string",
+              "example": "Leche Gloria Entera 1L",
+              "description": "Nombre del producto original"
+            },
+            "co2": {
+              "type": "number",
+              "format": "float",
+              "example": 4.2,
+              "description": "CO2 del producto original en kg CO2e"
+            }
+          },
+          "required": ["id", "nombre", "co2"]
+        },
+        "productoRecomendado": {
+          "type": "object",
+          "description": "Información del producto alternativo recomendado",
+          "properties": {
+            "nombre": {
+              "type": "string",
+              "example": "Leche Laive Light 1L",
+              "description": "Nombre del producto recomendado"
+            },
+            "marca": {
+              "type": "string",
+              "nullable": true,
+              "example": "Laive",
+              "description": "Marca del producto recomendado"
+            },
+            "categoria": {
+              "type": "string",
+              "nullable": true,
+              "example": "Lácteos",
+              "description": "Categoría del producto recomendado"
+            },
+            "tienda": {
+              "type": "string",
+              "example": "tottus",
+              "description": "Tienda donde está disponible (tottus, wong, vivanda, plazavea, metro)"
+            },
+            "co2": {
+              "type": "number",
+              "format": "float",
+              "example": 2.8,
+              "description": "CO2 del producto recomendado en kg CO2e (siempre menor que el original)"
+            }
+          },
+          "required": ["nombre", "marca", "categoria", "tienda", "co2"]
+        },
+        "mejora": {
+          "type": "object",
+          "description": "Información sobre la mejora ambiental",
+          "properties": {
+            "porcentaje": {
+              "type": "number",
+              "format": "float",
+              "example": 33.33,
+              "description": "Porcentaje de reducción de CO2 respecto al producto original"
+            },
+            "co2Ahorrado": {
+              "type": "number",
+              "format": "float",
+              "example": 1.4,
+              "description": "Cantidad de CO2 ahorrado en kg CO2e"
+            }
+          },
+          "required": ["porcentaje", "co2Ahorrado"]
+        },
+        "tipo": {
+          "type": "string",
+          "enum": [
+            "ALTERNATIVA_MISMA_TIENDA",
+            "ALTERNATIVA_OTRA_TIENDA",
+            "PRODUCTO_ECO_EQUIVALENTE",
+            "MARCA_SOSTENIBLE"
+          ],
+          "example": "ALTERNATIVA_MISMA_TIENDA",
+          "description": "Tipo de recomendación basada en la tienda y características del producto"
+        },
+        "scoreSimilitud": {
+          "type": "number",
+          "format": "float",
+          "minimum": 0,
+          "maximum": 1,
+          "example": 0.92,
+          "description": "Score de similitud semántica del producto recomendado (0-1) calculado con embeddings"
+        }
+      },
+      "required": [
+        "id",
+        "productoOriginal",
+        "productoRecomendado",
+        "mejora",
+        "tipo",
+        "scoreSimilitud"
+      ]
+    },
+    "ResumenRecomendaciones": {
+      "type": "object",
+      "description": "Resumen agregado de todas las recomendaciones de la boleta",
+      "properties": {
+        "totalRecomendaciones": {
+          "type": "integer",
+          "format": "int32",
+          "example": 5,
+          "description": "Cantidad total de recomendaciones generadas para la boleta"
+        },
+        "co2TotalAhorrable": {
+          "type": "number",
+          "format": "float",
+          "example": 8.5,
+          "description": "Total de CO2 que se podría ahorrar en kg CO2e siguiendo todas las recomendaciones"
+        },
+        "porcentajeMejoraPromedio": {
+          "type": "number",
+          "format": "float",
+          "example": 28.50,
+          "description": "Porcentaje promedio de mejora de CO2 de todas las recomendaciones"
+        }
+      },
+      "required": [
+        "totalRecomendaciones",
+        "co2TotalAhorrable",
+        "porcentajeMejoraPromedio"
+      ]
+    },
     "AnalisisBoleta": {
       "type": "object",
       "properties": {
@@ -442,6 +652,15 @@
         "analisis": {
           "$ref": "#/components/schemas/AnalisisDetalleSimplificado",
           "description": "Análisis simplificado del impacto ambiental de la boleta"
+        },
+        "recomendaciones": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/RecomendacionItem" },
+          "description": "Listado de recomendaciones de productos alternativos con menor huella de carbono. Solo se generan para productos con CO2 > 3.0. Máximo 3 recomendaciones por producto."
+        },
+        "resumenRecomendaciones": {
+          "$ref": "#/components/schemas/ResumenRecomendaciones",
+          "description": "Resumen agregado de todas las recomendaciones de la boleta"
         }
       },
       "required": [
@@ -453,7 +672,9 @@
         "tipoAmbiental",
         "urlImagen",
         "productos",
-        "analisis"
+        "analisis",
+        "recomendaciones",
+        "resumenRecomendaciones"
       ]
     },
     "ProcesarBoletaResponse": {
@@ -491,7 +712,7 @@
   "tags": [
     {
       "name": "Boletas",
-      "description": "Endpoints para procesar boletas de compra: extracción OCR, clasificación de productos, análisis de impacto ambiental y generación de sugerencias ecológicas"
+      "description": "Endpoints para procesar boletas de compra: extracción OCR, clasificación de productos, análisis de impacto ambiental, generación de sugerencias ecológicas y recomendaciones de productos alternativos con menor huella de carbono basadas en base de datos vectorial Qdrant"
     }
   ]
 }

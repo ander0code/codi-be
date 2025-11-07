@@ -12,23 +12,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/* =========================
-  ENUMS GLOBALES
-========================= */
+/**
+ * =========================
+ * ENUMS GLOBALES
+ * =========================
+ */
 enum BoletaTipoAmbiental {
   VERDE
   AMARILLO
   ROJO
-} 
+}
 
 enum MonedaTipo {
   PEN
   USD
 }
 
-/* =========================
-  1) NÚCLEO / USUARIOS
-========================= */
+enum TipoRecomendacion {
+  ALTERNATIVA_MISMA_TIENDA // Producto similar en la misma tienda
+  ALTERNATIVA_OTRA_TIENDA // Producto similar en otra tienda
+  PRODUCTO_ECO_EQUIVALENTE // Producto ecológico equivalente
+  MARCA_SOSTENIBLE // Marca con mejor huella de carbono
+}
+
+/**
+ * =========================
+ * 1) NÚCLEO / USUARIOS
+ * =========================
+ */
 model Usuarios {
   Id            String   @id @default(uuid()) @db.Uuid
   Nombre        String   @db.VarChar(80)
@@ -46,22 +57,26 @@ model Usuarios {
   PromosUsuario PromocionesUsuarios[]
 }
 
-/* Preferencias (JSONB arrays) */
+/**
+ * Preferencias (JSONB arrays)
+ */
 model PreferenciasUsuarios {
-  Id                   String   @id @default(uuid()) @db.Uuid
-  UsuarioId            String   @unique @db.Uuid
-  Objetivos            Json     @default("{}")
-  EstilosVida          Json     @default("{}")
-  PreferenciasConsumo  Json     @default("{}")
-  IngredientesEvitar   Json     @default("{}")
-  ActualizadoEn        DateTime @updatedAt
+  Id                  String   @id @default(uuid()) @db.Uuid
+  UsuarioId           String   @unique @db.Uuid
+  Objetivos           Json     @default("{}")
+  EstilosVida         Json     @default("{}")
+  PreferenciasConsumo Json     @default("{}")
+  IngredientesEvitar  Json     @default("{}")
+  ActualizadoEn       DateTime @updatedAt
 
   Usuario Usuarios @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
 }
 
-/* =========================
-  2) TIENDAS 
-========================= */
+/**
+ * =========================
+ * 2) TIENDAS
+ * =========================
+ */
 model Tiendas {
   Id        String   @id @default(uuid()) @db.Uuid
   Nombre    String   @unique
@@ -74,17 +89,18 @@ model Tiendas {
   Promos  Promociones[]
 }
 
-
-/* =========================
-  3) BOLETAS + Productos 
-========================= */
+/**
+ * =========================
+ * 3) BOLETAS + Productos
+ * =========================
+ */
 model Boletas {
   Id              String              @id @default(uuid()) @db.Uuid
   UsuarioId       String              @db.Uuid
   TiendaId        String?             @db.Uuid
   NombreTienda    String?             @db.VarChar(100)
-  NumeroBoleta    String?             @db.VarChar(30)  
-  DireccionTienda String?             @db.Text 
+  NumeroBoleta    String?             @db.VarChar(30)
+  DireccionTienda String?             @db.Text
   FechaBoleta     DateTime?           @db.Date
   CodigoMoneda    MonedaTipo          @default(PEN)
   Subtotal        Decimal?            @db.Decimal(12, 2)
@@ -96,9 +112,10 @@ model Boletas {
   TipoAmbiental   BoletaTipoAmbiental @default(AMARILLO)
   CreadoEn        DateTime            @default(now()) @db.Timestamptz(6)
 
-  Usuario Usuarios @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
-  Tienda  Tiendas? @relation(fields: [TiendaId], references: [Id])
-  Items   Productos[]
+  Usuario         Usuarios          @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
+  Tienda          Tiendas?          @relation(fields: [TiendaId], references: [Id])
+  Items           Productos[]
+  Recomendaciones Recomendaciones[] // ✅ AGREGAR ESTA LÍNEA
 
   @@index([UsuarioId, FechaBoleta(sort: Desc)])
   @@index([TiendaId])
@@ -107,7 +124,7 @@ model Boletas {
 model Productos {
   Id                  String   @id @default(uuid()) @db.Uuid
   BoletaId            String   @db.Uuid
-  NumeroLinea         Int?     @db.Integer      
+  NumeroLinea         Int?     @db.Integer
   TextoOriginal       String?  @db.Text
   NombreProducto      String?  @db.VarChar(200)
   Cantidad            Decimal? @db.Decimal(12, 3)
@@ -127,10 +144,11 @@ model Productos {
   EsEco               Boolean  @default(false)
   CreadoEn            DateTime @default(now()) @db.Timestamptz(6)
 
-  Boleta       Boletas       @relation(fields: [BoletaId], references: [Id], onDelete: Cascade)
-  Marca        Marcas?       @relation(fields: [MarcaId], references: [Id])
-  Categoria    Categorias?   @relation(fields: [CategoriaId], references: [Id])
-  Subcategoria Subcategorias? @relation(fields: [SubcategoriaId], references: [Id])
+  Boleta          Boletas           @relation(fields: [BoletaId], references: [Id], onDelete: Cascade)
+  Marca           Marcas?           @relation(fields: [MarcaId], references: [Id])
+  Categoria       Categorias?       @relation(fields: [CategoriaId], references: [Id])
+  Subcategoria    Subcategorias?    @relation(fields: [SubcategoriaId], references: [Id])
+  Recomendaciones Recomendaciones[] @relation("ProductoOriginal") // ✅ AGREGAR ESTA LÍNEA
 
   @@index([BoletaId])
   @@index([ColeccionQdrant, PuntoQdrantId])
@@ -138,22 +156,27 @@ model Productos {
   @@index([CategoriaId])
   @@index([SubcategoriaId])
 }
-/* =========================
-  CÁTALOGOS
-========================= */
+
+/**
+ * =========================
+ * CÁTALOGOS
+ * =========================
+ */
 model Marcas {
-  Id       String      @id @default(uuid()) @db.Uuid
-  Nombre   String      @unique         @db.VarChar(100)
-  CreadoEn DateTime    @default(now()) @db.Timestamptz(6)
-  Items    Productos[]
+  Id              String            @id @default(uuid()) @db.Uuid
+  Nombre          String            @unique @db.VarChar(100)
+  CreadoEn        DateTime          @default(now()) @db.Timestamptz(6)
+  Items           Productos[]
+  Recomendaciones Recomendaciones[] @relation("MarcaRecomendaciones") // ✅ AGREGAR ESTA LÍNEA
 }
 
 model Categorias {
-  Id            String          @id @default(uuid()) @db.Uuid
-  Nombre        String          @unique         @db.VarChar(100)
-  CreadoEn      DateTime        @default(now()) @db.Timestamptz(6)
-  Subcategorias Subcategorias[]
-  Items         Productos[]
+  Id              String            @id @default(uuid()) @db.Uuid
+  Nombre          String            @unique @db.VarChar(100)
+  CreadoEn        DateTime          @default(now()) @db.Timestamptz(6)
+  Subcategorias   Subcategorias[]
+  Items           Productos[]
+  Recomendaciones Recomendaciones[] @relation("CategoriaRecomendaciones") // ✅ AGREGAR ESTA LÍNEA
 }
 
 model Subcategorias {
@@ -169,9 +192,11 @@ model Subcategorias {
   @@index([CategoriaId])
 }
 
-/* =========================
-  4) PROMOCIONES
-========================= */
+/**
+ * =========================
+ * 4) PROMOCIONES
+ * =========================
+ */
 model Promociones {
   Id                String    @id @default(uuid()) @db.Uuid
   Titulo            String    @db.VarChar(120)
@@ -188,7 +213,6 @@ model Promociones {
   PromosUsuario PromocionesUsuarios[]
 }
 
-
 model PromocionesUsuarios {
   Id          String    @id @default(uuid()) @db.Uuid
   UsuarioId   String    @db.Uuid
@@ -202,4 +226,35 @@ model PromocionesUsuarios {
   Promocion Promociones @relation(fields: [PromocionId], references: [Id], onDelete: Cascade)
 
   @@unique([UsuarioId, PromocionId])
+}
+
+model Recomendaciones {
+  Id                 String @id @default(uuid())
+  BoletaId           String
+  ProductoOriginalId String
+
+  ProductoRecomendadoNombre      String
+  ProductoRecomendadoMarcaId     String?
+  ProductoRecomendadoCategoriaId String?
+  TiendaOrigen                   String
+
+  Co2Original      Decimal @db.Decimal(10, 4)
+  Co2Recomendado   Decimal @db.Decimal(10, 4)
+  PorcentajeMejora Decimal @db.Decimal(5, 2)
+
+  TipoRecomendacion TipoRecomendacion @default(ALTERNATIVA_MISMA_TIENDA)
+
+  ScoreSimilitud Decimal @db.Decimal(3, 2)
+
+  CreadoEn DateTime @default(now())
+
+  // ✅ Relaciones con nombres explícitos
+  Boleta           Boletas     @relation(fields: [BoletaId], references: [Id], onDelete: Cascade)
+  ProductoOriginal Productos   @relation("ProductoOriginal", fields: [ProductoOriginalId], references: [Id], onDelete: Cascade)
+  Marca            Marcas?     @relation("MarcaRecomendaciones", fields: [ProductoRecomendadoMarcaId], references: [Id]) // ✅ CAMBIO
+  Categoria        Categorias? @relation("CategoriaRecomendaciones", fields: [ProductoRecomendadoCategoriaId], references: [Id]) // ✅ CAMBIO
+
+  @@index([BoletaId])
+  @@index([ProductoOriginalId])
+  @@map("recomendaciones")
 }
