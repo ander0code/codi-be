@@ -42,6 +42,7 @@ function transformarComprasRecientes(boletas: BoletaConDetalles[]): CompraRecien
         const co2Boleta = calcularCo2DeItems(boleta.Items);
         
         return {
+            id: boleta.Id, 
             fechaBoleta: boleta.FechaBoleta,
             logoTienda: boleta.Tienda?.UrlLogo ?? null,
             nombreTienda: boleta.Tienda?.Nombre ?? boleta.NombreTienda ?? null,
