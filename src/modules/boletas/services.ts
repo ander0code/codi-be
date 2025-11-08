@@ -116,9 +116,23 @@ async function procesarBoleta(
     try {
         logger.info('🚀 Iniciando procesamiento de boleta', { userId, fileName });
         
-        // Pasos 1-5 (sin cambios)
+        // ✅ PASO 1: Extracción de texto con OCR
         logger.info('📸 Paso 1: Extrayendo texto con OCR...');
         const textoOCR = await TesseractService.extractText(imageBuffer);
+        
+        // ✅ NUEVO: Logger para mostrar texto extraído completo
+        logger.info('📝 Texto extraído del OCR (completo):', {
+            caracteres: textoOCR.length,
+            lineas: textoOCR.split('\n').length,
+        });
+        logger.debug('📄 Contenido OCR:', {
+            texto: textoOCR, // ✅ Muestra el texto completo en modo debug
+        });
+        
+        // Si quieres verlo en modo INFO (para producción), usa esto:
+        logger.info('📄 Preview del texto OCR (primeras 500 chars):', {
+            preview: textoOCR.substring(0, 500),
+        });
         
         logger.info('🏪 Paso 2: Detectando supermercado con patrones...');
         const collectionName = SupermarketDetector.detectSupermercado(textoOCR);

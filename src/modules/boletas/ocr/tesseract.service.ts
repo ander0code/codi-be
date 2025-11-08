@@ -6,297 +6,413 @@ import { DeepSeekClientService } from '@/lib/clients/deepseek.js';
 import type { ProductoExtraido } from '../schemas.js';
 
 /**
- * ✅ MEJORADO: Preprocesa la imagen AGRESIVAMENTE para OCR
+ * Analiza calidad de imagen (brillo promedio)
+ */
+function analyzeImageQuality(image: typeof Jimp.prototype): {
+    brilloPromedio: number;
+    esOscura: boolean;
+    esMuyClara: boolean;
+} {
+    let totalBrillo = 0;
+    let pixelCount = 0;
+
+    // Tipar el callback explícitamente
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (
+        this: typeof Jimp.prototype,
+        x: number,
+        y: number,
+        idx: number
+    ) {
+        const red = this.bitmap.data[idx + 0];
+        const green = this.bitmap.data[idx + 1];
+        const blue = this.bitmap.data[idx + 2];
+        const brillo = (red + green + blue) / 3;
+        totalBrillo += brillo;
+        pixelCount++;
+    });
+
+    const brilloPromedio = totalBrillo / pixelCount;
+
+    return {
+        brilloPromedio,
+        esOscura: brilloPromedio < 100,
+        esMuyClara: brilloPromedio > 200,
+    };
+}
+
+/**
+ * Preprocesamiento adaptativo según calidad de imagen
  */
 async function preprocessImage(buffer: Buffer): Promise<Buffer> {
     try {
         const image = await Jimp.read(buffer);
 
-        // 1. Redimensionar si es muy pequeña (mínimo 1000px de ancho)
-        if (image.bitmap.width < 1000) {
-            image.resize({ w: 1000 }); // ✅ CORRECCIÓN: Nueva sintaxis de Jimp
-        }
-
-        // 2. Convertir a escala de grises
-        image.greyscale();
-
-        // 3. Aumentar contraste AGRESIVAMENTE
-        image.contrast(0.8);
-
-        // 4. Normalizar brillo
-        image.normalize();
-
-        // 5. Aplicar threshold (binarización) para texto blanco/negro puro
-        image.threshold({ max: 128, replace: 255, autoGreyscale: false });
-
-        // 6. Eliminar ruido con blur suave
-        image.blur(1);
-
-        logger.info('✅ Imagen preprocesada para OCR', {
+        logger.info('📸 Imagen original:', {
             ancho: image.bitmap.width,
-            alto: image.bitmap.height
+            alto: image.bitmap.height,
         });
 
-        // ✅ CORRECCIÓN: getBuffer() ahora acepta solo 1 argumento
+        //  Analizar calidad de imagen
+        const calidad = analyzeImageQuality(image);
+        logger.info('📊 Calidad detectada:', {
+            brilloPromedio: Math.round(calidad.brilloPromedio),
+            esOscura: calidad.esOscura,
+            esMuyClara: calidad.esMuyClara,
+        });
+
+        //  1. Redimensionar (siempre)
+        if (image.bitmap.width < 2000) {
+            image.resize({ w: 2000 });
+            logger.debug('🔧 Imagen redimensionada a 2000px');
+        }
+
+      // ✅ 2. Escala de grises (siempre)
+        await image.greyscale();
+
+
+        //  3. Ajuste de brillo ADAPTATIVO
+        if (calidad.esOscura) {
+            await image.brightness(0.3);
+            await image.contrast(1.0);
+            logger.debug('🔧 Corrección para imagen oscura aplicada');
+        } else if (calidad.esMuyClara) {
+            await image.brightness(-0.2);
+            await image.contrast(0.7);
+            logger.debug('🔧 Corrección para imagen muy clara aplicada');
+        } else {
+            await image.contrast(0.9);
+            logger.debug('🔧 Corrección estándar aplicada');
+        }
+
+
+        // ✅ 4. Normalizar (siempre)
+        await image.normalize();
+
+        // ✅ 5. Threshold ADAPTATIVO (SINTAXIS CORREGIDA)
+        const thresholdValue = calidad.esOscura ? 120 : 140;
+        
+        // ✅ CORRECCIÓN: Tipar explícitamente el callback
+        await image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (
+            this: typeof Jimp.prototype, // ✅ Tipo explícito para 'this'
+            x: number,
+            y: number,
+            idx: number
+        ) {
+            const gray = this.bitmap.data[idx]; // Ya está en escala de grises
+            
+            if (gray > thresholdValue) {
+                this.bitmap.data[idx] = 255;     // R
+                this.bitmap.data[idx + 1] = 255; // G
+                this.bitmap.data[idx + 2] = 255; // B
+            } else {
+                this.bitmap.data[idx] = 0;       // R
+                this.bitmap.data[idx + 1] = 0;   // G
+                this.bitmap.data[idx + 2] = 0;   // B
+            }
+        });
+        
+        logger.debug(`🔧 Threshold aplicado: ${thresholdValue}`);
+
+        // ✅ 6. Blur suave (siempre)
+        await image.blur(1); // ✅ CORRECCIÓN: blur(0.5) no existe, usar blur(1)
+
+        // ✅ 7. Sharpen (solo si NO es oscura) - SINTAXIS CORREGIDA
+        if (!calidad.esOscura) {
+            await image.convolute({
+                kernel: [
+                    [0, -1, 0],
+                    [-1, 5, -1],
+                    [0, -1, 0],
+                ],
+            }); // ✅ CORRECCIÓN: Nueva sintaxis de convolute
+            logger.debug('🔧 Sharpen aplicado');
+        } else {
+            logger.debug('⏭️ Sharpen omitido (imagen oscura)');
+        }
+
+        logger.info('✅ Imagen preprocesada adaptativamente');
+
         return await image.getBuffer('image/png');
     } catch (error) {
-        logger.error('Error en preprocesamiento de imagen', { error });
+        logger.error('❌ Error preprocesando imagen', { 
+            error,
+            mensaje: error instanceof Error ? error.message : 'Error desconocido',
+            stack: error instanceof Error ? error.stack : undefined,
+        });
         throw error;
     }
 }
 
 /**
- * ✅ MEJORADO: Enriquece el texto OCR corrigiendo errores comunes
+ * Corrige SOLO palabras con baja confianza usando IA
  */
-async function enrichOCRText(textoOCR: string): Promise<string> {
+async function corregirPalabrasProblematicas(
+    textoCompleto: string,
+    palabrasProblematicas: Array<{ texto: string; confianza: number }>
+): Promise<string> {
+    if (palabrasProblematicas.length === 0) {
+        return textoCompleto;
+    }
+
+    const prompt = `Eres un experto en corrección de texto OCR de boletas peruanas.
+
+Texto OCR (contiene errores):
+${textoCompleto}
+
+Palabras sospechosas detectadas:
+${palabrasProblematicas.map((p) => `- "${p.texto}" (confianza: ${p.confianza}%)`).join('\n')}
+
+Reglas ESTRICTAS:
+1. Corrige SOLO errores evidentes de OCR (ej: "T0TTUS" → "TOTTUS", "R0JA" → "ROJA")
+2. Mantén códigos de barras de 13 dígitos intactos
+3. Mantén precios con formato XX.XX o X.XX
+4. Une líneas de nombres partidos (ej: "Ma\nTONI CA" → "MANZANA ROJA")
+5. Elimina basura al inicio (ej: "Les TOTTUS" → "TOTTUS")
+6. NO inventes productos ni precios
+
+Responde SOLO con el texto corregido, sin explicaciones:`;
+
     try {
-        logger.info('🔧 Enriqueciendo texto OCR con IA...');
-        
-        logger.debug('📝 Texto OCR ANTES de enriquecer:', { 
-            texto: textoOCR.substring(0, 500)
+        const textoCorregido = await DeepSeekClientService.chat(prompt, 0.1);
+
+        logger.info('✅ Texto corregido con IA');
+        logger.debug('📝 Texto corregido (primeras 500 chars):', {
+            texto: textoCorregido.substring(0, 500),
         });
 
-        const prompt = `Corrige errores comunes de OCR en este texto de recibo/boleta peruano.
-
-Texto original:
-${textoOCR}
-
-Reglas estrictas:
-1. Corrige letras confundidas (O→0, I→1, l→1, etc)
-2. Separa correctamente líneas de productos
-3. Mantén códigos de barras (13 dígitos)
-4. NO cambies precios ni formato de moneda (S/)
-5. NO inventes información
-6. Solo corrige texto visible del OCR
-
-Formato esperado por línea:
-[CÓDIGO 13 DIGITOS] [NOMBRE PRODUCTO]     [PRECIO]
-
-Responde SOLO con el texto corregido, sin explicaciones.`;
-
-        const textoEnriquecido = await DeepSeekClientService.chat(prompt, 0.1);
-
-        logger.info('✅ Texto OCR enriquecido correctamente');
-        logger.debug('📝 Texto OCR DESPUÉS de enriquecer:', { 
-            texto: textoEnriquecido.substring(0, 500)
-        });
-        
-        return textoEnriquecido;
+        return textoCorregido;
     } catch (error) {
-        logger.warn('⚠️ Error enriqueciendo texto OCR, usando texto original', { error });
-        return textoOCR;
+        logger.warn('⚠️ Error corrigiendo con IA, usando texto original', { error });
+        return textoCompleto;
     }
 }
 
 /**
- * ✅ MEJORADO: Extrae texto con configuración PSM optimizada
+ * OCR Multi-Pass con análisis de confianza por palabra
  */
 async function extractText(imageBuffer: Buffer): Promise<string> {
     try {
-        logger.info('Iniciando OCR con Tesseract');
+        logger.info('🚀 Iniciando OCR Multi-Pass PROFESIONAL');
 
-        // Preprocesar imagen AGRESIVAMENTE
         const processedBuffer = await preprocessImage(imageBuffer);
 
-        // ✅ CORRECCIÓN: Configuración correcta de Tesseract.js
-        const result = await Tesseract.recognize(processedBuffer, env.ocr.language, {
-            logger: (m) => {
-                if (m.status === 'recognizing text') {
-                    logger.debug(`OCR Progress: ${Math.round(m.progress * 100)}%`);
-                }
-            },
+        // PASADA 1: PSM 6 (SINGLE_BLOCK - boletas estándar)
+        logger.debug('📊 Ejecutando Pasada 1 (PSM 6 - Bloque único)...');
+        const worker1 = await Tesseract.createWorker(env.ocr.language);
+        await worker1.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+        });
+        const result1 = await worker1.recognize(processedBuffer);
+        await worker1.terminate();
+
+        // PASADA 2: PSM 4 (SINGLE_COLUMN - boletas largas)
+        logger.debug('📊 Ejecutando Pasada 2 (PSM 4 - Columna única)...');
+        const worker2 = await Tesseract.createWorker(env.ocr.language);
+        await worker2.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_COLUMN,
+        });
+        const result2 = await worker2.recognize(processedBuffer);
+        await worker2.terminate();
+
+        logger.info(' OCR Multi-Pass completado:', {
+            confianzaPSM6: Math.round(result1.data.confidence),
+            confianzaPSM4: Math.round(result2.data.confidence),
+            lineasPSM6: result1.data.text.split('\n').length,
+            lineasPSM4: result2.data.text.split('\n').length,
         });
 
-        const { data } = result;
-        const text = data.text;
-        const confidence = data.confidence;
-        const linesCount = (data as any).lines?.length || 0;
+        // Elegir mejor resultado basado en confianza
+        const mejorResultado =
+            result1.data.confidence > result2.data.confidence ? result1 : result2;
+        const psmUsado =
+            mejorResultado === result1 ? 'PSM 6 (SINGLE_BLOCK)' : 'PSM 4 (SINGLE_COLUMN)';
 
-        logger.info('OCR completado exitosamente', {
-            confidence,
-            lines: linesCount,
+        logger.info(`📊 Usando resultado de ${psmUsado}`, {
+            confianza: Math.round(mejorResultado.data.confidence),
+            caracteres: mejorResultado.data.text.length,
         });
 
-        logger.debug('📝 Texto OCR extraído por Tesseract:', { 
-            texto: text.substring(0, 800),
-            longitudTotal: text.length
-        });
+        // ✅ CORRECCIÓN: Usar IA SIEMPRE si confianza < 70% (sin extraer palabras individuales)
+        const confianzaGlobal = mejorResultado.data.confidence;
 
-        // ✅ SIEMPRE enriquecer con IA si confianza < 80
-        if (confidence < 80 || linesCount === 0) {
-            logger.warn('⚠️ Confianza del OCR baja o sin líneas, enriqueciendo texto...');
-            const textoEnriquecido = await enrichOCRText(text);
-            return textoEnriquecido;
+        if (confianzaGlobal < 70) {
+            logger.warn(`⚠️ Confianza baja (${Math.round(confianzaGlobal)}%), activando corrección con IA`, {
+                confianza: Math.round(confianzaGlobal),
+            });
+
+            // ✅ SIMPLIFICADO: Corregir directamente sin extraer palabras individuales
+            const prompt = `Eres un experto en corrección de texto OCR de boletas peruanas de supermercados (Tottus, Wong, Metro, Plaza Vea).
+
+Texto OCR (contiene errores y basura):
+${mejorResultado.data.text}
+
+Reglas ESTRICTAS:
+1. Corrige errores de OCR (ej: "T0TTUS" → "TOTTUS", "R0JA" → "ROJA", "Ma\nTONI CA" → "MANZANA ROJA")
+2. Elimina basura al inicio (ej: "Les TOTTUS" → "TOTTUS", "Iva. ULIO5[146," → eliminar)
+3. Mantén códigos de barras de 13 dígitos intactos
+4. Mantén precios con formato XX.XX o X.XX
+5. Une líneas de nombres partidos en UNA sola línea
+6. Separa productos diferentes con línea vacía
+7. NO inventes productos ni precios
+
+Formato esperado:
+\`\`\`
+TOTTUS
+
+2500012000007 MANZANA ROJA
+1.17kg 6.50 X kg 7.61
+
+2000422769255 POP CORN
+3 2.39 X UN 7.17
+\`\`\`
+
+Responde SOLO con el texto corregido:`;
+
+            try {
+                const textoCorregido = await DeepSeekClientService.chat(prompt, 0.1);
+
+                logger.info('✅ Texto corregido con IA');
+                logger.debug('📝 Texto corregido (primeras 500 chars):', {
+                    texto: textoCorregido.substring(0, 500),
+                });
+
+                return textoCorregido;
+            } catch (error) {
+                logger.warn('⚠️ Error corrigiendo con IA, usando texto original', { error });
+                return mejorResultado.data.text;
+            }
         }
 
-        return text;
+        return mejorResultado.data.text;
     } catch (error) {
-        logger.error('Error en extracción de texto OCR', { error });
-        throw new Error('Error al procesar la imagen');
+        logger.error('❌ Error en OCR Multi-Pass', { error });
+        throw new Error('Error al procesar la imagen con OCR');
     }
 }
 
 /**
- * ✅ MEJORADO: Extrae productos con patrones más flexibles
+ * Parseo con regex mejorados (named groups + validación)
  */
 function parseProductosFromText(text: string): ProductoExtraido[] {
     const productos: ProductoExtraido[] = [];
 
-    logger.debug('📝 Texto completo recibido para parseo:', { 
-        texto: text,
-        longitud: text.length,
-        lineas: text.split('\n').length
-    });
+    logger.info('🔍 Iniciando parseo DINÁMICO de productos');
 
-    // ✅ PATRÓN 1: Detectar líneas multi-línea de Tottus
-    const patronTottusMultiLinea = /(\d{13})\s+([A-ZÁ-Ú0-9\s]+)\n(?:.*?)\s+(\d+\.?\d*)\s+(\d+\.?\d*)\s*V?/gm;
+    const textoLimpio = text
+        .replace(/\r\n/g, '\n')
+        .replace(/\s{3,}/g, ' ')
+        .trim();
 
-    // ✅ PATRÓN 2: Formato Tottus estándar con código
-    const patronTottus = /(\d{13})\s+(.+?)\s{2,}(\d+\.?\d*)\s*$/gm;
+    const lineas = textoLimpio.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    logger.info(`📄 Total de líneas válidas: ${lineas.length}`);
 
-    // ✅ PATRÓN 3: Formato con S/
-    const patronEstandar = /^(.+?)\s+(?:S\/|s\/)\s*(\d+\.?\d*)/gm;
+    let i = 0;
+    while (i < lineas.length) {
+        const linea = lineas[i];
 
-    // ✅ PATRÓN 4: Formato simple
-    const patronSimple = /^([A-Z\s]{3,})\s{2,}(\d+\.?\d*)$/gm;
+        // ✅ ETAPA 1: Detectar código de barras (13 dígitos al inicio de línea)
+        const matchCodigo = linea.match(/^(\d{13})/);
+        
+        if (matchCodigo) {
+            const codigo = matchCodigo[1];
+            logger.debug(`📦 Código detectado: ${codigo}`);
 
-    let matchCount = 0;
+            // ✅ ETAPA 2: Extraer nombre del producto (LÍMITE ESTRICTO: máximo 2 líneas SIN números)
+            let nombre = linea.replace(codigo, '').trim();
+            let lineaActual = i + 1;
+            let lineasAgregadas = 0;
+            
+            // ✅ LÍMITE REDUCIDO: Máximo 2 líneas Y sin números
+            while (lineaActual < lineas.length && lineasAgregadas < 2) {
+                const siguienteLinea = lineas[lineaActual];
+                
+                // ✅ STOP si encuentra CUALQUIER número (precio, cantidad, o código siguiente)
+                const tieneNumeros = /\d/.test(siguienteLinea);
+                
+                if (tieneNumeros) {
+                    break; // ✅ STOP inmediato
+                }
+                
+                // ✅ Agregar SOLO si es texto puro (sin números ni caracteres raros)
+                if (siguienteLinea.length > 2 && /^[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+$/.test(siguienteLinea)) {
+                    nombre += ' ' + siguienteLinea;
+                    lineaActual++;
+                    lineasAgregadas++;
+                } else {
+                    break;
+                }
+            }
 
-    // Intentar patrón multi-línea primero
-    let matchMulti;
-    while ((matchMulti = patronTottusMultiLinea.exec(text)) !== null) {
-        matchCount++;
-        const codigo = matchMulti[1];
-        const nombre = matchMulti[2].trim();
-        const precioUnitario = parseFloat(matchMulti[3]);
-        const precioTotal = parseFloat(matchMulti[4]);
+            // ✅ Limpiar nombre (eliminar TODO excepto letras y espacios)
+            nombre = nombre
+                .replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ\s]/g, ' ')
+                .replace(/\s{2,}/g, ' ')
+                .trim()
+                .substring(0, 40); // ✅ Reducido de 50 a 40
 
-        logger.debug(`🔍 Match patronTottusMultiLinea #${matchCount}:`, { 
-            codigo, 
-            nombre, 
-            precioUnitario, 
-            precioTotal 
-        });
+            if (nombre.length < 3) {
+                logger.warn(`⚠️ Nombre muy corto: "${nombre}"`);
+                i++;
+                continue;
+            }
 
-        if (
-            nombre.length > 2 &&
-            !nombre.toLowerCase().includes('total') &&
-            !nombre.toLowerCase().includes('descuento') &&
-            precioTotal > 0 &&
-            precioTotal < 10000
-        ) {
-            productos.push({
-                nombre,
-                precio: precioTotal,
-                cantidad: Math.round(precioTotal / precioUnitario),
-                confianza: 0.95,
-            });
-            logger.debug(`✅ Producto agregado: ${nombre}`);
+            // ✅ ETAPA 3: Buscar precio y cantidad (hasta 3 líneas adelante)
+            let precio: number | null = null;
+            let cantidad: number = 1;
+            let lineasExploradas = 0;
+
+            while (lineaActual < lineas.length && lineasExploradas < 3) {
+                const lineaPrecio = lineas[lineaActual];
+                
+                // ✅ Buscar cantidad
+                const matchCantidad = lineaPrecio.match(/(\d+)[.,](\d+)\s*(kg|un|l|g)/i);
+                if (matchCantidad) {
+                    const entero = matchCantidad[1];
+                    const decimal = matchCantidad[2];
+                    cantidad = parseFloat(`${entero}.${decimal}`);
+                    logger.debug(`📏 Cantidad detectada: ${cantidad}`);
+                }
+
+                // ✅ Buscar precio (último número con 2 decimales en la línea)
+                const preciosEncontrados = lineaPrecio.match(/\d+[.,]\d{2}/g);
+                if (preciosEncontrados && preciosEncontrados.length > 0) {
+                    const precioStr = preciosEncontrados[preciosEncontrados.length - 1];
+                    precio = parseFloat(precioStr.replace(',', '.'));
+                    logger.debug(`💰 Precio detectado: ${precio}`);
+                    break;
+                }
+
+                lineaActual++;
+                lineasExploradas++;
+            }
+
+            // ✅ ETAPA 4: Validar y agregar producto
+            if (precio && precio > 0 && precio < 10000) {
+                productos.push({
+                    nombre,
+                    precio,
+                    cantidad,
+                    confianza: 0.85,
+                });
+                logger.debug(`✅ Producto agregado: "${nombre}" ($${precio} x${cantidad})`);
+            } else {
+                logger.warn(`⚠️ Precio inválido para: "${nombre}" (precio: ${precio})`);
+            }
+
+            i = lineaActual;
+            continue;
         }
+
+        i++;
     }
 
-    if (productos.length > 0) {
-        logger.info('✅ Productos extraídos con patrón multi-línea', { cantidad: productos.length });
-        return productos;
-    }
-
-    // Intentar patrón Tottus estándar
-    let matchTottus;
-    while ((matchTottus = patronTottus.exec(text)) !== null) {
-        matchCount++;
-        const codigo = matchTottus[1];
-        const nombre = matchTottus[2].trim();
-        const precio = parseFloat(matchTottus[3]);
-
-        logger.debug(`🔍 Match patronTottus #${matchCount}:`, { codigo, nombre, precio });
-
-        if (
-            nombre.length > 2 &&
-            !nombre.toLowerCase().includes('total') &&
-            !nombre.toLowerCase().includes('subtotal') &&
-            !nombre.toLowerCase().includes('descuento') &&
-            precio > 0 &&
-            precio < 10000
-        ) {
-            productos.push({
-                nombre,
-                precio,
-                cantidad: 1,
-                confianza: 0.9,
-            });
-            logger.debug(`✅ Producto agregado: ${nombre}`);
-        }
-    }
-
-    if (productos.length > 0) {
-        logger.info('✅ Productos extraídos con patrón Tottus', { cantidad: productos.length });
-        return productos;
-    }
-
-    // Intentar con patrón estándar S/
-    let matchEstandar;
-    while ((matchEstandar = patronEstandar.exec(text)) !== null) {
-        matchCount++;
-        const nombre = matchEstandar[1].trim();
-        const precio = parseFloat(matchEstandar[2]);
-
-        logger.debug(`🔍 Match patronEstandar #${matchCount}:`, { nombre, precio });
-
-        if (
-            nombre.length > 2 &&
-            !nombre.toLowerCase().includes('total') &&
-            !nombre.toLowerCase().includes('subtotal') &&
-            precio > 0 &&
-            precio < 10000
-        ) {
-            productos.push({
-                nombre,
-                precio,
-                cantidad: 1,
-                confianza: 0.8,
-            });
-            logger.debug(`✅ Producto agregado: ${nombre}`);
-        }
-    }
-
-    if (productos.length > 0) {
-        logger.info('✅ Productos extraídos con patrón estándar', { cantidad: productos.length });
-        return productos;
-    }
-
-    // Último intento: patrón simple
-    let matchSimple;
-    while ((matchSimple = patronSimple.exec(text)) !== null) {
-        matchCount++;
-        const nombre = matchSimple[1].trim();
-        const precio = parseFloat(matchSimple[2]);
-
-        logger.debug(`🔍 Match patronSimple #${matchCount}:`, { nombre, precio });
-
-        if (
-            nombre.length > 3 &&
-            !nombre.toLowerCase().includes('total') &&
-            precio > 0 &&
-            precio < 10000
-        ) {
-            productos.push({
-                nombre,
-                precio,
-                cantidad: 1,
-                confianza: 0.6,
-            });
-            logger.debug(`✅ Producto agregado: ${nombre}`);
-        }
-    }
+    logger.info(`🎯 Total productos extraídos: ${productos.length}`);
 
     if (productos.length === 0) {
-        logger.warn('⚠️ No se encontraron productos con ningún patrón', {
-            totalMatches: matchCount,
-            textPreview: text.substring(0, 500)
+        logger.warn('⚠️ No se encontraron productos válidos. Muestra de líneas:', {
+            lineas: lineas.slice(0, 10),
         });
     }
-
-    logger.info('Productos extraídos del OCR', { cantidad: productos.length });
 
     return productos;
 }
