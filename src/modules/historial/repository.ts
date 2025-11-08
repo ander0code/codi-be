@@ -14,7 +14,11 @@ async function getAllBoletasConDetalles(userId: string): Promise<BoletaConDetall
     return await prisma.boletas.findMany({
         where: { UsuarioId: userId },
         orderBy: { FechaBoleta: 'desc' },
-        include: {
+        select: {
+            Id: true,
+            FechaBoleta: true,
+            NombreTienda: true,
+            TipoAmbiental: true,
             Tienda: {
                 select: {
                     Nombre: true,
