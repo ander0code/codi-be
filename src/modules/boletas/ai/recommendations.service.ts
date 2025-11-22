@@ -13,9 +13,6 @@ interface ProductoRecomendado {
     scoreSimilitud: number;
 }
 
-/**
- * Busca alternativas con menor CO2 para un producto
- */
 async function findAlternatives(
     producto: ProductoClasificado,
     tiendaOriginal: string,
@@ -31,7 +28,7 @@ async function findAlternatives(
             vector: embedding,
             limit: 10,
             with_payload: true,
-            score_threshold: 0.70, // Menos estricto para alternativas
+            score_threshold: 0.60,
             filter: {
                 must: [
                     {
@@ -41,6 +38,17 @@ async function findAlternatives(
                 ],
             },
         });
+
+        if (resultsMismaTienda.length > 0) {
+            logger.debug(`🔍 Candidatos en ${tiendaOriginal} para "${producto.nombre}":`, {
+                candidatos: resultsMismaTienda.slice(0, 5).map((r, idx) => ({
+                    rank: idx + 1,
+                    nombre: (r.payload as any).nombre || 'Sin nombre',
+                    score: Math.round(r.score * 100) / 100,
+                    co2: (r.payload as any).co2_estimado || (r.payload as any).co2e_estimado || 0,
+                }))
+            });
+        }
 
         for (const match of resultsMismaTienda) {
             const payload = match.payload as Record<string, any>;
@@ -71,7 +79,7 @@ async function findAlternatives(
                         vector: embedding,
                         limit: 5,
                         with_payload: true,
-                        score_threshold: 0.75,
+                        score_threshold: 0.65,
                         filter: {
                             must: [
                                 {

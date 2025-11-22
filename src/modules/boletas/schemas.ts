@@ -3,6 +3,7 @@ import { z } from 'zod';
 // Schema para validar userId en params
 export const SubirBoletaSchema = z.object({
     userId: z.uuid('El ID del usuario debe ser un UUID válido'),
+    generateSuggestions: z.boolean().optional().default(false), // ✅ Sugerencias opcionales
 });
 
 // Schema para validad boletaId en params
@@ -27,6 +28,19 @@ export const ProductoClasificadoSchema = ProductoExtraidoSchema.extend({
     factorCo2: z.number().nonnegative(),
     esLocal: z.boolean().default(false),
     tieneEmpaqueEcologico: z.boolean().default(false),
+    // ✅ NUEVO: Validación con tabla_maestra
+    validacion: z.object({
+        nivel: z.enum(['verde', 'amarillo', 'rojo']),
+        mensaje: z.string(),
+        co2Calculado: z.number(),
+        rangos: z.object({
+            verde_hasta: z.number(),
+            amarillo_hasta: z.number(),
+            rojo_desde: z.number(),
+            huella_media: z.number(),
+        }),
+        fuentes: z.array(z.string()),
+    }).optional(),
 });
 
 // Schema para análisis de boleta

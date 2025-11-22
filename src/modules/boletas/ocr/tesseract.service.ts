@@ -5,6 +5,9 @@ import logger from '@/config/logger.js';
 import { DeepSeekClientService } from '@/lib/clients/deepseek.js';
 import type { ProductoExtraido } from '../schemas.js';
 
+// ✅ Umbral de confianza OCR configurable (antes hardcodeado en 70)
+const OCR_CONFIDENCE_THRESHOLD = 70; // Ajustar según necesidad por supermercado
+
 /**
  * Analiza calidad de imagen (brillo promedio)
  */
@@ -66,7 +69,7 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
             logger.debug('🔧 Imagen redimensionada a 2000px');
         }
 
-      // ✅ 2. Escala de grises (siempre)
+        // ✅ 2. Escala de grises (siempre)
         await image.greyscale();
 
 
@@ -90,7 +93,7 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
 
         // ✅ 5. Threshold ADAPTATIVO (SINTAXIS CORREGIDA)
         const thresholdValue = calidad.esOscura ? 120 : 140;
-        
+
         // ✅ CORRECCIÓN: Tipar explícitamente el callback
         await image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (
             this: typeof Jimp.prototype, // ✅ Tipo explícito para 'this'
@@ -99,7 +102,7 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
             idx: number
         ) {
             const gray = this.bitmap.data[idx]; // Ya está en escala de grises
-            
+
             if (gray > thresholdValue) {
                 this.bitmap.data[idx] = 255;     // R
                 this.bitmap.data[idx + 1] = 255; // G
@@ -110,7 +113,7 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
                 this.bitmap.data[idx + 2] = 0;   // B
             }
         });
-        
+
         logger.debug(`🔧 Threshold aplicado: ${thresholdValue}`);
 
         // ✅ 6. Blur suave (siempre)
@@ -134,7 +137,7 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
 
         return await image.getBuffer('image/png');
     } catch (error) {
-        logger.error('❌ Error preprocesando imagen', { 
+        logger.error('❌ Error preprocesando imagen', {
             error,
             mensaje: error instanceof Error ? error.message : 'Error desconocido',
             stack: error instanceof Error ? error.stack : undefined,
@@ -232,10 +235,10 @@ async function extractText(imageBuffer: Buffer): Promise<string> {
             caracteres: mejorResultado.data.text.length,
         });
 
-        // ✅ CORRECCIÓN: Usar IA SIEMPRE si confianza < 70% (sin extraer palabras individuales)
+        // ✅ Usar IA si confianza < umbral configurable
         const confianzaGlobal = mejorResultado.data.confidence;
 
-        if (confianzaGlobal < 70) {
+        if (confianzaGlobal < OCR_CONFIDENCE_THRESHOLD) {
             logger.warn(`⚠️ Confianza baja (${Math.round(confianzaGlobal)}%), activando corrección con IA`, {
                 confianza: Math.round(confianzaGlobal),
             });
@@ -312,7 +315,7 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
 
         // ✅ ETAPA 1: Detectar código de barras (13 dígitos al inicio de línea)
         const matchCodigo = linea.match(/^(\d{13})/);
-        
+
         if (matchCodigo) {
             const codigo = matchCodigo[1];
             logger.debug(`📦 Código detectado: ${codigo}`);
@@ -321,18 +324,18 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
             let nombre = linea.replace(codigo, '').trim();
             let lineaActual = i + 1;
             let lineasAgregadas = 0;
-            
+
             // ✅ LÍMITE REDUCIDO: Máximo 2 líneas Y sin números
             while (lineaActual < lineas.length && lineasAgregadas < 2) {
                 const siguienteLinea = lineas[lineaActual];
-                
+
                 // ✅ STOP si encuentra CUALQUIER número (precio, cantidad, o código siguiente)
                 const tieneNumeros = /\d/.test(siguienteLinea);
-                
+
                 if (tieneNumeros) {
                     break; // ✅ STOP inmediato
                 }
-                
+
                 // ✅ Agregar SOLO si es texto puro (sin números ni caracteres raros)
                 if (siguienteLinea.length > 2 && /^[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+$/.test(siguienteLinea)) {
                     nombre += ' ' + siguienteLinea;
@@ -363,7 +366,7 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
 
             while (lineaActual < lineas.length && lineasExploradas < 3) {
                 const lineaPrecio = lineas[lineaActual];
-                
+
                 // ✅ Buscar cantidad
                 const matchCantidad = lineaPrecio.match(/(\d+)[.,](\d+)\s*(kg|un|l|g)/i);
                 if (matchCantidad) {

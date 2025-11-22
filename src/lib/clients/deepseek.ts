@@ -4,7 +4,7 @@ import logger from '@/config/logger.js';
 
 class DeepSeekClientService {
     private static instance: OpenAI;
-    
+
     static getInstance(): OpenAI {
         if (!DeepSeekClientService.instance) {
             DeepSeekClientService.instance = new OpenAI({
@@ -15,7 +15,7 @@ class DeepSeekClientService {
         }
         return DeepSeekClientService.instance;
     }
-    
+
     /**
      * Chat simple con DeepSeek
      */
@@ -27,69 +27,50 @@ class DeepSeekClientService {
                 messages: [{ role: 'user', content: prompt }],
                 temperature,
             });
-            
+
             return response.choices[0].message.content || '';
         } catch (error) {
             logger.error('❌ Error en chat con DeepSeek', { error });
             throw new Error('Error al comunicarse con DeepSeek');
         }
     }
-    
+
     /**
-     * Valida si el CO2 de un producto es coherente
-     * ESTE ES EL ÚNICO USO CRÍTICO DE IA
+     * Genera sugerencias ecológicas personalizadas con datos de CO2
      */
-    static async validateCO2(
-        nombreProducto: string,
-        co2Estimado: number,
-        categoria: string
-    ): Promise<{ esValido: boolean; razon: string; co2Sugerido?: number }> {
-        try {
-            const prompt = `
-Eres un experto en huella de carbono de productos de supermercado.
-
-Producto: "${nombreProducto}"
-Categoría: "${categoria}"
-CO2 estimado: ${co2Estimado} kg CO2e
-
-¿Es coherente este valor de CO2? 
-Responde en formato JSON:
-{
-  "esValido": true/false,
-  "razon": "explicación breve",
-  "co2Sugerido": número (solo si no es válido)
-}
-
-Valores de referencia:
-- Frutas/verduras: 0.3-2.0 kg CO2e/kg
-- Lácteos: 1.0-4.0 kg CO2e/kg
-- Carnes: 5.0-27.0 kg CO2e/kg
-- Procesados: 2.0-10.0 kg CO2e/kg
-            `.trim();
-            
-            const content = await this.chat(prompt, 0.3);
-            return JSON.parse(content);
-        } catch (error) {
-            logger.error('❌ Error validando CO2 con DeepSeek', { error });
-            return { 
-                esValido: true, 
-                razon: 'Error de validación, se acepta por defecto' 
-            };
+    static async generateSuggestions(
+        productos: Array<{
+            nombre: string;
+            co2: number;
+            nivel?: 'verde' | 'amarillo' | 'rojo';
+        }>,
+        analisis: {
+            co2Total: number;
+            tipoAmbiental: 'VERDE' | 'AMARILLO' | 'ROJO';
         }
-    }
-    
-    /**
-     * Genera sugerencias ecológicas personalizadas
-     */
-    static async generateSuggestions(productos: string[]): Promise<string[]> {
+    ): Promise<string[]> {
         try {
-            const prompt = `
-Productos comprados: ${productos.join(', ')}
+            // ✅ Prompt enriquecido con datos de CO2 y niveles
+            const productosDetalle = productos.map(p =>
+                `- ${p.nombre} (${p.co2.toFixed(2)} kg CO2, nivel: ${p.nivel || 'desconocido'})`
+            ).join('\n');
 
-Genera 3 sugerencias ecológicas breves y accionables para reducir la huella de carbono.
+            const prompt = `
+Eres un experto en sostenibilidad y huella de carbono.
+
+Productos comprados:
+${productosDetalle}
+
+Resumen de la compra:
+- CO2 total: ${analisis.co2Total.toFixed(2)} kg CO2e
+- Tipo de boleta: ${analisis.tipoAmbiental}
+
+Genera 3 sugerencias ecológicas ESPECÍFICAS y accionables para reducir la huella de carbono en futuras compras.
+Enfócate en los productos con mayor impacto (nivel rojo y amarillo).
+
 Responde en formato JSON array: ["sugerencia1", "sugerencia2", "sugerencia3"]
             `.trim();
-            
+
             const content = await this.chat(prompt, 0.7);
             return JSON.parse(content);
         } catch (error) {
