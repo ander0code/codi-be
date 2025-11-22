@@ -15,7 +15,8 @@ export const GetBoletaParamsSchema = z.object({
 export const ProductoExtraidoSchema = z.object({
     nombre: z.string().min(2, 'El nombre del producto es muy corto'),
     precio: z.number().positive('El precio debe ser positivo'),
-    cantidad: z.number().int().positive().default(1),
+    cantidad: z.number().positive().default(1),
+    unidad: z.string().default('kg'), // ✅ Unidad de medida (kg, g, l, ml, un)
     confianza: z.number().min(0).max(1), // Confianza del OCR
 });
 

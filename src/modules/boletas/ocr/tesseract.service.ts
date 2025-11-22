@@ -359,21 +359,23 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
                 continue;
             }
 
-            // ✅ ETAPA 3: Buscar precio y cantidad (hasta 3 líneas adelante)
+            // ✅ ETAPA 3: Buscar precio, cantidad Y UNIDAD (hasta 3 líneas adelante)
             let precio: number | null = null;
             let cantidad: number = 1;
+            let unidad: string = 'kg';
             let lineasExploradas = 0;
 
             while (lineaActual < lineas.length && lineasExploradas < 3) {
                 const lineaPrecio = lineas[lineaActual];
 
-                // ✅ Buscar cantidad
-                const matchCantidad = lineaPrecio.match(/(\d+)[.,](\d+)\s*(kg|un|l|g)/i);
+                // ✅ Buscar cantidad CON unidad (incluyendo ml)
+                const matchCantidad = lineaPrecio.match(/(\d+)[.,](\d+)\s*(kg|un|l|ml|g)/i);
                 if (matchCantidad) {
                     const entero = matchCantidad[1];
                     const decimal = matchCantidad[2];
                     cantidad = parseFloat(`${entero}.${decimal}`);
-                    logger.debug(`📏 Cantidad detectada: ${cantidad}`);
+                    unidad = matchCantidad[3].toLowerCase();
+                    logger.debug(`📏 Cantidad detectada: ${cantidad} ${unidad}`);
                 }
 
                 // ✅ Buscar precio (último número con 2 decimales en la línea)
@@ -395,9 +397,10 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
                     nombre,
                     precio,
                     cantidad,
+                    unidad,
                     confianza: 0.85,
                 });
-                logger.debug(`✅ Producto agregado: "${nombre}" ($${precio} x${cantidad})`);
+                logger.debug(`✅ Producto agregado: "${nombre}" ($${precio} x${cantidad} ${unidad})`);
             } else {
                 logger.warn(`⚠️ Precio inválido para: "${nombre}" (precio: ${precio})`);
             }

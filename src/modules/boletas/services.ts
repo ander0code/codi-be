@@ -6,6 +6,7 @@ import { SupermarketDetector } from "./ai/supermarket-detector.js";
 import { DeepSeekClientService } from "@/lib/clients/deepseek.js";
 import { clasificarImpactoProducto } from "./utils/impactClassifier.js";
 import { validarCO2 } from "./utils/tablaMaestra.js";
+import { normalizarCantidadAKg } from "./utils/normalizador-unidades.js";
 import { ValidationError, NotFoundError } from "@/config/errors/errors.js";
 import logger from "@/config/logger.js";
 import type { BoletaTipoAmbiental } from "@prisma/client";
@@ -57,9 +58,56 @@ async function matchProductos(
       validarCO2Flag
     );
 
+
     if (match) {
-      // ✅ Calcular CO2 con peso real de la boleta
-      const co2Calculado = match.factorCo2 * productoOCR.cantidad;
+      // ✅ LÓGICA DE NORMALIZACIÓN:
+      // 1. Si tiene peso (kg, g, ml, l) → Solo convertir unidades
+      // 2. Si es por unidad (un) → Estimar peso (ÚLTIMO RECURSO)
+
+      let cantidadEnKg: number;
+      const unidad = productoOCR.unidad || 'kg';
+      const unidadLower = unidad.toLowerCase().trim();
+
+      // CASO 1: Producto con peso en boleta (kg, g, ml, l)
+      if (['kg', 'g', 'ml', 'l'].includes(unidadLower)) {
+        cantidadEnKg = normalizarCantidadAKg(
+          productoOCR.cantidad,
+          unidad,
+          match.categoria
+        );
+        logger.debug('✅ Producto con peso en boleta, solo convirtiendo unidades', {
+          nombre: productoOCR.nombre,
+          cantidadOriginal: productoOCR.cantidad,
+          unidadOriginal: unidad,
+          cantidadNormalizada: cantidadEnKg,
+        });
+      }
+      // CASO 2: Producto sin peso (por unidad) - ÚLTIMO RECURSO
+      else if (['un', 'unidad', 'unidades'].includes(unidadLower)) {
+        cantidadEnKg = normalizarCantidadAKg(
+          productoOCR.cantidad,
+          unidad,
+          match.categoria
+        );
+        logger.warn('⚠️ Producto sin peso en boleta, estimando por categoría', {
+          nombre: productoOCR.nombre,
+          cantidadUnidades: productoOCR.cantidad,
+          categoria: match.categoria,
+          pesoEstimado: cantidadEnKg,
+        });
+      }
+      // CASO 3: Unidad no reconocida - usar cantidad directa
+      else {
+        cantidadEnKg = productoOCR.cantidad;
+        logger.warn('⚠️ Unidad no reconocida, usando cantidad directa', {
+          nombre: productoOCR.nombre,
+          cantidad: productoOCR.cantidad,
+          unidad: unidad,
+        });
+      }
+
+      // ✅ Calcular CO2 con cantidad normalizada
+      const co2Calculado = match.factorCo2 * cantidadEnKg;
 
       // ✅ Validar con tabla_maestra usando subcategoría
       const subcategoria = match.subcategoria || match.categoria;
@@ -67,8 +115,10 @@ async function matchProductos(
 
       logger.debug('✅ Producto matched y validado', {
         nombre: productoOCR.nombre,
+        cantidadOriginal: productoOCR.cantidad,
+        unidadOriginal: productoOCR.unidad,
+        cantidadNormalizada: cantidadEnKg,
         subcategoria,
-        peso: productoOCR.cantidad,
         huella: match.factorCo2,
         co2Calculado,
         nivel: validacion.nivel
@@ -77,7 +127,7 @@ async function matchProductos(
       productosClasificados.push({
         ...match,
         precio: productoOCR.precio,
-        cantidad: productoOCR.cantidad,  // ✅ Peso real de la boleta
+        cantidad: cantidadEnKg,  // ✅ Cantidad normalizada en kg
         confianza: match.confianza,
         validacion,  // ✅ NUEVO: Validación con tabla_maestra
       });

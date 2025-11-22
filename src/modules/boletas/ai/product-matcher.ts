@@ -126,6 +126,7 @@ async function findSimilarProduct(
             nombre: payload.nombre || productName,
             precio: 0,
             cantidad: 1,
+            unidad: 'kg', // ✅ Unidad por defecto
             confianza: match.score,
             categoria: categoriaNormalizada.normalized,
             subcategoria: payload.subcategoria,
