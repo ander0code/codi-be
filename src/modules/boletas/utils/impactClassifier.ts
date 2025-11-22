@@ -1,7 +1,6 @@
-import { huellaCarbonoPorSupermercado, obtenerUmbrales } from './conts.js';
+import { getRangosPorSubcategoria } from './tablaMaestra.js';
 import logger from '@/config/logger.js';
 
-// ✅ MEJORADO: Tipo estricto
 export interface ImpactoProducto {
     nivel: 'bajo' | 'medio' | 'alto';
     esEco: boolean;
@@ -10,26 +9,27 @@ export interface ImpactoProducto {
 }
 
 /**
- * Clasifica el impacto ambiental de un producto según su CO2 y categoría
- * ✅ MEJORADO: Manejo de errores y logs
+ * Clasifica el impacto de un producto usando tabla_maestra.json
+ * @param supermercado - No se usa, mantenido por compatibilidad
+ * @param categoria - Subcategoría del producto (ej: "Frutas Cítricas")
+ * @param co2ePorKg - CO2 calculado del producto
  */
 export function clasificarImpactoProducto(
     supermercado: string,
     categoria: string,
     co2ePorKg: number
 ): ImpactoProducto {
-    // Obtener umbrales de forma segura
-    const regla = obtenerUmbrales(supermercado, categoria);
-    
-    if (!regla) {
-        logger.warn('⚠️ No se encontró regla de clasificación, usando umbral por defecto', { 
-            supermercado, 
-            categoria 
+
+    // ✅ Usar tabla_maestra.json como fuente de verdad
+    const rangos = getRangosPorSubcategoria(categoria);
+
+    if (!rangos) {
+        logger.warn('⚠️ No se encontró subcategoría en tabla_maestra, usando umbral por defecto', {
+            categoria
         });
-        
-        // Umbral por defecto
-        const umbralDefault = { bajo: 3.0, medio: 7.0, alto: Infinity };
-        
+
+        const umbralDefault = { bajo: 2.0, medio: 5.0, alto: Infinity };
+
         if (co2ePorKg <= umbralDefault.bajo) {
             return { nivel: 'bajo', esEco: true, umbralUsado: umbralDefault, co2ePorKg };
         }
@@ -38,35 +38,36 @@ export function clasificarImpactoProducto(
         }
         return { nivel: 'alto', esEco: false, umbralUsado: umbralDefault, co2ePorKg };
     }
-    
-    const { umbrales } = regla;
-    
-    // Clasificar según umbrales
+
+    // ✅ Usar rangos de tabla_maestra
+    const umbrales = {
+        bajo: rangos.verde_hasta,
+        medio: rangos.amarillo_hasta,
+        alto: Infinity
+    };
+
     if (co2ePorKg <= umbrales.bajo) {
-        logger.debug('✅ Producto clasificado como bajo impacto', { 
-            supermercado, 
-            categoria, 
-            co2ePorKg, 
-            umbral: umbrales.bajo 
+        logger.debug('✅ Producto clasificado como bajo impacto', {
+            categoria,
+            co2ePorKg,
+            umbral: umbrales.bajo
         });
         return { nivel: 'bajo', esEco: true, umbralUsado: umbrales, co2ePorKg };
     }
-    
+
     if (co2ePorKg <= umbrales.medio) {
-        logger.debug('⚠️ Producto clasificado como medio impacto', { 
-            supermercado, 
-            categoria, 
-            co2ePorKg, 
-            umbral: umbrales.medio 
+        logger.debug('⚠️ Producto clasificado como medio impacto', {
+            categoria,
+            co2ePorKg,
+            umbral: umbrales.medio
         });
         return { nivel: 'medio', esEco: false, umbralUsado: umbrales, co2ePorKg };
     }
-    
-    logger.debug('🔴 Producto clasificado como alto impacto', { 
-        supermercado, 
-        categoria, 
-        co2ePorKg, 
-        umbral: umbrales.medio 
+
+    logger.debug('🔴 Producto clasificado como alto impacto', {
+        categoria,
+        co2ePorKg,
+        umbral: umbrales.medio
     });
     return { nivel: 'alto', esEco: false, umbralUsado: umbrales, co2ePorKg };
 }

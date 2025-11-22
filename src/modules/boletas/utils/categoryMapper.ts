@@ -1,4 +1,4 @@
-import { huellaCarbonoPorSupermercado } from './conts.js';
+import { tablaMaestra } from './tablaMaestra.js';
 import logger from '@/config/logger.js';
 
 /**
@@ -16,19 +16,7 @@ const CATEGORY_SYNONYMS: Record<string, Record<string, string[]>> = {
         'Lácteos y Frescos': ['lacteos', 'frescos', 'dairy', 'leche', 'yogurt', 'mantequilla'],
         'Aguas y Jugos': ['aguas', 'jugos', 'water', 'juice', 'bebidas'],
         'Cervezas': ['cervezas', 'beer', 'cerveza'],
-        'Espumantes y Vinos': ['espumantes', 'vinos', 'wine', 'champagne', 'vino'],
         'Licores': ['licores', 'liquor', 'spirits', 'ron', 'vodka', 'whisky'],
-        'Cuidado Capilar': ['cuidado capilar', 'shampoo', 'acondicionador', 'hair care', 'cabello'],
-        'Cuidado de la Piel': ['cuidado de la piel', 'skin care', 'cremas', 'lociones'],
-        'Higiene Personal': ['higiene personal', 'personal care', 'jabon', 'desodorante', 'pasta dental'],
-        'Maquillaje': ['maquillaje', 'makeup', 'cosmeticos', 'labial', 'rimel'],
-        'Salud': ['salud', 'health', 'medicamentos', 'vitaminas'],
-        'Ambientales y Desinfectantes': ['ambientales', 'desinfectantes', 'disinfectants', 'aromatizantes'],
-        'Bolsas de Basura': ['bolsas de basura', 'trash bags', 'bolsas', 'basura'],
-        'Detergentes y Cuidado de Ropa': ['detergentes', 'cuidado de ropa', 'laundry', 'ropa', 'suavizante'],
-        'Limpiadores': ['limpiadores', 'cleaners', 'limpiavidrios', 'desengrasante'],
-        'Papeles': ['papeles', 'papel higienico', 'toilet paper', 'toallas', 'servilletas'],
-        'Utensilios de Aseo': ['utensilios de aseo', 'escobas', 'trapeadores', 'cleaning tools'],
     },
     'metro': {
         'Aves y Huevos': ['aves', 'huevos', 'poultry', 'eggs', 'pollo'],
@@ -95,15 +83,15 @@ export function normalizarCategoria(
     supermercado: string
 ): { original: string; normalized: string; supermercado: string; confianza: number } {
     const categoriaLower = (categoriaRaw || '').toLowerCase().trim();
-    
-    // ✅ FIX: Castear a tipo compatible con el objeto `as const`
-    const categoriasDisponibles = huellaCarbonoPorSupermercado[supermercado as keyof typeof huellaCarbonoPorSupermercado];
-    
-    // 1. Buscar coincidencia exacta
-    if (categoriasDisponibles && categoriasDisponibles[categoriaRaw as keyof typeof categoriasDisponibles]) {
-        logger.debug('✅ Coincidencia exacta de categoría', { 
-            original: categoriaRaw, 
-            supermercado 
+
+    // ✅ Usar subcategorías de tabla_maestra como fuente de verdad
+    const subcategoriasDisponibles = Object.keys(tablaMaestra.subcategorias);
+
+    // 1. Buscar coincidencia exacta en tabla_maestra
+    if (subcategoriasDisponibles.includes(categoriaRaw)) {
+        logger.debug('✅ Coincidencia exacta de subcategoría en tabla_maestra', {
+            original: categoriaRaw,
+            supermercado
         });
         return {
             original: categoriaRaw,
@@ -133,11 +121,11 @@ export function normalizarCategoria(
     }
 
     // 3. Categoría desconocida
-    logger.warn('⚠️ Categoría no reconocida', { 
-        categoria: categoriaRaw, 
-        supermercado 
+    logger.warn('⚠️ Categoría no reconocida', {
+        categoria: categoriaRaw,
+        supermercado
     });
-    
+
     return {
         original: categoriaRaw,
         normalized: 'Sin categoría',
@@ -147,13 +135,12 @@ export function normalizarCategoria(
 }
 
 export function esCategoriaValida(categoria: string, supermercado: string): boolean {
-    // ✅ FIX: Castear tipo
-    const categoriasDisponibles = huellaCarbonoPorSupermercado[supermercado as keyof typeof huellaCarbonoPorSupermercado];
-    return Boolean(categoriasDisponibles && categoriasDisponibles[categoria as keyof typeof categoriasDisponibles]);
+    // ✅ Validar contra subcategorías de tabla_maestra
+    return Object.keys(tablaMaestra.subcategorias).includes(categoria);
 }
 
 export function getCategoriasDisponibles(supermercado: string): string[] {
-    // ✅ FIX: Castear tipo
-    const categorias = huellaCarbonoPorSupermercado[supermercado as keyof typeof huellaCarbonoPorSupermercado];
-    return categorias ? Object.keys(categorias) : [];
+    // ✅ Retornar subcategorías de tabla_maestra
+    // Nota: tabla_maestra es global, no específica por supermercado
+    return Object.keys(tablaMaestra.subcategorias);
 }

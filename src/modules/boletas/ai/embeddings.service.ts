@@ -19,7 +19,9 @@ export class EmbeddingsService {
         return name
             .toLowerCase()
             .trim()
-            .replace(/\s+/g, ' ')      // Múltiples espacios → 1 espacio
-            .replace(/[^\w\s]/g, '');  // Eliminar caracteres especiales
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .replace(/[^\w\s\dáéíóúñ]/gi, '');
     }
 }

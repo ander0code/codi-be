@@ -1,0 +1,122 @@
+[
+  {
+    "category": "Frutas y Verduras",
+    "subcategories": [
+      {
+        "name": "Frutas Cítricas",
+        "subsubcategories": [
+          {
+            "name": "Limones, Naranjas y Mandarinas",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16994/Limones--Naranjas-y-Mandarinas"
+          },
+          {
+            "name": "Fresas y Arándanos",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16993/Fresas-y-Arandanos"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Frutas y Verduras",
+    "subcategories": [
+      {
+        "name": "Frutas Exóticas",
+        "subsubcategories": [
+          {
+            "name": "Granadillas, Tunas y Pitahayas",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16992/Granadillas--Tunas-y-Pitahayas"
+          },
+          {
+            "name": "Paltas y Frutas Nativas",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16991/Paltas-y-Frutas-Nativas"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Frutas y Verduras",
+    "subcategories": [
+      {
+        "name": "Frutas Tropicales",
+        "subsubcategories": [
+          {
+            "name": "Plátanos, Papayas, Piñas y Tropicales",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16986/Platanos--Papayas--Pinas-y-Tropicales"
+          },
+          {
+            "name": "Manzanas, Peras, Uvas y Membrillos",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16987/Manzanas--Peras--Uvas-y-Membrillos"
+          },
+          {
+            "name": "Duraznos, Sandías, Melones y Mangos",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16995/Duraznos--Sandias--Melones-y-Mangos"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Frutas y Verduras",
+    "subcategories": [
+      {
+        "name": "Mundo Hortalizas",
+        "subsubcategories": [
+          {
+            "name": "Zapallos, Berenjenas y Caihuas",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16989/Zapallos-Berenjenas-y-Caihuas"
+          },
+          {
+            "name": "Arvejas, Vainitas y Habas",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16979/Arvejas--Vainitas-y-Habas"
+          },
+          {
+            "name": "Choclo, Zanahoria, Pepinos y Beterragas",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16980/Choclo--Zanahoria--Pepinos-y-Beterragas"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Frutas y Verduras",
+    "subcategories": [
+      {
+        "name": "Mundo Tubérculos",
+        "subsubcategories": [
+          {
+            "name": "Cebolla, Tomate, Ajo y Ajíes",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16978/Cebolla--Tomate--Ajo-y-Ajies"
+          },
+          {
+            "name": "Papas y Camotes",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16977/Papas-y-Camotes"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Frutas y Verduras",
+    "subcategories": [
+      {
+        "name": "Mundo Hojas",
+        "subsubcategories": [
+          {
+            "name": "Lechugas, Espinacas y Hojas",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16985/Lechugas--Espinacas-y-Hojas"
+          },
+          {
+            "name": "Apio, Espárragos y Pimientos",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16981/Apio--Esparragos-y-Pimientos"
+          },
+          {
+            "name": "Brócoli, Col, Coliflor y Alcachofa",
+            "url": "https://www.tottus.com.pe/tottus-pe/lista/CATG16982/Brocoli-Col-Coliflor-y-Alcachofa"
+          }
+        ]
+      }
+    ]
+  }
+]

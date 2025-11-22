@@ -1,0 +1,1297 @@
+{
+  "version": "3.0",
+  "fecha_actualizacion": "2025-11-21",
+  "metodologia": "Promedio ponderado: Poore & Nemecek (40%) + Klimato (30%) + Huellaco2 (20%) + Mandouri (10%)",
+  "subcategorias": {
+    "Abarrotes": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 0.8,
+      "rango_max": 4.0,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Promedio general abarrotes secos"
+    },
+    "Aceite": {
+      "huella_media_kg_co2_por_kg": 4.5,
+      "rango_min": 2.6,
+      "rango_max": 12.0,
+      "verde_hasta": 3.15,
+      "amarillo_hasta": 6.75,
+      "rojo_desde": 6.75,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Poore girasol: 3.9 | soya: 6.8 | palma: 7.6"
+    },
+    "Accesorios de Repostería": {
+      "huella_media_kg_co2_por_kg": 0.5,
+      "rango_min": 0.2,
+      "rango_max": 1.0,
+      "verde_hasta": 0.35,
+      "amarillo_hasta": 0.75,
+      "rojo_desde": 0.75,
+      "fuentes": ["Estimado"],
+      "notas": "No alimenticio - plástico/papel"
+    },
+    "Aguas": {
+      "huella_media_kg_co2_por_kg": 0.25,
+      "rango_min": 0.1,
+      "rango_max": 0.4,
+      "verde_hasta": 0.175,
+      "amarillo_hasta": 0.375,
+      "rojo_desde": 0.375,
+      "fuentes": ["Huellaco2.org"],
+      "notas": "Huellaco2: 0.1 | Empaque PET incluido"
+    },
+    "Ajíes y Cremas": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.0,
+      "rango_max": 3.5,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Calculado"],
+      "notas": "Base vegetal + procesamiento"
+    },
+    "Arma Tu Parrilla": {
+      "huella_media_kg_co2_por_kg": 12.0,
+      "rango_min": 5.0,
+      "rango_max": 25.0,
+      "verde_hasta": 8.4,
+      "amarillo_hasta": 18.0,
+      "rojo_desde": 18.0,
+      "fuentes": ["Calculado"],
+      "notas": "Mix carnes variable"
+    },
+    "Arroz": {
+      "huella_media_kg_co2_por_kg": 3.7,
+      "rango_min": 0.52,
+      "rango_max": 6.0,
+      "verde_hasta": 2.59,
+      "amarillo_hasta": 5.55,
+      "rojo_desde": 5.55,
+      "fuentes": ["Klimato 2024", "Poore & Nemecek 2018", "MINAM 2019"],
+      "notas": "Klimato: 3.7 | Poore: 1.56 × 1.5 (ajuste Perú inundado)"
+    },
+    "Azúcar y Sustitutos": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.0,
+      "rango_max": 3.0,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Huellaco2.org"],
+      "notas": "Huellaco2: 1.0-2.5 | Diferencia caña vs remolacha"
+    },
+    "Baguettes y Artesanales": {
+      "huella_media_kg_co2_por_kg": 1.3,
+      "rango_min": 0.96,
+      "rango_max": 1.8,
+      "verde_hasta": 0.91,
+      "amarillo_hasta": 1.95,
+      "rojo_desde": 1.95,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore bread: 1.59 | Huellaco2: 0.96"
+    },
+    "Bebidas": {
+      "huella_media_kg_co2_por_kg": 0.7,
+      "rango_min": 0.2,
+      "rango_max": 1.5,
+      "verde_hasta": 0.49,
+      "amarillo_hasta": 1.05,
+      "rojo_desde": 1.05,
+      "fuentes": ["Estimado"],
+      "notas": "Promedio bebidas no alcohólicas"
+    },
+    "Bocaditos y Piqueos": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 2.0,
+      "rango_max": 5.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Calculado"],
+      "notas": "Mix variable según ingredientes"
+    },
+    "Café e Infusiones": {
+      "huella_media_kg_co2_por_kg": 10.0,
+      "rango_min": 3.5,
+      "rango_max": 17.0,
+      "verde_hasta": 7.0,
+      "amarillo_hasta": 15.0,
+      "rojo_desde": 15.0,
+      "fuentes": ["UCL 2021", "Life Cycle Assessment Studies"],
+      "notas": "VERIFICADO: Convencional 15.33 kg | Sostenible 3.51 kg | Promedio ~10 kg CO2/kg café tostado"
+    },
+    "Caramelos y Chupetes": {
+      "huella_media_kg_co2_por_kg": 2.5,
+      "rango_min": 1.5,
+      "rango_max": 4.0,
+      "verde_hasta": 1.75,
+      "amarillo_hasta": 3.75,
+      "rojo_desde": 3.75,
+      "fuentes": ["Calculado"],
+      "notas": "Base azúcar + procesamiento"
+    },
+    "Carne de Cerdo": {
+      "huella_media_kg_co2_por_kg": 7.0,
+      "rango_min": 2.05,
+      "rango_max": 11.0,
+      "verde_hasta": 4.9,
+      "amarillo_hasta": 10.5,
+      "rojo_desde": 10.5,
+      "fuentes": ["Poore & Nemecek 2018", "Klimato 2024", "Mandouri 2025"],
+      "notas": "Poore media: 2.05 | Klimato: 7.07 | Mandouri: 5.5-9.0"
+    },
+    "Carne de Pollo": {
+      "huella_media_kg_co2_por_kg": 5.5,
+      "rango_min": 1.54,
+      "rango_max": 9.0,
+      "verde_hasta": 3.85,
+      "amarillo_hasta": 8.25,
+      "rojo_desde": 8.25,
+      "fuentes": ["Poore & Nemecek 2018", "Klimato 2024", "Huellaco2.org"],
+      "notas": "Poore: 1.54 | Klimato: 5.98 | Huellaco2: 4.1"
+    },
+    "Carne de Res": {
+      "huella_media_kg_co2_por_kg": 60.0,
+      "rango_min": 30.0,
+      "rango_max": 100.0,
+      "verde_hasta": 42.0,
+      "amarillo_hasta": 90.0,
+      "rojo_desde": 90.0,
+      "fuentes": ["Poore & Nemecek 2018", "Our World in Data"],
+      "notas": "VERIFICADO: Igual que Res - Poore 60 kg CO2/kg"
+    },
+    "Carnes": {
+      "huella_media_kg_co2_por_kg": 12.0,
+      "rango_min": 4.0,
+      "rango_max": 35.0,
+      "verde_hasta": 8.4,
+      "amarillo_hasta": 18.0,
+      "rojo_desde": 18.0,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio ponderado carnes"
+    },
+    "Carnes Regionales": {
+      "huella_media_kg_co2_por_kg": 15.0,
+      "rango_min": 5.0,
+      "rango_max": 30.0,
+      "verde_hasta": 10.5,
+      "amarillo_hasta": 22.5,
+      "rojo_desde": 22.5,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio rumiantes regionales"
+    },
+    "Cereales": {
+      "huella_media_kg_co2_por_kg": 2.5,
+      "rango_min": 1.5,
+      "rango_max": 4.0,
+      "verde_hasta": 1.75,
+      "amarillo_hasta": 3.75,
+      "rojo_desde": 3.75,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Base granos + procesamiento industrial"
+    },
+    "Cerdo": {
+      "huella_media_kg_co2_por_kg": 7.0,
+      "rango_min": 2.05,
+      "rango_max": 11.0,
+      "verde_hasta": 4.9,
+      "amarillo_hasta": 10.5,
+      "rojo_desde": 10.5,
+      "fuentes": ["Poore & Nemecek 2018", "Klimato 2024"],
+      "notas": "Igual que Carne de Cerdo"
+    },
+    "Cervezas Artesanales": {
+      "huella_media_kg_co2_por_kg": 0.6,
+      "rango_min": 0.3,
+      "rango_max": 0.9,
+      "verde_hasta": 0.42,
+      "amarillo_hasta": 0.9,
+      "rojo_desde": 0.9,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Cerveza + proceso artesanal"
+    },
+    "Chocolates": {
+      "huella_media_kg_co2_por_kg": 4.5,
+      "rango_min": 1.7,
+      "rango_max": 6.8,
+      "verde_hasta": 3.15,
+      "amarillo_hasta": 6.75,
+      "rojo_desde": 6.75,
+      "fuentes": ["ScienceDirect 2018", "PMC 2024", "SpringerLink"],
+      "notas": "VERIFICADO: Dark chocolate 1.67-2.0 | Milk chocolate 2.9-4.2 | Confectionery hasta 6.76 kg CO2/kg"
+    },
+    "Chorizos": {
+      "huella_media_kg_co2_por_kg": 9.5,
+      "rango_min": 6.0,
+      "rango_max": 14.0,
+      "verde_hasta": 6.65,
+      "amarillo_hasta": 14.25,
+      "rojo_desde": 14.25,
+      "fuentes": ["Calculado"],
+      "notas": "Base cerdo (7.0) × 1.35 condimentado"
+    },
+    "Comidas Listas Congeladas": {
+      "huella_media_kg_co2_por_kg": 10.0,
+      "rango_min": 5.0,
+      "rango_max": 18.0,
+      "verde_hasta": 7.0,
+      "amarillo_hasta": 15.0,
+      "rojo_desde": 15.0,
+      "fuentes": ["Calculado"],
+      "notas": "Mix ingredientes + congelación"
+    },
+    "Complementos": {
+      "huella_media_kg_co2_por_kg": 1.5,
+      "rango_min": 0.5,
+      "rango_max": 3.0,
+      "verde_hasta": 1.05,
+      "amarillo_hasta": 2.25,
+      "rojo_desde": 2.25,
+      "fuentes": ["Estimado"],
+      "notas": "Variable según tipo"
+    },
+    "Compras por Volumen": {
+      "huella_media_kg_co2_por_kg": 2.5,
+      "rango_min": 1.5,
+      "rango_max": 4.0,
+      "verde_hasta": 1.75,
+      "amarillo_hasta": 3.75,
+      "rojo_desde": 3.75,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio dulces"
+    },
+    "Condimentos": {
+      "huella_media_kg_co2_por_kg": 1.5,
+      "rango_min": 0.8,
+      "rango_max": 2.5,
+      "verde_hasta": 1.05,
+      "amarillo_hasta": 2.25,
+      "rojo_desde": 2.25,
+      "fuentes": ["Estimado"],
+      "notas": "Bajo peso por porción"
+    },
+    "Condimentos y Especias": {
+      "huella_media_kg_co2_por_kg": 1.3,
+      "rango_min": 0.5,
+      "rango_max": 2.5,
+      "verde_hasta": 0.91,
+      "amarillo_hasta": 1.95,
+      "rojo_desde": 1.95,
+      "fuentes": ["Estimado"],
+      "notas": "Promedio condimentos secos"
+    },
+    "Confitería y Snacks": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 1.5,
+      "rango_max": 5.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio dulces y snacks"
+    },
+    "Conservas": {
+      "huella_media_kg_co2_por_kg": 2.8,
+      "rango_min": 2.0,
+      "rango_max": 4.0,
+      "verde_hasta": 1.96,
+      "amarillo_hasta": 4.2,
+      "rojo_desde": 4.2,
+      "fuentes": ["Calculado"],
+      "notas": "Base vegetal/pescado × 1.8 (lata acero)"
+    },
+    "Croissant Enrollados y Otros": {
+      "huella_media_kg_co2_por_kg": 2.5,
+      "rango_min": 1.5,
+      "rango_max": 4.0,
+      "verde_hasta": 1.75,
+      "amarillo_hasta": 3.75,
+      "rojo_desde": 3.75,
+      "fuentes": ["Calculado"],
+      "notas": "Pan + mantequilla (10.8) ponderado"
+    },
+    "Date un Gusto": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 2.0,
+      "rango_max": 5.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio snacks dulces"
+    },
+    "Desayunos": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 1.0,
+      "rango_max": 6.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Calculado"],
+      "notas": "Variable: café alto, pan bajo"
+    },
+    "Empanadas y Sandwiches": {
+      "huella_media_kg_co2_por_kg": 6.0,
+      "rango_min": 3.0,
+      "rango_max": 10.0,
+      "verde_hasta": 4.2,
+      "amarillo_hasta": 9.0,
+      "rojo_desde": 9.0,
+      "fuentes": ["Calculado"],
+      "notas": "Masa + relleno variable"
+    },
+    "Endulzantes": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.0,
+      "rango_max": 3.0,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Huellaco2.org"],
+      "notas": "Similar azúcar"
+    },
+    "Especias": {
+      "huella_media_kg_co2_por_kg": 1.2,
+      "rango_min": 0.5,
+      "rango_max": 2.0,
+      "verde_hasta": 0.84,
+      "amarillo_hasta": 1.8,
+      "rojo_desde": 1.8,
+      "fuentes": ["Estimado"],
+      "notas": "Bajo peso por uso"
+    },
+    "Fiambres Gourmet": {
+      "huella_media_kg_co2_por_kg": 10.0,
+      "rango_min": 7.0,
+      "rango_max": 15.0,
+      "verde_hasta": 7.0,
+      "amarillo_hasta": 15.0,
+      "rojo_desde": 15.0,
+      "fuentes": ["Calculado"],
+      "notas": "Embutido premium procesado"
+    },
+    "Frescos": {
+      "huella_media_kg_co2_por_kg": 5.0,
+      "rango_min": 1.1,
+      "rango_max": 14.0,
+      "verde_hasta": 3.5,
+      "amarillo_hasta": 7.5,
+      "rojo_desde": 7.5,
+      "fuentes": ["Poore & Nemecek 2018", "CO2everything", "The Fish Site"],
+      "notas": "VERIFICADO: Pescado farmed 4-6 kg | Sardinas/pelágicos ~1-2 kg | Farmed fish alto por metano"
+    },
+    "Frutas": {
+      "huella_media_kg_co2_por_kg": 0.6,
+      "rango_min": 0.3,
+      "rango_max": 1.5,
+      "verde_hasta": 0.42,
+      "amarillo_hasta": 0.9,
+      "rojo_desde": 0.9,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Promedio frutas frescas"
+    },
+    "Frutas Cítricas": {
+      "huella_media_kg_co2_por_kg": 0.4,
+      "rango_min": 0.1,
+      "rango_max": 0.9,
+      "verde_hasta": 0.28,
+      "amarillo_hasta": 0.6,
+      "rojo_desde": 0.6,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore citrus: 0.4 | Huellaco2 naranja: 0.22"
+    },
+    "Frutas Exóticas": {
+      "huella_media_kg_co2_por_kg": 1.2,
+      "rango_min": 0.5,
+      "rango_max": 2.5,
+      "verde_hasta": 0.84,
+      "amarillo_hasta": 1.8,
+      "rojo_desde": 1.8,
+      "fuentes": ["Calculado"],
+      "notas": "Mayor transporte importación"
+    },
+    "Frutas Tropicales": {
+      "huella_media_kg_co2_por_kg": 0.9,
+      "rango_min": 0.6,
+      "rango_max": 1.9,
+      "verde_hasta": 0.63,
+      "amarillo_hasta": 1.35,
+      "rojo_desde": 1.35,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore bananas: 0.9 | Huellaco2: 0.83"
+    },
+    "Frutas y Verduras": {
+      "huella_media_kg_co2_por_kg": 0.7,
+      "rango_min": 0.2,
+      "rango_max": 2.0,
+      "verde_hasta": 0.49,
+      "amarillo_hasta": 1.05,
+      "rojo_desde": 1.05,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Promedio general FyV"
+    },
+    "Frutas y Verduras Congeladas": {
+      "huella_media_kg_co2_por_kg": 0.9,
+      "rango_min": 0.5,
+      "rango_max": 1.5,
+      "verde_hasta": 0.63,
+      "amarillo_hasta": 1.35,
+      "rojo_desde": 1.35,
+      "fuentes": ["Calculado"],
+      "notas": "Base FyV × 1.3 congelación"
+    },
+    "Frutos Secos": {
+      "huella_media_kg_co2_por_kg": 0.5,
+      "rango_min": 0.2,
+      "rango_max": 1.3,
+      "verde_hasta": 0.35,
+      "amarillo_hasta": 0.75,
+      "rojo_desde": 0.75,
+      "fuentes": ["Poore & Nemecek 2018", "CO2everything"],
+      "notas": "VERIFICADO: CO2everything reporta 0.05 kg CO2/100g = 0.5 kg/kg para mixed nuts"
+    },
+    "Galletas": {
+      "huella_media_kg_co2_por_kg": 2.4,
+      "rango_min": 1.5,
+      "rango_max": 3.5,
+      "verde_hasta": 1.68,
+      "amarillo_hasta": 3.6,
+      "rojo_desde": 3.6,
+      "fuentes": ["Calculado"],
+      "notas": "Base harina (1.1) × 2 procesamiento"
+    },
+    "Galletas y Wafers": {
+      "huella_media_kg_co2_por_kg": 2.4,
+      "rango_min": 1.5,
+      "rango_max": 3.5,
+      "verde_hasta": 1.68,
+      "amarillo_hasta": 3.6,
+      "rojo_desde": 3.6,
+      "fuentes": ["Calculado"],
+      "notas": "Igual que Galletas"
+    },
+    "Gaseosas": {
+      "huella_media_kg_co2_por_kg": 0.6,
+      "rango_min": 0.4,
+      "rango_max": 1.0,
+      "verde_hasta": 0.42,
+      "amarillo_hasta": 0.9,
+      "rojo_desde": 0.9,
+      "fuentes": ["Estimado"],
+      "notas": "Azúcar + CO2 + embotellado PET"
+    },
+    "Gin": {
+      "huella_media_kg_co2_por_kg": 2.2,
+      "rango_min": 1.3,
+      "rango_max": 3.5,
+      "verde_hasta": 1.54,
+      "amarillo_hasta": 3.3,
+      "rojo_desde": 3.3,
+      "fuentes": ["Estimado"],
+      "notas": "Destilado granos + botánicos"
+    },
+    "Hamburguesas": {
+      "huella_media_kg_co2_por_kg": 52.0,
+      "rango_min": 35.0,
+      "rango_max": 80.0,
+      "verde_hasta": 36.4,
+      "amarillo_hasta": 78.0,
+      "rojo_desde": 78.0,
+      "fuentes": ["Calculado desde Poore & Nemecek 2018"],
+      "notas": "VERIFICADO: Base res (60) × 0.85 (mezcla) + procesamiento = ~52 kg CO2/kg"
+    },
+    "Harina": {
+      "huella_media_kg_co2_por_kg": 1.1,
+      "rango_min": 0.8,
+      "rango_max": 1.5,
+      "verde_hasta": 0.77,
+      "amarillo_hasta": 1.65,
+      "rojo_desde": 1.65,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Poore wheat: 0.8 kg/1000 kcal"
+    },
+    "Harina y Maicena": {
+      "huella_media_kg_co2_por_kg": 1.1,
+      "rango_min": 0.8,
+      "rango_max": 1.5,
+      "verde_hasta": 0.77,
+      "amarillo_hasta": 1.65,
+      "rojo_desde": 1.65,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Igual que Harina"
+    },
+    "Helados": {
+      "huella_media_kg_co2_por_kg": 3.5,
+      "rango_min": 2.0,
+      "rango_max": 5.0,
+      "verde_hasta": 2.45,
+      "amarillo_hasta": 5.25,
+      "rojo_desde": 5.25,
+      "fuentes": ["Calculado"],
+      "notas": "Base láctea (2.8) × 1.2 congelación"
+    },
+    "Hielo": {
+      "huella_media_kg_co2_por_kg": 0.15,
+      "rango_min": 0.05,
+      "rango_max": 0.3,
+      "verde_hasta": 0.1,
+      "amarillo_hasta": 0.22,
+      "rojo_desde": 0.22,
+      "fuentes": ["Estimado"],
+      "notas": "Solo energía congelación"
+    },
+    "Huevos": {
+      "huella_media_kg_co2_por_kg": 4.5,
+      "rango_min": 0.55,
+      "rango_max": 5.7,
+      "verde_hasta": 3.15,
+      "amarillo_hasta": 6.75,
+      "rojo_desde": 6.75,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org", "CEPAL 2023"],
+      "notas": "Poore: 0.55 | Ajuste Perú: 4.5 (CEPAL)"
+    },
+    "Huevos y Fiambres": {
+      "huella_media_kg_co2_por_kg": 7.0,
+      "rango_min": 3.0,
+      "rango_max": 12.0,
+      "verde_hasta": 4.9,
+      "amarillo_hasta": 10.5,
+      "rojo_desde": 10.5,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio categoría"
+    },
+    "Jamones": {
+      "huella_media_kg_co2_por_kg": 9.0,
+      "rango_min": 6.0,
+      "rango_max": 15.0,
+      "verde_hasta": 6.3,
+      "amarillo_hasta": 13.5,
+      "rojo_desde": 13.5,
+      "fuentes": ["Calculado"],
+      "notas": "Base cerdo (7.0) × 1.3 curado"
+    },
+    "Jamonadas": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 5.0,
+      "rango_max": 12.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Mix cerdo/pollo procesado"
+    },
+    "Jugos Naturales": {
+      "huella_media_kg_co2_por_kg": 1.2,
+      "rango_min": 0.8,
+      "rango_max": 2.0,
+      "verde_hasta": 0.84,
+      "amarillo_hasta": 1.8,
+      "rojo_desde": 1.8,
+      "fuentes": ["Calculado"],
+      "notas": "Base fruta + proceso"
+    },
+    "Jugos y Tés Líquidos": {
+      "huella_media_kg_co2_por_kg": 1.2,
+      "rango_min": 0.8,
+      "rango_max": 2.0,
+      "verde_hasta": 0.84,
+      "amarillo_hasta": 1.8,
+      "rojo_desde": 1.8,
+      "fuentes": ["Calculado"],
+      "notas": "Base fruta + proceso + empaque"
+    },
+    "Kekes y Chifones": {
+      "huella_media_kg_co2_por_kg": 3.5,
+      "rango_min": 2.0,
+      "rango_max": 5.0,
+      "verde_hasta": 2.45,
+      "amarillo_hasta": 5.25,
+      "rojo_desde": 5.25,
+      "fuentes": ["Calculado"],
+      "notas": "Harina + huevo + lácteo"
+    },
+    "La Pastelería": {
+      "huella_media_kg_co2_por_kg": 4.0,
+      "rango_min": 2.5,
+      "rango_max": 6.0,
+      "verde_hasta": 2.8,
+      "amarillo_hasta": 6.0,
+      "rojo_desde": 6.0,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio pastelería"
+    },
+    "Lácteos": {
+      "huella_media_kg_co2_por_kg": 4.0,
+      "rango_min": 1.5,
+      "rango_max": 10.0,
+      "verde_hasta": 2.8,
+      "amarillo_hasta": 6.0,
+      "rojo_desde": 6.0,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Promedio lácteos"
+    },
+    "Lanzamientos del Mes": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 1.0,
+      "rango_max": 10.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Estimado"],
+      "notas": "Variable - revisar producto específico"
+    },
+    "Leches": {
+      "huella_media_kg_co2_por_kg": 3.2,
+      "rango_min": 1.34,
+      "rango_max": 8.9,
+      "verde_hasta": 2.24,
+      "amarillo_hasta": 4.8,
+      "rojo_desde": 4.8,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore P50: 3.2 | Huellaco2: 1.34"
+    },
+    "Levadura y Polvo para Hornear": {
+      "huella_media_kg_co2_por_kg": 1.0,
+      "rango_min": 0.5,
+      "rango_max": 1.5,
+      "verde_hasta": 0.7,
+      "amarillo_hasta": 1.5,
+      "rojo_desde": 1.5,
+      "fuentes": ["Estimado"],
+      "notas": "Bajo impacto"
+    },
+    "Listo para Calentar": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 4.0,
+      "rango_max": 15.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Variable según ingredientes"
+    },
+    "Mantecas y Aceites": {
+      "huella_media_kg_co2_por_kg": 5.0,
+      "rango_min": 3.0,
+      "rango_max": 8.0,
+      "verde_hasta": 3.5,
+      "amarillo_hasta": 7.5,
+      "rojo_desde": 7.5,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Grasa vegetal/animal"
+    },
+    "Mantequillas y Margarinas": {
+      "huella_media_kg_co2_por_kg": 10.8,
+      "rango_min": 9.0,
+      "rango_max": 14.0,
+      "verde_hasta": 7.56,
+      "amarillo_hasta": 16.2,
+      "rojo_desde": 16.2,
+      "fuentes": ["Klimato 2024", "Huellaco2.org"],
+      "notas": "Klimato: 10.77 | Huellaco2: 11.52"
+    },
+    "Mariscos Congelados": {
+      "huella_media_kg_co2_por_kg": 18.0,
+      "rango_min": 8.0,
+      "rango_max": 40.0,
+      "verde_hasta": 12.6,
+      "amarillo_hasta": 27.0,
+      "rojo_desde": 27.0,
+      "fuentes": ["Poore & Nemecek 2018", "CO2everything", "Green Stars Project"],
+      "notas": "VERIFICADO: Crustáceos (camarones) ~40 kg CO2/kg | Bivalvos (mejillones) mucho menor ~2-5 kg"
+    },
+    "Marshmellows y Gomitas": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.0,
+      "rango_max": 3.0,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Calculado"],
+      "notas": "Azúcar + gelatina"
+    },
+    "Menestras": {
+      "huella_media_kg_co2_por_kg": 1.5,
+      "rango_min": 0.4,
+      "rango_max": 2.5,
+      "verde_hasta": 1.05,
+      "amarillo_hasta": 2.25,
+      "rojo_desde": 2.25,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Poore pulses: 0.4 kg/100g proteína"
+    },
+    "Mermeladas Mieles y Dulces": {
+      "huella_media_kg_co2_por_kg": 1.5,
+      "rango_min": 0.8,
+      "rango_max": 2.5,
+      "verde_hasta": 1.05,
+      "amarillo_hasta": 2.25,
+      "rojo_desde": 2.25,
+      "fuentes": ["Huellaco2.org"],
+      "notas": "Huellaco2 miel: 0.96"
+    },
+    "Modificadores y Complementos": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 2.0,
+      "rango_max": 5.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Calculado"],
+      "notas": "Variable lácteo/cacao"
+    },
+    "Morcillas": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 5.0,
+      "rango_max": 12.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Derivado cerdo"
+    },
+    "Mundo Hojas": {
+      "huella_media_kg_co2_por_kg": 0.7,
+      "rango_min": 0.2,
+      "rango_max": 1.2,
+      "verde_hasta": 0.49,
+      "amarillo_hasta": 1.05,
+      "rojo_desde": 1.05,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore brassicas: 0.5 | Huellaco2 lechuga: 0.81"
+    },
+    "Mundo Hortalizas": {
+      "huella_media_kg_co2_por_kg": 0.7,
+      "rango_min": 0.2,
+      "rango_max": 1.2,
+      "verde_hasta": 0.49,
+      "amarillo_hasta": 1.05,
+      "rojo_desde": 1.05,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Poore vegetables: 0.5-0.7"
+    },
+    "Mundo Tubérculos": {
+      "huella_media_kg_co2_por_kg": 0.5,
+      "rango_min": 0.17,
+      "rango_max": 1.04,
+      "verde_hasta": 0.35,
+      "amarillo_hasta": 0.75,
+      "rojo_desde": 0.75,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore: 0.52 | Huellaco2 papa: 0.42"
+    },
+    "Nuggets y Empanizados": {
+      "huella_media_kg_co2_por_kg": 7.5,
+      "rango_min": 5.0,
+      "rango_max": 11.0,
+      "verde_hasta": 5.25,
+      "amarillo_hasta": 11.25,
+      "rojo_desde": 11.25,
+      "fuentes": ["Calculado"],
+      "notas": "Base pollo (5.5) × 1.3 empanizado"
+    },
+    "Orgánicos y Verduras Baby": {
+      "huella_media_kg_co2_por_kg": 0.8,
+      "rango_min": 0.3,
+      "rango_max": 1.5,
+      "verde_hasta": 0.56,
+      "amarillo_hasta": 1.2,
+      "rojo_desde": 1.2,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Verduras frescas orgánicas"
+    },
+    "Otras Marcas de Cerveza": {
+      "huella_media_kg_co2_por_kg": 0.5,
+      "rango_min": 0.24,
+      "rango_max": 0.66,
+      "verde_hasta": 0.35,
+      "amarillo_hasta": 0.75,
+      "rojo_desde": 0.75,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore: 0.24 | Huellaco2: 0.66"
+    },
+    "Otros Fiambres": {
+      "huella_media_kg_co2_por_kg": 9.0,
+      "rango_min": 6.0,
+      "rango_max": 14.0,
+      "verde_hasta": 6.3,
+      "amarillo_hasta": 13.5,
+      "rojo_desde": 13.5,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio fiambres"
+    },
+    "Otros Licores": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.0,
+      "rango_max": 3.5,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Estimado"],
+      "notas": "Promedio destilados"
+    },
+    "Pan de la Casa y Pan de Molde": {
+      "huella_media_kg_co2_por_kg": 1.3,
+      "rango_min": 0.96,
+      "rango_max": 1.8,
+      "verde_hasta": 0.91,
+      "amarillo_hasta": 1.95,
+      "rojo_desde": 1.95,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore bread: 1.59 | Huellaco2: 0.96"
+    },
+    "Panadería": {
+      "huella_media_kg_co2_por_kg": 1.3,
+      "rango_min": 0.96,
+      "rango_max": 2.0,
+      "verde_hasta": 0.91,
+      "amarillo_hasta": 1.95,
+      "rojo_desde": 1.95,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Poore bread: 1.59"
+    },
+    "Panes Congelados": {
+      "huella_media_kg_co2_por_kg": 1.5,
+      "rango_min": 1.0,
+      "rango_max": 2.0,
+      "verde_hasta": 1.05,
+      "amarillo_hasta": 2.25,
+      "rojo_desde": 2.25,
+      "fuentes": ["Calculado"],
+      "notas": "Pan × 1.15 congelación"
+    },
+    "Pasta": {
+      "huella_media_kg_co2_por_kg": 1.4,
+      "rango_min": 0.88,
+      "rango_max": 2.0,
+      "verde_hasta": 0.98,
+      "amarillo_hasta": 2.1,
+      "rojo_desde": 2.1,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore wheat: 1.59 | Huellaco2: 0.88"
+    },
+    "Pastelería": {
+      "huella_media_kg_co2_por_kg": 4.0,
+      "rango_min": 2.5,
+      "rango_max": 6.0,
+      "verde_hasta": 2.8,
+      "amarillo_hasta": 6.0,
+      "rojo_desde": 6.0,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio pastelería"
+    },
+    "Pavo": {
+      "huella_media_kg_co2_por_kg": 6.5,
+      "rango_min": 3.09,
+      "rango_max": 8.0,
+      "verde_hasta": 4.55,
+      "amarillo_hasta": 9.75,
+      "rojo_desde": 9.75,
+      "fuentes": ["Huellaco2.org"],
+      "notas": "Huellaco2: 5.58"
+    },
+    "Pescados Congelados": {
+      "huella_media_kg_co2_por_kg": 6.0,
+      "rango_min": 3.5,
+      "rango_max": 10.0,
+      "verde_hasta": 4.2,
+      "amarillo_hasta": 9.0,
+      "rojo_desde": 9.0,
+      "fuentes": ["Calculado"],
+      "notas": "Pescado fresco × 1.5 congelación"
+    },
+    "Pescados y Mariscos": {
+      "huella_media_kg_co2_por_kg": 5.0,
+      "rango_min": 2.0,
+      "rango_max": 12.0,
+      "verde_hasta": 3.5,
+      "amarillo_hasta": 7.5,
+      "rojo_desde": 7.5,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Promedio marino"
+    },
+    "Pisco": {
+      "huella_media_kg_co2_por_kg": 1.8,
+      "rango_min": 1.0,
+      "rango_max": 2.5,
+      "verde_hasta": 1.26,
+      "amarillo_hasta": 2.7,
+      "rojo_desde": 2.7,
+      "fuentes": ["Estimado"],
+      "notas": "Destilado uva peruana"
+    },
+    "Pizzas": {
+      "huella_media_kg_co2_por_kg": 11.0,
+      "rango_min": 7.0,
+      "rango_max": 18.0,
+      "verde_hasta": 7.7,
+      "amarillo_hasta": 16.5,
+      "rojo_desde": 16.5,
+      "fuentes": ["Calculado"],
+      "notas": "Mix queso (8) + carnes + masa"
+    },
+    "Pizzas Pastas y Bocaditos": {
+      "huella_media_kg_co2_por_kg": 11.0,
+      "rango_min": 7.0,
+      "rango_max": 18.0,
+      "verde_hasta": 7.7,
+      "amarillo_hasta": 16.5,
+      "rojo_desde": 16.5,
+      "fuentes": ["Calculado"],
+      "notas": "Igual que Pizzas"
+    },
+    "Platos Preparados": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 4.0,
+      "rango_max": 15.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Variable según ingredientes"
+    },
+    "Pollo": {
+      "huella_media_kg_co2_por_kg": 5.5,
+      "rango_min": 1.54,
+      "rango_max": 9.0,
+      "verde_hasta": 3.85,
+      "amarillo_hasta": 8.25,
+      "rojo_desde": 8.25,
+      "fuentes": ["Poore & Nemecek 2018", "Klimato 2024"],
+      "notas": "Poore: 1.54 | Klimato: 5.98"
+    },
+    "Pollo Broaster y Piqueo": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 5.0,
+      "rango_max": 12.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Pollo × 1.45 fritura"
+    },
+    "Pollo Rostizado": {
+      "huella_media_kg_co2_por_kg": 7.0,
+      "rango_min": 4.0,
+      "rango_max": 11.0,
+      "verde_hasta": 4.9,
+      "amarillo_hasta": 10.5,
+      "rojo_desde": 10.5,
+      "fuentes": ["Calculado"],
+      "notas": "Pollo × 1.25 cocción"
+    },
+    "Postres": {
+      "huella_media_kg_co2_por_kg": 4.5,
+      "rango_min": 3.0,
+      "rango_max": 7.0,
+      "verde_hasta": 3.15,
+      "amarillo_hasta": 6.75,
+      "rojo_desde": 6.75,
+      "fuentes": ["Calculado"],
+      "notas": "Lácteo + azúcar"
+    },
+    "Postres Instantáneos": {
+      "huella_media_kg_co2_por_kg": 2.5,
+      "rango_min": 1.5,
+      "rango_max": 4.0,
+      "verde_hasta": 1.75,
+      "amarillo_hasta": 3.75,
+      "rojo_desde": 3.75,
+      "fuentes": ["Calculado"],
+      "notas": "Base + aditivos"
+    },
+    "Productos Congelados": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 2.0,
+      "rango_max": 25.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Variable alto rango"
+    },
+    "Productos Vegetarianos": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 1.5,
+      "rango_max": 5.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Tofu/soya base: 2.0"
+    },
+    "Puré Sopas y Bases": {
+      "huella_media_kg_co2_por_kg": 1.8,
+      "rango_min": 1.0,
+      "rango_max": 2.5,
+      "verde_hasta": 1.26,
+      "amarillo_hasta": 2.7,
+      "rojo_desde": 2.7,
+      "fuentes": ["Calculado"],
+      "notas": "Base vegetal procesada"
+    },
+    "Quesos": {
+      "huella_media_kg_co2_por_kg": 21.0,
+      "rango_min": 11.0,
+      "rango_max": 27.0,
+      "verde_hasta": 14.7,
+      "amarillo_hasta": 31.5,
+      "rojo_desde": 31.5,
+      "fuentes": ["Poore & Nemecek 2018", "Our World in Data"],
+      "notas": "VERIFICADO: Poore & Nemecek reportan 21-27 kg CO2/kg para queso"
+    },
+    "Quesos del Mundo": {
+      "huella_media_kg_co2_por_kg": 24.0,
+      "rango_min": 15.0,
+      "rango_max": 30.0,
+      "verde_hasta": 16.8,
+      "amarillo_hasta": 36.0,
+      "rojo_desde": 36.0,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "VERIFICADO: Queso maduro importado, rango alto de Poore"
+    },
+    "Ready To Drink": {
+      "huella_media_kg_co2_por_kg": 0.8,
+      "rango_min": 0.4,
+      "rango_max": 1.5,
+      "verde_hasta": 0.56,
+      "amarillo_hasta": 1.2,
+      "rojo_desde": 1.2,
+      "fuentes": ["Estimado"],
+      "notas": "Bebida diluida"
+    },
+    "Rellenos y Coberturas": {
+      "huella_media_kg_co2_por_kg": 4.0,
+      "rango_min": 2.5,
+      "rango_max": 6.0,
+      "verde_hasta": 2.8,
+      "amarillo_hasta": 6.0,
+      "rojo_desde": 6.0,
+      "fuentes": ["Calculado"],
+      "notas": "Azúcar + grasa"
+    },
+    "Res": {
+      "huella_media_kg_co2_por_kg": 60.0,
+      "rango_min": 30.0,
+      "rango_max": 100.0,
+      "verde_hasta": 42.0,
+      "amarillo_hasta": 90.0,
+      "rojo_desde": 90.0,
+      "fuentes": ["Poore & Nemecek 2018", "Our World in Data"],
+      "notas": "VERIFICADO: Poore reporta 60 kg CO2/kg (sin desperdicio) | 100 kg (con desperdicio) | Mayor emisor"
+    },
+    "Ron": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.2,
+      "rango_max": 3.0,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Estimado"],
+      "notas": "Destilado caña"
+    },
+    "Sal": {
+      "huella_media_kg_co2_por_kg": 0.7,
+      "rango_min": 0.3,
+      "rango_max": 1.0,
+      "verde_hasta": 0.49,
+      "amarillo_hasta": 1.05,
+      "rojo_desde": 1.05,
+      "fuentes": ["Estimado"],
+      "notas": "Mineral bajo procesamiento"
+    },
+    "Salchichas": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 5.0,
+      "rango_max": 12.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Mix cerdo/pollo procesado"
+    },
+    "Salchichas y Hot Dogs": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 5.0,
+      "rango_max": 12.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Igual que Salchichas"
+    },
+    "Salsas para Pasta": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.2,
+      "rango_max": 3.0,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Calculado"],
+      "notas": "Base tomate + procesamiento"
+    },
+    "Salsas y Cremas": {
+      "huella_media_kg_co2_por_kg": 2.5,
+      "rango_min": 1.5,
+      "rango_max": 4.0,
+      "verde_hasta": 1.75,
+      "amarillo_hasta": 3.75,
+      "rojo_desde": 3.75,
+      "fuentes": ["Calculado"],
+      "notas": "Variable según ingredientes"
+    },
+    "Snacks": {
+      "huella_media_kg_co2_por_kg": 2.0,
+      "rango_min": 1.0,
+      "rango_max": 3.0,
+      "verde_hasta": 1.4,
+      "amarillo_hasta": 3.0,
+      "rojo_desde": 3.0,
+      "fuentes": ["Calculado"],
+      "notas": "Base papa/maíz + fritura"
+    },
+    "Tablas de Piqueos": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 4.0,
+      "rango_max": 15.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado"],
+      "notas": "Mix queso + fiambre"
+    },
+    "Tablas y Copas": {
+      "huella_media_kg_co2_por_kg": 1.0,
+      "rango_min": 0.3,
+      "rango_max": 2.0,
+      "verde_hasta": 0.7,
+      "amarillo_hasta": 1.5,
+      "rojo_desde": 1.5,
+      "fuentes": ["Estimado"],
+      "notas": "No alimenticio principalmente"
+    },
+    "Tamales y Humitas": {
+      "huella_media_kg_co2_por_kg": 5.0,
+      "rango_min": 3.0,
+      "rango_max": 8.0,
+      "verde_hasta": 3.5,
+      "amarillo_hasta": 7.5,
+      "rojo_desde": 7.5,
+      "fuentes": ["Calculado"],
+      "notas": "Maíz + relleno carne/queso"
+    },
+    "Tartas y Roscas": {
+      "huella_media_kg_co2_por_kg": 4.0,
+      "rango_min": 2.5,
+      "rango_max": 6.0,
+      "verde_hasta": 2.8,
+      "amarillo_hasta": 6.0,
+      "rojo_desde": 6.0,
+      "fuentes": ["Calculado"],
+      "notas": "Masa + relleno"
+    },
+    "Tequila": {
+      "huella_media_kg_co2_por_kg": 2.3,
+      "rango_min": 1.5,
+      "rango_max": 3.5,
+      "verde_hasta": 1.61,
+      "amarillo_hasta": 3.45,
+      "rojo_desde": 3.45,
+      "fuentes": ["Estimado"],
+      "notas": "Destilado agave"
+    },
+    "Tocinos": {
+      "huella_media_kg_co2_por_kg": 9.0,
+      "rango_min": 6.0,
+      "rango_max": 14.0,
+      "verde_hasta": 6.3,
+      "amarillo_hasta": 13.5,
+      "rojo_desde": 13.5,
+      "fuentes": ["Calculado"],
+      "notas": "Cerdo curado ahumado"
+    },
+    "Toffees y Tejas": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 2.0,
+      "rango_max": 4.5,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Calculado"],
+      "notas": "Azúcar + lácteo"
+    },
+    "Tortas": {
+      "huella_media_kg_co2_por_kg": 4.0,
+      "rango_min": 2.5,
+      "rango_max": 6.0,
+      "verde_hasta": 2.8,
+      "amarillo_hasta": 6.0,
+      "rojo_desde": 6.0,
+      "fuentes": ["Calculado"],
+      "notas": "Harina + huevo + lácteo"
+    },
+    "Tostadas y Bocaditos": {
+      "huella_media_kg_co2_por_kg": 1.5,
+      "rango_min": 1.0,
+      "rango_max": 2.2,
+      "verde_hasta": 1.05,
+      "amarillo_hasta": 2.25,
+      "rojo_desde": 2.25,
+      "fuentes": ["Calculado"],
+      "notas": "Pan + horneado extra"
+    },
+    "Velas y Toppers": {
+      "huella_media_kg_co2_por_kg": 0.5,
+      "rango_min": 0.2,
+      "rango_max": 1.0,
+      "verde_hasta": 0.35,
+      "amarillo_hasta": 0.75,
+      "rojo_desde": 0.75,
+      "fuentes": ["Estimado"],
+      "notas": "No alimenticio"
+    },
+    "Vinos y Espumantes": {
+      "huella_media_kg_co2_por_kg": 1.3,
+      "rango_min": 0.14,
+      "rango_max": 1.92,
+      "verde_hasta": 0.91,
+      "amarillo_hasta": 1.95,
+      "rojo_desde": 1.95,
+      "fuentes": ["Poore & Nemecek 2018", "Huellaco2.org"],
+      "notas": "Poore: 0.14 | Huellaco2 España: 1.92"
+    },
+    "Vodka": {
+      "huella_media_kg_co2_por_kg": 2.2,
+      "rango_min": 1.3,
+      "rango_max": 3.5,
+      "verde_hasta": 1.54,
+      "amarillo_hasta": 3.3,
+      "rojo_desde": 3.3,
+      "fuentes": ["Estimado"],
+      "notas": "Destilado granos/papa"
+    },
+    "Whisky": {
+      "huella_media_kg_co2_por_kg": 2.5,
+      "rango_min": 1.5,
+      "rango_max": 4.0,
+      "verde_hasta": 1.75,
+      "amarillo_hasta": 3.75,
+      "rojo_desde": 3.75,
+      "fuentes": ["Estimado"],
+      "notas": "Destilado granos añejado"
+    },
+    "Yogurt": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 1.8,
+      "rango_max": 5.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Calculado"],
+      "notas": "Leche × 1.1 fermentación"
+    }
+  }
+}
