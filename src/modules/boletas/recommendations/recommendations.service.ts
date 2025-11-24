@@ -1,5 +1,5 @@
 import { qdrantClient } from '@/lib/clients/qdrant.js';
-import { EmbeddingsService } from './embeddings.service.js';
+import { EmbeddingsService } from '../matching/embeddings.service.js';
 import logger from '@/config/logger.js';
 
 import type { ProductoClasificado } from '../schemas.js';
@@ -23,7 +23,6 @@ async function findAlternatives(
 
         const alternativas: ProductoRecomendado[] = [];
 
-        // 1. Buscar en la misma tienda
         const resultsMismaTienda = await qdrantClient.search(tiendaOriginal, {
             vector: embedding,
             limit: 10,
@@ -54,7 +53,6 @@ async function findAlternatives(
             const payload = match.payload as Record<string, any>;
             const co2 = payload.co2_estimado || payload.co2e_estimado || 0;
 
-            // Solo recomendar si tiene MENOR CO2
             if (co2 < producto.factorCo2 && co2 > 0) {
                 alternativas.push({
                     nombre: payload.nombre || 'Producto sin nombre',
@@ -67,7 +65,6 @@ async function findAlternatives(
             }
         }
 
-        // 2. Buscar en otras tiendas (si está habilitado)
         if (buscarOtrasTiendas && alternativas.length < 3) {
             const otrasTiendas = ['tottus', 'wong', 'vivanda', 'plazavea', 'metro'].filter(
                 t => t !== tiendaOriginal
@@ -106,18 +103,15 @@ async function findAlternatives(
                         }
                     }
                 } catch (error) {
-                    // Ignorar si la colección no existe
                     logger.debug(`⚠️ Colección ${tienda} no disponible`);
                 }
             }
         }
 
-        // Ordenar por mejor CO2 primero
         alternativas.sort((a, b) => a.co2 - b.co2);
 
         logger.info(`✅ Encontradas ${alternativas.length} alternativas para ${producto.nombre}`);
 
-        // Retornar máximo 3 mejores alternativas
         return alternativas.slice(0, 3);
     } catch (error) {
         logger.error('❌ Error buscando alternativas', { producto: producto.nombre, error });

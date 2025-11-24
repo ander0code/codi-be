@@ -92,7 +92,6 @@ async function getBoletaById(boletaId: string) {
                                 Nombre: true,
                             },
                         },
-                        // ✅ NUEVO: Incluir recomendaciones del producto
                         Recomendaciones: {
                             include: {
                                 Marca: {
@@ -107,9 +106,9 @@ async function getBoletaById(boletaId: string) {
                                 },
                             },
                             orderBy: {
-                                PorcentajeMejora: 'desc', // Mejores recomendaciones primero
+                                PorcentajeMejora: 'desc',
                             },
-                            take: 3, // Máximo 3 recomendaciones por producto
+                            take: 3,
                         },
                     },
                 },

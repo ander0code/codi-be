@@ -1,12 +1,12 @@
 import type { ServiceResponse } from "@/types/service.js";
 import { BoletasRepository } from "./repository.js";
 import { TesseractService } from "./ocr/tesseract.service.js";
-import { ProductMatcher } from "./ai/product-matcher.js";
+import { ProductMatcher } from "./matching/product-matcher.js";
 import { SupermarketDetector } from "./ai/supermarket-detector.js";
 import { DeepSeekClientService } from "@/lib/clients/deepseek.js";
-import { clasificarImpactoProducto } from "./utils/impactClassifier.js";
-import { validarCO2 } from "./utils/tablaMaestra.js";
-import { normalizarCantidadAKg } from "./utils/normalizador-unidades.js";
+import { clasificarImpactoProducto } from "./validation/impactClassifier.js";
+import { validarCO2 } from "./validation/tablaMaestra.js";
+import { normalizarCantidadAKg } from "./validation/normalizador-unidades.js";
 import { ValidationError, NotFoundError } from "@/config/errors/errors.js";
 import logger from "@/config/logger.js";
 import type { BoletaTipoAmbiental } from "@prisma/client";
@@ -19,9 +19,10 @@ import type {
   DetalleBoletaResponse,
   ProductoDetalle,
   RecomendacionItem,
+  GetRecommendationsResponse,
 } from "./schemas.js";
 
-import { RecommendationsService } from "./ai/recommendations.service.js";
+import { RecommendationsService } from "./recommendations/recommendations.service.js";
 
 function esProductoVerde(
   producto: ProductoClasificado,
@@ -60,15 +61,10 @@ async function matchProductos(
 
 
     if (match) {
-      // ✅ LÓGICA DE NORMALIZACIÓN:
-      // 1. Si tiene peso (kg, g, ml, l) → Solo convertir unidades
-      // 2. Si es por unidad (un) → Estimar peso (ÚLTIMO RECURSO)
-
       let cantidadEnKg: number;
       const unidad = productoOCR.unidad || 'kg';
       const unidadLower = unidad.toLowerCase().trim();
 
-      // CASO 1: Producto con peso en boleta (kg, g, ml, l)
       if (['kg', 'g', 'ml', 'l'].includes(unidadLower)) {
         cantidadEnKg = normalizarCantidadAKg(
           productoOCR.cantidad,
@@ -82,7 +78,6 @@ async function matchProductos(
           cantidadNormalizada: cantidadEnKg,
         });
       }
-      // CASO 2: Producto sin peso (por unidad) - ÚLTIMO RECURSO
       else if (['un', 'unidad', 'unidades'].includes(unidadLower)) {
         cantidadEnKg = normalizarCantidadAKg(
           productoOCR.cantidad,
@@ -96,7 +91,6 @@ async function matchProductos(
           pesoEstimado: cantidadEnKg,
         });
       }
-      // CASO 3: Unidad no reconocida - usar cantidad directa
       else {
         cantidadEnKg = productoOCR.cantidad;
         logger.warn('⚠️ Unidad no reconocida, usando cantidad directa', {
@@ -106,10 +100,8 @@ async function matchProductos(
         });
       }
 
-      // ✅ Calcular CO2 con cantidad normalizada
       const co2Calculado = match.factorCo2 * cantidadEnKg;
 
-      // ✅ Validar con tabla_maestra usando subcategoría
       const subcategoria = match.subcategoria || match.categoria;
       const validacion = validarCO2(subcategoria, co2Calculado);
 
@@ -127,9 +119,9 @@ async function matchProductos(
       productosClasificados.push({
         ...match,
         precio: productoOCR.precio,
-        cantidad: cantidadEnKg,  // ✅ Cantidad normalizada en kg
+        cantidad: cantidadEnKg,
         confianza: match.confianza,
-        validacion,  // ✅ NUEVO: Validación con tabla_maestra
+        validacion,
       });
     } else {
       logger.warn("⚠️ Producto no encontrado en Qdrant", {
@@ -137,7 +129,6 @@ async function matchProductos(
         collection: collectionName,
       });
 
-      // ✅ Producto no encontrado: usar valores por defecto
       const co2Calculado = 5.0 * productoOCR.cantidad;
       const validacion = validarCO2("Sin categoría", co2Calculado);
 
@@ -147,7 +138,7 @@ async function matchProductos(
         factorCo2: 5.0,
         esLocal: false,
         tieneEmpaqueEcologico: false,
-        validacion,  // ✅ Validación por defecto
+        validacion,
       });
     }
   }
@@ -160,27 +151,21 @@ function analizarBoleta(
 ): AnalisisBoleta {
   const totalProductos = productos.length;
 
-  // ✅ NUEVO: Contar productos verdes usando validación de tabla_maestra
-  // Los productos ya vienen con el campo validacion desde matchProductos
   const productosVerdes = productos.filter((p) => {
-    // Si tiene validación de tabla_maestra, usar ese nivel
     if (p.validacion) {
       return p.validacion.nivel === 'verde';
     }
-    // Fallback: usar lógica anterior
     return esProductoVerde(p, supermercado);
   }).length;
 
   const porcentajeVerde = (productosVerdes / totalProductos) * 100;
 
-  // ✅ Calcular CO2 total (peso_real × huella_categoria)
   const co2Total = productos.reduce(
     (sum, p) => sum + p.factorCo2 * p.cantidad,
     0
   );
   const co2Promedio = co2Total / totalProductos;
 
-  // ✅ Clasificar boleta según porcentaje de productos verdes
   let tipoAmbiental: "VERDE" | "AMARILLO" | "ROJO";
   if (porcentajeVerde >= 60) {
     tipoAmbiental = "VERDE";
@@ -215,25 +200,21 @@ async function procesarBoleta(
   userId: string,
   imageBuffer: Buffer,
   fileName: string,
-  generateSuggestions: boolean = false // ✅ Parámetro opcional
+  generateSuggestions: boolean = false
 ): Promise<ServiceResponse<ProcesarBoletaResponse>> {
   try {
     logger.info("🚀 Iniciando procesamiento de boleta", { userId, fileName });
-
-    // ✅ PASO 1: Extracción de texto con OCR
     logger.info("📸 Paso 1: Extrayendo texto con OCR...");
     const textoOCR = await TesseractService.extractText(imageBuffer);
 
-    // ✅ NUEVO: Logger para mostrar texto extraído completo
     logger.info("📝 Texto extraído del OCR (completo):", {
       caracteres: textoOCR.length,
       lineas: textoOCR.split("\n").length,
     });
     logger.debug("📄 Contenido OCR:", {
-      texto: textoOCR, // ✅ Muestra el texto completo en modo debug
+      texto: textoOCR,
     });
 
-    // Si quieres verlo en modo INFO (para producción), usa esto:
     logger.info("📄 Preview del texto OCR (primeras 500 chars):", {
       preview: textoOCR.substring(0, 500),
     });
@@ -261,7 +242,6 @@ async function procesarBoleta(
     logger.info("📊 Paso 4: Analizando impacto ambiental...");
     const analisis = analizarBoleta(productosClasificados, collectionName);
 
-    // ✅ Sugerencias opcionales (solo si se solicita)
     let sugerencias: string[] = [];
 
     logger.info("💾 Paso 5: Guardando en base de datos...");
@@ -287,67 +267,13 @@ async function procesarBoleta(
       }))
     );
 
-    // ✅ PASO 7: Generar recomendaciones (REFACTORIZADO)
-    logger.info("🌱 Paso 7: Generando recomendaciones de productos...");
 
-    // ✅ Obtener IDs de productos desde repository
-    const productosConIds = await BoletasRepository.getProductosByBoletaId(
-      boleta.Id
-    );
-
-    const recomendacionesParaGuardar = [];
-
-    for (let i = 0; i < productosClasificados.length; i++) {
-      const producto = productosClasificados[i];
-      const productoDb = productosConIds[i];
-
-      // Solo recomendar para productos con CO2 > 3.0
-      if (producto.factorCo2 > 3.0) {
-        const alternativas = await RecommendationsService.findAlternatives(
-          producto,
-          collectionName,
-          true
-        );
-
-        for (const alternativa of alternativas) {
-          const porcentajeMejora =
-            ((producto.factorCo2 - alternativa.co2) / producto.factorCo2) * 100;
-
-          recomendacionesParaGuardar.push({
-            productoOriginalId: productoDb.Id,
-            productoRecomendadoNombre: alternativa.nombre,
-            productoRecomendadoMarcaId: undefined,
-            productoRecomendadoCategoriaId: undefined,
-            tiendaOrigen: alternativa.tienda,
-            co2Original: producto.factorCo2,
-            co2Recomendado: alternativa.co2,
-            porcentajeMejora,
-            tipoRecomendacion:
-              alternativa.tienda === collectionName
-                ? ("ALTERNATIVA_MISMA_TIENDA" as const)
-                : ("ALTERNATIVA_OTRA_TIENDA" as const),
-            scoreSimilitud: alternativa.scoreSimilitud,
-          });
-        }
-      }
-    }
-
-    if (recomendacionesParaGuardar.length > 0) {
-      await BoletasRepository.createRecomendaciones(
-        boleta.Id,
-        recomendacionesParaGuardar
-      );
-      logger.info(
-        `✅ ${recomendacionesParaGuardar.length} recomendaciones guardadas`
-      );
-    }
 
     if (analisis.esReciboVerde) {
       await BoletasRepository.updatePuntosVerdes(userId, 1);
       logger.info("✅ Recibo verde detectado - Punto agregado");
     }
 
-    // ✅ PASO 6: Generar sugerencias ecológicas (OPCIONAL)
     if (generateSuggestions) {
       logger.info("💡 Generando sugerencias ecológicas con IA...");
 
@@ -393,7 +319,6 @@ async function getBoletaDetalle(
     throw new NotFoundError("Boleta no encontrada");
   }
 
-  // Transformar productos
   const productos: ProductoDetalle[] = boleta.Items.map((item) => ({
     id: item.Id,
     nombre: item.NombreProducto,
@@ -406,55 +331,12 @@ async function getBoletaDetalle(
     marca: item.Marca?.Nombre ?? null,
   }));
 
-  // ✅ NUEVO: Transformar recomendaciones
-  const recomendaciones: RecomendacionItem[] = [];
-
-  for (const item of boleta.Items) {
-    for (const rec of item.Recomendaciones || []) {
-      const co2Ahorrado = Number(rec.Co2Original) - Number(rec.Co2Recomendado);
-
-      recomendaciones.push({
-        id: rec.Id,
-        productoOriginal: {
-          id: item.Id,
-          nombre: item.NombreProducto || "Producto sin nombre",
-          co2: Number(item.FactorCo2PorUnidad),
-        },
-        productoRecomendado: {
-          nombre: rec.ProductoRecomendadoNombre,
-          marca: rec.Marca?.Nombre ?? null,
-          categoria: rec.Categoria?.Nombre ?? null,
-          tienda: rec.TiendaOrigen,
-          co2: Number(rec.Co2Recomendado),
-        },
-        mejora: {
-          porcentaje: Number(rec.PorcentajeMejora),
-          co2Ahorrado,
-        },
-        tipo: rec.TipoRecomendacion,
-        scoreSimilitud: Number(rec.ScoreSimilitud),
-      });
-    }
-  }
-
-  // Calcular análisis
   const totalProductos = productos.length;
   const co2Total = productos.reduce(
     (sum, p) => sum + p.factorCo2 * p.cantidad,
     0
   );
   const co2Promedio = totalProductos > 0 ? co2Total / totalProductos : 0;
-
-  // ✅ NUEVO: Resumen de recomendaciones
-  const co2TotalAhorrable = recomendaciones.reduce(
-    (sum, r) => sum + r.mejora.co2Ahorrado,
-    0
-  );
-  const porcentajeMejoraPromedio =
-    recomendaciones.length > 0
-      ? recomendaciones.reduce((sum, r) => sum + r.mejora.porcentaje, 0) /
-      recomendaciones.length
-      : 0;
 
   const detalle: DetalleBoletaResponse = {
     id: boleta.Id,
@@ -470,19 +352,10 @@ async function getBoletaDetalle(
       co2Total: Math.round(co2Total * 100) / 100,
       co2Promedio: Math.round(co2Promedio * 100) / 100,
     },
-    // ✅ NUEVO
-    recomendaciones,
-    resumenRecomendaciones: {
-      totalRecomendaciones: recomendaciones.length,
-      co2TotalAhorrable: Math.round(co2TotalAhorrable * 100) / 100,
-      porcentajeMejoraPromedio:
-        Math.round(porcentajeMejoraPromedio * 100) / 100,
-    },
   };
 
-  logger.info("Detalle de boleta obtenido con recomendaciones", {
+  logger.info("Detalle de boleta obtenido", {
     boletaId: params.boletaId,
-    recomendaciones: recomendaciones.length,
   });
 
   return {
@@ -491,7 +364,164 @@ async function getBoletaDetalle(
   };
 }
 
+async function getBoletaRecommendations(
+  params: GetBoletaParams
+): Promise<ServiceResponse<GetRecommendationsResponse>> {
+  const boleta = await BoletasRepository.getBoletaById(params.boletaId);
+
+  if (!boleta) {
+    throw new NotFoundError("Boleta no encontrada");
+  }
+
+  let recomendaciones: RecomendacionItem[] = [];
+  let generadoEn = new Date();
+
+  for (const item of boleta.Items) {
+    if (item.Recomendaciones && item.Recomendaciones.length > 0) {
+      for (const rec of item.Recomendaciones) {
+        const co2Ahorrado = Number(rec.Co2Original) - Number(rec.Co2Recomendado);
+
+        recomendaciones.push({
+          id: rec.Id,
+          productoOriginal: {
+            id: item.Id,
+            nombre: item.NombreProducto || "Producto sin nombre",
+            co2: Number(item.FactorCo2PorUnidad),
+          },
+          productoRecomendado: {
+            nombre: rec.ProductoRecomendadoNombre,
+            marca: rec.Marca?.Nombre ?? null,
+            categoria: rec.Categoria?.Nombre ?? null,
+            tienda: rec.TiendaOrigen,
+            co2: Number(rec.Co2Recomendado),
+          },
+          mejora: {
+            porcentaje: Number(rec.PorcentajeMejora),
+            co2Ahorrado,
+          },
+          tipo: rec.TipoRecomendacion,
+          scoreSimilitud: Number(rec.ScoreSimilitud),
+        });
+      }
+    }
+  }
+
+  if (recomendaciones.length === 0) {
+    logger.info("🌱 No hay recomendaciones, generando...", {
+      boletaId: params.boletaId,
+    });
+
+    const productosConIds = await BoletasRepository.getProductosByBoletaId(boleta.Id);
+    const recomendacionesParaGuardar = [];
+
+    for (const productoDb of productosConIds) {
+      if (Number(productoDb.FactorCo2PorUnidad) > 3.0) {
+        const producto: ProductoClasificado = {
+          nombre: productoDb.NombreProducto || "Producto",
+          precio: 0,
+          cantidad: Number(productoDb.Cantidad),
+          unidad: "kg",
+          confianza: 1.0,
+          categoria: "Sin categoría",
+          subcategoria: "Sin categoría",
+          marcaId: undefined,
+          factorCo2: Number(productoDb.FactorCo2PorUnidad),
+          esLocal: false,
+          tieneEmpaqueEcologico: false,
+        };
+
+        const alternativas = await RecommendationsService.findAlternatives(
+          producto,
+          boleta.NombreTienda || "tottus",
+          true
+        );
+
+        for (const alternativa of alternativas) {
+          const porcentajeMejora =
+            ((producto.factorCo2 - alternativa.co2) / producto.factorCo2) * 100;
+
+          const co2Ahorrado = producto.factorCo2 - alternativa.co2;
+
+          recomendacionesParaGuardar.push({
+            productoOriginalId: productoDb.Id,
+            productoRecomendadoNombre: alternativa.nombre,
+            productoRecomendadoMarcaId: undefined,
+            productoRecomendadoCategoriaId: undefined,
+            tiendaOrigen: alternativa.tienda,
+            co2Original: producto.factorCo2,
+            co2Recomendado: alternativa.co2,
+            porcentajeMejora,
+            tipoRecomendacion:
+              alternativa.tienda === boleta.NombreTienda
+                ? ("ALTERNATIVA_MISMA_TIENDA" as const)
+                : ("ALTERNATIVA_OTRA_TIENDA" as const),
+            scoreSimilitud: alternativa.scoreSimilitud,
+          });
+
+          recomendaciones.push({
+            id: "",
+            productoOriginal: {
+              id: productoDb.Id,
+              nombre: productoDb.NombreProducto || "Producto",
+              co2: producto.factorCo2,
+            },
+            productoRecomendado: {
+              nombre: alternativa.nombre,
+              marca: alternativa.marca,
+              categoria: alternativa.categoria,
+              tienda: alternativa.tienda,
+              co2: alternativa.co2,
+            },
+            mejora: {
+              porcentaje: porcentajeMejora,
+              co2Ahorrado,
+            },
+            tipo:
+              alternativa.tienda === boleta.NombreTienda
+                ? "ALTERNATIVA_MISMA_TIENDA"
+                : "ALTERNATIVA_OTRA_TIENDA",
+            scoreSimilitud: alternativa.scoreSimilitud,
+          });
+        }
+      }
+    }
+
+    if (recomendacionesParaGuardar.length > 0) {
+      await BoletasRepository.createRecomendaciones(
+        boleta.Id,
+        recomendacionesParaGuardar
+      );
+      logger.info(`✅ ${recomendacionesParaGuardar.length} recomendaciones generadas y guardadas`);
+    }
+  }
+
+  const co2TotalAhorrable = recomendaciones.reduce(
+    (sum, r) => sum + r.mejora.co2Ahorrado,
+    0
+  );
+  const porcentajeMejoraPromedio =
+    recomendaciones.length > 0
+      ? recomendaciones.reduce((sum, r) => sum + r.mejora.porcentaje, 0) /
+      recomendaciones.length
+      : 0;
+
+  return {
+    message: "Recomendaciones obtenidas exitosamente",
+    data: {
+      boletaId: boleta.Id,
+      recomendaciones,
+      resumen: {
+        totalRecomendaciones: recomendaciones.length,
+        co2TotalAhorrable: Math.round(co2TotalAhorrable * 100) / 100,
+        porcentajeMejoraPromedio: Math.round(porcentajeMejoraPromedio * 100) / 100,
+      },
+      generadoEn,
+    },
+  };
+}
+
 export const BoletasService = {
   procesarBoleta,
   getBoletaDetalle,
+  getBoletaRecommendations,
 };

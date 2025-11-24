@@ -1,4 +1,4 @@
-import { getRangosPorSubcategoria } from './tablaMaestra.js';
+import { getRangosPorSubcategoria } from '../validation/tablaMaestra.js';
 import logger from '@/config/logger.js';
 
 export interface ImpactoProducto {
@@ -8,19 +8,13 @@ export interface ImpactoProducto {
     co2ePorKg: number;
 }
 
-/**
- * Clasifica el impacto de un producto usando tabla_maestra.json
- * @param supermercado - No se usa, mantenido por compatibilidad
- * @param categoria - Subcategoría del producto (ej: "Frutas Cítricas")
- * @param co2ePorKg - CO2 calculado del producto
- */
+
 export function clasificarImpactoProducto(
     supermercado: string,
     categoria: string,
     co2ePorKg: number
 ): ImpactoProducto {
 
-    // ✅ Usar tabla_maestra.json como fuente de verdad
     const rangos = getRangosPorSubcategoria(categoria);
 
     if (!rangos) {
@@ -39,7 +33,6 @@ export function clasificarImpactoProducto(
         return { nivel: 'alto', esEco: false, umbralUsado: umbralDefault, co2ePorKg };
     }
 
-    // ✅ Usar rangos de tabla_maestra
     const umbrales = {
         bajo: rangos.verde_hasta,
         medio: rangos.amarillo_hasta,

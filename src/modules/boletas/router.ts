@@ -1,21 +1,19 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadBoleta, getBoleta } from './controller.js';
+import { uploadBoleta, getBoleta, getBoletaRecommendations } from './controller.js';
 import { authMiddleware } from '@/middlewares/auth.js';
 import { env } from '@/config/env.js';
 
 const router = Router();
 
-// Configurar Multer para subida de imágenes
 const upload = multer({
-    storage: multer.memoryStorage(), // Guardar en memoria para procesamiento
+    storage: multer.memoryStorage(),
     limits: {
-        fileSize: env.ocr.maxFileSize, // 10MB por defecto
+        fileSize: env.ocr.maxFileSize,
     },
     fileFilter: (req, file, cb) => {
-        // Validar tipos de archivo
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-        
+
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
@@ -24,21 +22,23 @@ const upload = multer({
     },
 });
 
-/**
- * POST /boletas/:userId/upload
- * Sube y procesa una boleta
- */
 router.post(
     '/:userId/upload',
-    authMiddleware, // Autenticación requerida
-    upload.single('boleta'), // Campo 'boleta' en FormData
+    authMiddleware,
+    upload.single('boleta'),
     uploadBoleta
 );
 
 router.get(
     '/:boletaId',
-    authMiddleware, // Autenticación requerida
+    authMiddleware,
     getBoleta
+);
+
+router.get(
+    '/:boletaId/recommendations',
+    authMiddleware,
+    getBoletaRecommendations
 );
 
 

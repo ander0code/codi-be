@@ -5,12 +5,8 @@ import logger from '@/config/logger.js';
 import { DeepSeekClientService } from '@/lib/clients/deepseek.js';
 import type { ProductoExtraido } from '../schemas.js';
 
-// ✅ Umbral de confianza OCR configurable (antes hardcodeado en 70)
-const OCR_CONFIDENCE_THRESHOLD = 70; // Ajustar según necesidad por supermercado
+const OCR_CONFIDENCE_THRESHOLD = 70;
 
-/**
- * Analiza calidad de imagen (brillo promedio)
- */
 function analyzeImageQuality(image: typeof Jimp.prototype): {
     brilloPromedio: number;
     esOscura: boolean;
@@ -19,7 +15,6 @@ function analyzeImageQuality(image: typeof Jimp.prototype): {
     let totalBrillo = 0;
     let pixelCount = 0;
 
-    // Tipar el callback explícitamente
     image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (
         this: typeof Jimp.prototype,
         x: number,
@@ -43,9 +38,6 @@ function analyzeImageQuality(image: typeof Jimp.prototype): {
     };
 }
 
-/**
- * Preprocesamiento adaptativo según calidad de imagen
- */
 async function preprocessImage(buffer: Buffer): Promise<Buffer> {
     try {
         const image = await Jimp.read(buffer);
@@ -55,7 +47,6 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
             alto: image.bitmap.height,
         });
 
-        //  Analizar calidad de imagen
         const calidad = analyzeImageQuality(image);
         logger.info('📊 Calidad detectada:', {
             brilloPromedio: Math.round(calidad.brilloPromedio),
@@ -63,17 +54,14 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
             esMuyClara: calidad.esMuyClara,
         });
 
-        //  1. Redimensionar (siempre)
         if (image.bitmap.width < 2000) {
             image.resize({ w: 2000 });
             logger.debug('🔧 Imagen redimensionada a 2000px');
         }
 
-        // ✅ 2. Escala de grises (siempre)
         await image.greyscale();
 
 
-        //  3. Ajuste de brillo ADAPTATIVO
         if (calidad.esOscura) {
             await image.brightness(0.3);
             await image.contrast(1.0);
@@ -88,20 +76,17 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
         }
 
 
-        // ✅ 4. Normalizar (siempre)
         await image.normalize();
 
-        // ✅ 5. Threshold ADAPTATIVO (SINTAXIS CORREGIDA)
         const thresholdValue = calidad.esOscura ? 120 : 140;
 
-        // ✅ CORRECCIÓN: Tipar explícitamente el callback
         await image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (
-            this: typeof Jimp.prototype, // ✅ Tipo explícito para 'this'
+            this: typeof Jimp.prototype,
             x: number,
             y: number,
             idx: number
         ) {
-            const gray = this.bitmap.data[idx]; // Ya está en escala de grises
+            const gray = this.bitmap.data[idx];
 
             if (gray > thresholdValue) {
                 this.bitmap.data[idx] = 255;     // R
@@ -116,10 +101,8 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
 
         logger.debug(`🔧 Threshold aplicado: ${thresholdValue}`);
 
-        // ✅ 6. Blur suave (siempre)
-        await image.blur(1); // ✅ CORRECCIÓN: blur(0.5) no existe, usar blur(1)
+        await image.blur(1);
 
-        // ✅ 7. Sharpen (solo si NO es oscura) - SINTAXIS CORREGIDA
         if (!calidad.esOscura) {
             await image.convolute({
                 kernel: [
@@ -127,7 +110,7 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
                     [-1, 5, -1],
                     [0, -1, 0],
                 ],
-            }); // ✅ CORRECCIÓN: Nueva sintaxis de convolute
+            });
             logger.debug('🔧 Sharpen aplicado');
         } else {
             logger.debug('⏭️ Sharpen omitido (imagen oscura)');
@@ -146,9 +129,6 @@ async function preprocessImage(buffer: Buffer): Promise<Buffer> {
     }
 }
 
-/**
- * Corrige SOLO palabras con baja confianza usando IA
- */
 async function corregirPalabrasProblematicas(
     textoCompleto: string,
     palabrasProblematicas: Array<{ texto: string; confianza: number }>
@@ -190,16 +170,12 @@ Responde SOLO con el texto corregido, sin explicaciones:`;
     }
 }
 
-/**
- * OCR Multi-Pass con análisis de confianza por palabra
- */
 async function extractText(imageBuffer: Buffer): Promise<string> {
     try {
         logger.info('🚀 Iniciando OCR Multi-Pass PROFESIONAL');
 
         const processedBuffer = await preprocessImage(imageBuffer);
 
-        // PASADA 1: PSM 6 (SINGLE_BLOCK - boletas estándar)
         logger.debug('📊 Ejecutando Pasada 1 (PSM 6 - Bloque único)...');
         const worker1 = await Tesseract.createWorker(env.ocr.language);
         await worker1.setParameters({
@@ -208,7 +184,6 @@ async function extractText(imageBuffer: Buffer): Promise<string> {
         const result1 = await worker1.recognize(processedBuffer);
         await worker1.terminate();
 
-        // PASADA 2: PSM 4 (SINGLE_COLUMN - boletas largas)
         logger.debug('📊 Ejecutando Pasada 2 (PSM 4 - Columna única)...');
         const worker2 = await Tesseract.createWorker(env.ocr.language);
         await worker2.setParameters({
@@ -224,7 +199,6 @@ async function extractText(imageBuffer: Buffer): Promise<string> {
             lineasPSM4: result2.data.text.split('\n').length,
         });
 
-        // Elegir mejor resultado basado en confianza
         const mejorResultado =
             result1.data.confidence > result2.data.confidence ? result1 : result2;
         const psmUsado =
@@ -235,7 +209,6 @@ async function extractText(imageBuffer: Buffer): Promise<string> {
             caracteres: mejorResultado.data.text.length,
         });
 
-        // ✅ Usar IA si confianza < umbral configurable
         const confianzaGlobal = mejorResultado.data.confidence;
 
         if (confianzaGlobal < OCR_CONFIDENCE_THRESHOLD) {
@@ -243,7 +216,6 @@ async function extractText(imageBuffer: Buffer): Promise<string> {
                 confianza: Math.round(confianzaGlobal),
             });
 
-            // ✅ SIMPLIFICADO: Corregir directamente sin extraer palabras individuales
             const prompt = `Eres un experto en corrección de texto OCR de boletas peruanas de supermercados (Tottus, Wong, Metro, Plaza Vea).
 
 Texto OCR (contiene errores y basura):
@@ -293,9 +265,6 @@ Responde SOLO con el texto corregido:`;
     }
 }
 
-/**
- * Parseo con regex mejorados (named groups + validación)
- */
 function parseProductosFromText(text: string): ProductoExtraido[] {
     const productos: ProductoExtraido[] = [];
 
@@ -313,30 +282,24 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
     while (i < lineas.length) {
         const linea = lineas[i];
 
-        // ✅ ETAPA 1: Detectar código de barras (13 dígitos al inicio de línea)
         const matchCodigo = linea.match(/^(\d{13})/);
 
         if (matchCodigo) {
             const codigo = matchCodigo[1];
             logger.debug(`📦 Código detectado: ${codigo}`);
 
-            // ✅ ETAPA 2: Extraer nombre del producto (LÍMITE ESTRICTO: máximo 2 líneas SIN números)
             let nombre = linea.replace(codigo, '').trim();
             let lineaActual = i + 1;
             let lineasAgregadas = 0;
-
-            // ✅ LÍMITE REDUCIDO: Máximo 2 líneas Y sin números
             while (lineaActual < lineas.length && lineasAgregadas < 2) {
                 const siguienteLinea = lineas[lineaActual];
 
-                // ✅ STOP si encuentra CUALQUIER número (precio, cantidad, o código siguiente)
                 const tieneNumeros = /\d/.test(siguienteLinea);
 
                 if (tieneNumeros) {
-                    break; // ✅ STOP inmediato
+                    break;
                 }
 
-                // ✅ Agregar SOLO si es texto puro (sin números ni caracteres raros)
                 if (siguienteLinea.length > 2 && /^[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+$/.test(siguienteLinea)) {
                     nombre += ' ' + siguienteLinea;
                     lineaActual++;
@@ -346,7 +309,6 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
                 }
             }
 
-            // ✅ Limpiar nombre (eliminar TODO excepto letras y espacios)
             nombre = nombre
                 .replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ\s]/g, ' ')
                 .replace(/\s{2,}/g, ' ')
@@ -359,7 +321,6 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
                 continue;
             }
 
-            // ✅ ETAPA 3: Buscar precio, cantidad Y UNIDAD (hasta 3 líneas adelante)
             let precio: number | null = null;
             let cantidad: number = 1;
             let unidad: string = 'kg';
@@ -368,7 +329,6 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
             while (lineaActual < lineas.length && lineasExploradas < 3) {
                 const lineaPrecio = lineas[lineaActual];
 
-                // ✅ Buscar cantidad CON unidad (incluyendo ml)
                 const matchCantidad = lineaPrecio.match(/(\d+)[.,](\d+)\s*(kg|un|l|ml|g)/i);
                 if (matchCantidad) {
                     const entero = matchCantidad[1];
@@ -378,7 +338,6 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
                     logger.debug(`📏 Cantidad detectada: ${cantidad} ${unidad}`);
                 }
 
-                // ✅ Buscar precio (último número con 2 decimales en la línea)
                 const preciosEncontrados = lineaPrecio.match(/\d+[.,]\d{2}/g);
                 if (preciosEncontrados && preciosEncontrados.length > 0) {
                     const precioStr = preciosEncontrados[preciosEncontrados.length - 1];
@@ -391,7 +350,6 @@ function parseProductosFromText(text: string): ProductoExtraido[] {
                 lineasExploradas++;
             }
 
-            // ✅ ETAPA 4: Validar y agregar producto
             if (precio && precio > 0 && precio < 10000) {
                 productos.push({
                     nombre,

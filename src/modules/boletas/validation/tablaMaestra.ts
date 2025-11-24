@@ -6,9 +6,7 @@ import logger from '@/config/logger.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-/**
- * Rangos de CO2 por subcategoría según tabla maestra
- */
+
 export interface RangosCO2 {
     huella_media_kg_co2_por_kg: number;
     rango_min: number;
@@ -20,9 +18,6 @@ export interface RangosCO2 {
     notas: string;
 }
 
-/**
- * Estructura completa de la tabla maestra
- */
 export interface TablaMaestra {
     version: string;
     fecha_actualizacion: string;
@@ -30,9 +25,6 @@ export interface TablaMaestra {
     subcategorias: Record<string, RangosCO2>;
 }
 
-/**
- * Resultado de validación de CO2
- */
 export interface ValidacionCO2 {
     nivel: 'verde' | 'amarillo' | 'rojo';
     mensaje: string;
@@ -46,16 +38,11 @@ export interface ValidacionCO2 {
     fuentes: string[];
 }
 
-// ✅ Cargar tabla maestra desde archivo JSON
+
 const tablaMaestraPath = join(__dirname, '../../../json/tabla_maestra.json');
 const tablaMaestraRaw = readFileSync(tablaMaestraPath, 'utf-8');
 export const tablaMaestra: TablaMaestra = JSON.parse(tablaMaestraRaw);
 
-/**
- * Obtiene rangos de CO2 por subcategoría
- * @param subcategoria - Nombre de la subcategoría (ej: "Frutas Cítricas")
- * @returns Rangos de CO2 o null si no existe
- */
 export function getRangosPorSubcategoria(subcategoria: string): RangosCO2 | null {
     const rangos = tablaMaestra.subcategorias[subcategoria];
 
@@ -67,19 +54,12 @@ export function getRangosPorSubcategoria(subcategoria: string): RangosCO2 | null
     return rangos;
 }
 
-/**
- * Valida CO2 calculado contra rangos de tabla maestra
- * @param subcategoria - Subcategoría del producto
- * @param co2Calculado - CO2 calculado (peso × huella)
- * @returns Validación con nivel verde/amarillo/rojo
- */
 export function validarCO2(
     subcategoria: string,
     co2Calculado: number
 ): ValidacionCO2 {
     const rangos = getRangosPorSubcategoria(subcategoria);
 
-    // ✅ Si no existe la subcategoría, usar valores por defecto
     if (!rangos) {
         logger.warn('⚠️ Usando rangos por defecto para subcategoría desconocida', {
             subcategoria,
@@ -122,7 +102,6 @@ export function validarCO2(
         };
     }
 
-    // ✅ Validar con rangos de tabla maestra
     const rangosSimplificados = {
         verde_hasta: rangos.verde_hasta,
         amarillo_hasta: rangos.amarillo_hasta,
@@ -177,19 +156,11 @@ export function validarCO2(
     };
 }
 
-/**
- * Obtiene todas las subcategorías disponibles
- * @returns Array de nombres de subcategorías
- */
+
 export function getSubcategoriasDisponibles(): string[] {
     return Object.keys(tablaMaestra.subcategorias);
 }
 
-/**
- * Busca subcategoría por nombre parcial (fuzzy match)
- * @param nombreParcial - Nombre parcial de subcategoría
- * @returns Subcategorías que coinciden
- */
 export function buscarSubcategoria(nombreParcial: string): string[] {
     const nombreNormalizado = nombreParcial.toLowerCase();
 

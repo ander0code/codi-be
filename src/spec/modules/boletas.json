@@ -4,7 +4,9 @@
       "post": {
         "summary": "Subir y procesar una boleta",
         "description": "Procesa una imagen de boleta mediante OCR, detecta el supermercado, clasifica productos, calcula impacto ambiental, genera sugerencias ecológicas y crea recomendaciones de productos alternativos con menor huella de carbono. Actualiza puntos verdes si es recibo verde.",
-        "tags": ["Boletas"],
+        "tags": [
+          "Boletas"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -31,7 +33,9 @@
                     "description": "Archivo de imagen de la boleta (JPEG, PNG o PDF, máximo 10MB)"
                   }
                 },
-                "required": ["boleta"]
+                "required": [
+                  "boleta"
+                ]
               }
             }
           }
@@ -44,9 +48,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "message": { "type": "string", "example": "Boleta procesada exitosamente" },
-                    "data": { "$ref": "#/components/schemas/ProcesarBoletaResponse" }
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Boleta procesada exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ProcesarBoletaResponse"
+                    }
                   }
                 }
               }
@@ -56,7 +68,9 @@
             "description": "Error de validación (archivo no válido o sin productos detectados)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "examples": {
                   "sinArchivo": {
                     "summary": "No se subió archivo",
@@ -87,7 +101,9 @@
             "description": "Usuario no autenticado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
               }
             }
           }
@@ -101,9 +117,11 @@
     },
     "/boletas/{boletaId}": {
       "get": {
-        "summary": "Obtener detalle de una boleta procesada con recomendaciones",
-        "description": "Retorna la información completa de una boleta previamente procesada, incluyendo productos, análisis de impacto ambiental, datos de la tienda, y recomendaciones de productos alternativos con menor huella de carbono basadas en la base de datos vectorial Qdrant.",
-        "tags": ["Boletas"],
+        "summary": "Obtener detalle de una boleta procesada",
+        "description": "Retorna la información completa de una boleta previamente procesada, incluyendo productos, análisis de impacto ambiental y datos de la tienda. Las recomendaciones se obtienen mediante el endpoint /boletas/{boletaId}/recommendations para mejor rendimiento.",
+        "tags": [
+          "Boletas"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -119,20 +137,28 @@
         ],
         "responses": {
           "200": {
-            "description": "Detalle de boleta obtenido exitosamente con recomendaciones incluidas",
+            "description": "Detalle de boleta obtenido exitosamente (sin recomendaciones para mejor rendimiento)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "message": { "type": "string", "example": "Detalle de boleta obtenido exitosamente" },
-                    "data": { "$ref": "#/components/schemas/DetalleBoletaResponse" }
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Detalle de boleta obtenido exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DetalleBoletaResponse"
+                    }
                   }
                 },
                 "examples": {
-                  "boletaConRecomendaciones": {
-                    "summary": "Boleta con recomendaciones de productos",
+                  "boletaBasica": {
+                    "summary": "Boleta con información básica (sin recomendaciones)",
                     "value": {
                       "success": true,
                       "message": "Detalle de boleta obtenido exitosamente",
@@ -161,34 +187,6 @@
                           "totalProductos": 5,
                           "co2Total": 23.45,
                           "co2Promedio": 4.69
-                        },
-                        "recomendaciones": [
-                          {
-                            "id": "rec-uuid-1",
-                            "productoOriginal": {
-                              "id": "prod-uuid-1",
-                              "nombre": "Leche Gloria Entera 1L",
-                              "co2": 4.2
-                            },
-                            "productoRecomendado": {
-                              "nombre": "Leche Laive Light 1L",
-                              "marca": "Laive",
-                              "categoria": "Lácteos",
-                              "tienda": "tottus",
-                              "co2": 2.8
-                            },
-                            "mejora": {
-                              "porcentaje": 33.33,
-                              "co2Ahorrado": 1.4
-                            },
-                            "tipo": "ALTERNATIVA_MISMA_TIENDA",
-                            "scoreSimilitud": 0.92
-                          }
-                        ],
-                        "resumenRecomendaciones": {
-                          "totalRecomendaciones": 3,
-                          "co2TotalAhorrable": 5.2,
-                          "porcentajeMejoraPromedio": 28.5
                         }
                       }
                     }
@@ -201,7 +199,9 @@
             "description": "Boleta no encontrada",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "success": false,
                   "message": "Boleta no encontrada"
@@ -213,7 +213,81 @@
             "description": "Usuario no autenticado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/boletas/{boletaId}/recommendations": {
+      "get": {
+        "summary": "Obtener recomendaciones de productos alternativos",
+        "description": "Genera o retorna recomendaciones de productos alternativos con menor huella de carbono para una boleta específica. Si las recomendaciones ya fueron generadas, las retorna de la base de datos (rápido). Si no existen, las genera usando búsqueda vectorial en Qdrant y las guarda para futuras consultas (puede tardar ~5 segundos la primera vez).",
+        "tags": [
+          "Boletas"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "boletaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID de la boleta en formato UUID",
+            "example": "a3f2c1e0-b4d5-4321-8765-1234567890ab"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recomendaciones obtenidas exitosamente (generadas o desde caché)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Recomendaciones obtenidas exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GetRecommendationsResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Boleta no encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario no autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
               }
             }
           }
@@ -403,7 +477,11 @@
               "description": "CO2 del producto original en kg CO2e"
             }
           },
-          "required": ["id", "nombre", "co2"]
+          "required": [
+            "id",
+            "nombre",
+            "co2"
+          ]
         },
         "productoRecomendado": {
           "type": "object",
@@ -438,7 +516,13 @@
               "description": "CO2 del producto recomendado en kg CO2e (siempre menor que el original)"
             }
           },
-          "required": ["nombre", "marca", "categoria", "tienda", "co2"]
+          "required": [
+            "nombre",
+            "marca",
+            "categoria",
+            "tienda",
+            "co2"
+          ]
         },
         "mejora": {
           "type": "object",
@@ -457,7 +541,10 @@
               "description": "Cantidad de CO2 ahorrado en kg CO2e"
             }
           },
-          "required": ["porcentaje", "co2Ahorrado"]
+          "required": [
+            "porcentaje",
+            "co2Ahorrado"
+          ]
         },
         "tipo": {
           "type": "string",
@@ -554,7 +641,11 @@
         },
         "tipoAmbiental": {
           "type": "string",
-          "enum": ["VERDE", "AMARILLO", "ROJO"],
+          "enum": [
+            "VERDE",
+            "AMARILLO",
+            "ROJO"
+          ],
           "example": "VERDE",
           "description": "Clasificación ambiental de la boleta. VERDE: ≥60% productos verdes y CO2 promedio <4.0. AMARILLO: ≥30% productos verdes y CO2 promedio <7.0. ROJO: resto de casos"
         },
@@ -596,7 +687,11 @@
           "description": "Promedio de CO2 por producto en kg"
         }
       },
-      "required": ["totalProductos", "co2Total", "co2Promedio"]
+      "required": [
+        "totalProductos",
+        "co2Total",
+        "co2Promedio"
+      ]
     },
     "DetalleBoletaResponse": {
       "type": "object",
@@ -634,7 +729,11 @@
         },
         "tipoAmbiental": {
           "type": "string",
-          "enum": ["VERDE", "AMARILLO", "ROJO"],
+          "enum": [
+            "VERDE",
+            "AMARILLO",
+            "ROJO"
+          ],
           "example": "VERDE",
           "description": "Clasificación ambiental de la boleta según el impacto de los productos"
         },
@@ -646,21 +745,14 @@
         },
         "productos": {
           "type": "array",
-          "items": { "$ref": "#/components/schemas/ProductoDetalle" },
+          "items": {
+            "$ref": "#/components/schemas/ProductoDetalle"
+          },
           "description": "Listado de productos comprados en la boleta"
         },
         "analisis": {
           "$ref": "#/components/schemas/AnalisisDetalleSimplificado",
           "description": "Análisis simplificado del impacto ambiental de la boleta"
-        },
-        "recomendaciones": {
-          "type": "array",
-          "items": { "$ref": "#/components/schemas/RecomendacionItem" },
-          "description": "Listado de recomendaciones de productos alternativos con menor huella de carbono. Solo se generan para productos con CO2 > 3.0. Máximo 3 recomendaciones por producto."
-        },
-        "resumenRecomendaciones": {
-          "$ref": "#/components/schemas/ResumenRecomendaciones",
-          "description": "Resumen agregado de todas las recomendaciones de la boleta"
         }
       },
       "required": [
@@ -672,9 +764,7 @@
         "tipoAmbiental",
         "urlImagen",
         "productos",
-        "analisis",
-        "recomendaciones",
-        "resumenRecomendaciones"
+        "analisis"
       ]
     },
     "ProcesarBoletaResponse": {
@@ -692,12 +782,14 @@
         },
         "productos": {
           "type": "array",
-          "items": { "$ref": "#/components/schemas/ProductoClasificado" },
+          "items": {
+            "$ref": "#/components/schemas/ProductoClasificado"
+          },
           "description": "Listado de productos extraídos y clasificados de la boleta"
         },
         "sugerencias": {
           "type": "array",
-          "items": { 
+          "items": {
             "type": "string",
             "example": "Prioriza productos locales y de temporada"
           },
@@ -706,7 +798,47 @@
           "maxItems": 3
         }
       },
-      "required": ["boletaId", "analisis", "productos", "sugerencias"]
+      "required": [
+        "boletaId",
+        "analisis",
+        "productos",
+        "sugerencias"
+      ]
+    },
+    "GetRecommendationsResponse": {
+      "type": "object",
+      "description": "Respuesta del endpoint de recomendaciones con lazy loading",
+      "properties": {
+        "boletaId": {
+          "type": "string",
+          "format": "uuid",
+          "example": "a3f2c1e0-b4d5-4321-8765-1234567890ab",
+          "description": "ID de la boleta para la cual se generaron las recomendaciones"
+        },
+        "recomendaciones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/components/schemas/RecomendacionItem"
+          },
+          "description": "Listado de recomendaciones de productos alternativos con menor huella de carbono"
+        },
+        "resumen": {
+          "$ref": "#/components/schemas/ResumenRecomendaciones",
+          "description": "Resumen agregado de todas las recomendaciones"
+        },
+        "generadoEn": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2025-11-24T17:35:00.000Z",
+          "description": "Fecha y hora en que se generaron las recomendaciones (primera vez) o se obtuvieron de caché"
+        }
+      },
+      "required": [
+        "boletaId",
+        "recomendaciones",
+        "resumen",
+        "generadoEn"
+      ]
     }
   },
   "tags": [
