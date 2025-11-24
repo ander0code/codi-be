@@ -1,35 +1,31 @@
 import { z } from 'zod';
 
-// Schema para validar userId en params
 export const SubirBoletaSchema = z.object({
     userId: z.uuid('El ID del usuario debe ser un UUID válido'),
-    generateSuggestions: z.boolean().optional().default(false), // ✅ Sugerencias opcionales
+    generateSuggestions: z.boolean().optional().default(false),
 });
 
-// Schema para validad boletaId en params
 export const GetBoletaParamsSchema = z.object({
     boletaId: z.uuid('El ID de la boleta debe ser un UUID válido'),
 });
 
-// Schema para producto extraído del OCR
 export const ProductoExtraidoSchema = z.object({
     nombre: z.string().min(2, 'El nombre del producto es muy corto'),
     precio: z.number().positive('El precio debe ser positivo'),
     cantidad: z.number().positive().default(1),
-    unidad: z.string().default('kg'), // ✅ Unidad de medida (kg, g, l, ml, un)
-    confianza: z.number().min(0).max(1), // Confianza del OCR
+    unidad: z.string().default('kg'),
+    confianza: z.number().min(0).max(1),
 });
 
-// Schema para producto clasificado (después del matching)
 export const ProductoClasificadoSchema = ProductoExtraidoSchema.extend({
     productoId: z.uuid().optional(),
     categoria: z.string(),
     subcategoria: z.string().optional(),
+    marca: z.string().optional(),
     marcaId: z.uuid().optional(),
     factorCo2: z.number().nonnegative(),
     esLocal: z.boolean().default(false),
     tieneEmpaqueEcologico: z.boolean().default(false),
-    // ✅ NUEVO: Validación con tabla_maestra
     validacion: z.object({
         nivel: z.enum(['verde', 'amarillo', 'rojo']),
         mensaje: z.string(),
@@ -44,19 +40,15 @@ export const ProductoClasificadoSchema = ProductoExtraidoSchema.extend({
     }).optional(),
 });
 
-// Schema para análisis de boleta
 export const AnalisisBoletaSchema = z.object({
     totalProductos: z.number().int().positive(),
     productosVerdes: z.number().int().nonnegative(),
     porcentajeVerde: z.number().min(0).max(100),
     co2Total: z.number().nonnegative(),
     co2Promedio: z.number().nonnegative(),
-    // ✅ CORRECCIÓN: Cambiar "AMARILLA" → "AMARILLO"
     tipoAmbiental: z.enum(['VERDE', 'AMARILLO', 'ROJO']),
     esReciboVerde: z.boolean(),
 });
-
-// Schema para respuesta final
 export const ProcesarBoletaResponseSchema = z.object({
     boletaId: z.uuid(),
     analisis: AnalisisBoletaSchema,
@@ -64,10 +56,9 @@ export const ProcesarBoletaResponseSchema = z.object({
     sugerencias: z.array(z.string()),
 });
 
-// Schema para item de producto en detalle de boleta
 export const ProductoDetalleSchema = z.object({
     id: z.uuid(),
-    nombre: z.string().nullable(), // ✅ Permitir null desde la BD
+    nombre: z.string().nullable(),
     cantidad: z.number(),
     precioUnitario: z.number(),
     precioTotal: z.number(),
@@ -92,8 +83,8 @@ export const RecomendacionItemSchema = z.object({
         co2: z.number(),
     }),
     mejora: z.object({
-        porcentaje: z.number(), // Ej: 35.50
-        co2Ahorrado: z.number(), // kg CO2e ahorrados
+        porcentaje: z.number(),
+        co2Ahorrado: z.number(),
     }),
     tipo: z.enum([
         'ALTERNATIVA_MISMA_TIENDA',
@@ -104,8 +95,6 @@ export const RecomendacionItemSchema = z.object({
     scoreSimilitud: z.number().min(0).max(1),
 });
 
-
-// Schema para respuesta de detalle de boleta
 export const DetalleBoletaResponseSchema = z.object({
     id: z.uuid(),
     fechaBoleta: z.date().nullable(),
@@ -120,13 +109,17 @@ export const DetalleBoletaResponseSchema = z.object({
         co2Total: z.number(),
         co2Promedio: z.number(),
     }),
-    // ✅ NUEVO: Recomendaciones
+});
+
+export const GetRecommendationsResponseSchema = z.object({
+    boletaId: z.uuid(),
     recomendaciones: z.array(RecomendacionItemSchema),
-    resumenRecomendaciones: z.object({
+    resumen: z.object({
         totalRecomendaciones: z.number().int(),
         co2TotalAhorrable: z.number(),
         porcentajeMejoraPromedio: z.number(),
     }),
+    generadoEn: z.date(),
 });
 
 // Exportar tipos
@@ -139,3 +132,4 @@ export type ProcesarBoletaResponse = z.infer<typeof ProcesarBoletaResponseSchema
 export type ProductoDetalle = z.infer<typeof ProductoDetalleSchema>;
 export type DetalleBoletaResponse = z.infer<typeof DetalleBoletaResponseSchema>;
 export type RecomendacionItem = z.infer<typeof RecomendacionItemSchema>;
+export type GetRecommendationsResponse = z.infer<typeof GetRecommendationsResponseSchema>;

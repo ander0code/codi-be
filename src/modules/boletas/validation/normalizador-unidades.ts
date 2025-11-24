@@ -1,16 +1,5 @@
 import logger from '@/config/logger.js';
 
-/**
- * Tabla de pesos promedio SOLO para productos empaquetados/envasados
- * que típicamente se venden por UNIDAD y NO traen peso en la boleta.
- * 
- * ⚠️ IMPORTANTE: Esta tabla es el ÚLTIMO RECURSO
- * - La mayoría de productos frescos (frutas, verduras, carnes) SÍ traen peso en la boleta
- * - Solo usar esta tabla cuando el OCR no detecte peso Y el producto sea por unidad
- * 
- * Basada en análisis de 6,556 productos reales de Tottus
- * Generado: 2025-11-22
- */
 const PESOS_POR_CATEGORIA: Record<string, number> = {
     // ========================================
     // PRODUCTOS EMPAQUETADOS - SNACKS Y DULCES
@@ -92,14 +81,6 @@ const PESOS_POR_CATEGORIA: Record<string, number> = {
     'Sin categoría': 0.25,              // Peso promedio genérico
 };
 
-/**
- * Estima el peso en kilogramos basado en la categoría del producto
- * ⚠️ SOLO para productos empaquetados que se venden por unidad
- * 
- * @param cantidadUnidades - Número de unidades
- * @param categoria - Categoría del producto
- * @returns Peso estimado en kilogramos
- */
 export function estimarPesoPorCategoria(
     cantidadUnidades: number,
     categoria: string
@@ -117,18 +98,6 @@ export function estimarPesoPorCategoria(
     return pesoTotal;
 }
 
-/**
- * Normaliza cualquier unidad de medida a kilogramos
- * 
- * PRIORIDAD DE NORMALIZACIÓN:
- * 1. Si ya está en kg/g/l/ml → Convertir directamente
- * 2. Si es "unidad" (un) → Estimar SOLO si es producto empaquetado
- * 
- * @param cantidad - Cantidad en la unidad original
- * @param unidad - Unidad de medida (kg, g, l, ml, un)
- * @param categoria - Categoría del producto (para estimar peso si es por unidad)
- * @returns Cantidad normalizada en kilogramos
- */
 export function normalizarCantidadAKg(
     cantidad: number,
     unidad: string,
@@ -136,13 +105,11 @@ export function normalizarCantidadAKg(
 ): number {
     const unidadLower = unidad.toLowerCase().trim();
 
-    // CASO 1: Ya está en kilogramos
     if (unidadLower === 'kg') {
         logger.debug('✅ Cantidad ya en kg', { cantidad });
         return cantidad;
     }
 
-    // CASO 2: Gramos → Kilogramos
     if (unidadLower === 'g') {
         const cantidadKg = cantidad / 1000;
         logger.debug('🔄 Conversión g → kg', {
@@ -153,7 +120,6 @@ export function normalizarCantidadAKg(
         return cantidadKg;
     }
 
-    // CASO 3: Litros → Kilogramos (densidad ≈ 1.0 para líquidos comunes)
     if (unidadLower === 'l') {
         logger.debug('🔄 Conversión l → kg (densidad ≈ 1.0)', {
             original: cantidad,
@@ -163,7 +129,6 @@ export function normalizarCantidadAKg(
         return cantidad; // 1L ≈ 1kg para agua, leche, jugos, etc.
     }
 
-    // CASO 4: Mililitros → Kilogramos
     if (unidadLower === 'ml') {
         const cantidadKg = cantidad / 1000;
         logger.debug('🔄 Conversión ml → kg', {
@@ -174,8 +139,6 @@ export function normalizarCantidadAKg(
         return cantidadKg;
     }
 
-    // CASO 5: Unidades → Kilogramos (SOLO para productos empaquetados)
-    // ⚠️ Este es el ÚLTIMO RECURSO - la mayoría de productos frescos traen peso
     if (unidadLower === 'un' || unidadLower === 'unidad' || unidadLower === 'unidades') {
         const cantidadKg = estimarPesoPorCategoria(cantidad, categoria);
         logger.debug('🔄 Conversión unidades → kg (producto empaquetado)', {
@@ -187,7 +150,6 @@ export function normalizarCantidadAKg(
         return cantidadKg;
     }
 
-    // CASO 6: Sin unidad o unidad no reconocida → Usar categoría como último recurso
     logger.warn('⚠️ Unidad no reconocida, estimando por categoría', {
         cantidad,
         unidad,

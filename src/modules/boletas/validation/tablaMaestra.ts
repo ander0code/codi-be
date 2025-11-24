@@ -6,9 +6,7 @@ import logger from '@/config/logger.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-/**
- * Rangos de CO2 por subcategoría según tabla maestra
- */
+
 export interface RangosCO2 {
     huella_media_kg_co2_por_kg: number;
     rango_min: number;
@@ -20,9 +18,6 @@ export interface RangosCO2 {
     notas: string;
 }
 
-/**
- * Estructura completa de la tabla maestra
- */
 export interface TablaMaestra {
     version: string;
     fecha_actualizacion: string;
@@ -30,9 +25,6 @@ export interface TablaMaestra {
     subcategorias: Record<string, RangosCO2>;
 }
 
-/**
- * Resultado de validación de CO2
- */
 export interface ValidacionCO2 {
     nivel: 'verde' | 'amarillo' | 'rojo';
     mensaje: string;
@@ -46,16 +38,11 @@ export interface ValidacionCO2 {
     fuentes: string[];
 }
 
-// ✅ Cargar tabla maestra desde archivo JSON
+
 const tablaMaestraPath = join(__dirname, '../../../json/tabla_maestra.json');
 const tablaMaestraRaw = readFileSync(tablaMaestraPath, 'utf-8');
 export const tablaMaestra: TablaMaestra = JSON.parse(tablaMaestraRaw);
 
-/**
- * Obtiene rangos de CO2 por subcategoría
- * @param subcategoria - Nombre de la subcategoría (ej: "Frutas Cítricas")
- * @returns Rangos de CO2 o null si no existe
- */
 export function getRangosPorSubcategoria(subcategoria: string): RangosCO2 | null {
     const rangos = tablaMaestra.subcategorias[subcategoria];
 
@@ -67,23 +54,20 @@ export function getRangosPorSubcategoria(subcategoria: string): RangosCO2 | null
     return rangos;
 }
 
-/**
- * Valida CO2 calculado contra rangos de tabla maestra
- * @param subcategoria - Subcategoría del producto
- * @param co2Calculado - CO2 calculado (peso × huella)
- * @returns Validación con nivel verde/amarillo/rojo
- */
 export function validarCO2(
     subcategoria: string,
-    co2Calculado: number
+    factorCo2PorKg: number,
+    cantidadKg: number
 ): ValidacionCO2 {
     const rangos = getRangosPorSubcategoria(subcategoria);
 
-    // ✅ Si no existe la subcategoría, usar valores por defecto
+    // CO₂ total para la cantidad indicada
+    const co2Total = factorCo2PorKg * cantidadKg;
+
     if (!rangos) {
         logger.warn('⚠️ Usando rangos por defecto para subcategoría desconocida', {
             subcategoria,
-            co2Calculado
+            co2Calculado: co2Total // Corrected variable name
         });
 
         const rangosPorDefecto = {
@@ -93,21 +77,21 @@ export function validarCO2(
             huella_media: 3.0
         };
 
-        if (co2Calculado <= rangosPorDefecto.verde_hasta) {
+        if (co2Total <= rangosPorDefecto.verde_hasta) {
             return {
                 nivel: 'verde',
                 mensaje: 'Bajo impacto ambiental (estimado)',
-                co2Calculado,
+                co2Calculado: co2Total,
                 rangos: rangosPorDefecto,
                 fuentes: ['Estimado - subcategoría no encontrada']
             };
         }
 
-        if (co2Calculado <= rangosPorDefecto.amarillo_hasta) {
+        if (co2Total <= rangosPorDefecto.amarillo_hasta) {
             return {
                 nivel: 'amarillo',
                 mensaje: 'Impacto moderado (estimado)',
-                co2Calculado,
+                co2Calculado: co2Total,
                 rangos: rangosPorDefecto,
                 fuentes: ['Estimado - subcategoría no encontrada']
             };
@@ -116,80 +100,62 @@ export function validarCO2(
         return {
             nivel: 'rojo',
             mensaje: 'Alto impacto ambiental (estimado)',
-            co2Calculado,
+            co2Calculado: co2Total,
             rangos: rangosPorDefecto,
             fuentes: ['Estimado - subcategoría no encontrada']
         };
     }
 
-    // ✅ Validar con rangos de tabla maestra
+    // Escalamos los límites de la tabla maestra multiplicándolos por la cantidad
+    const verdeLimite = rangos.verde_hasta * cantidadKg;
+    const amarilloLimite = rangos.amarillo_hasta * cantidadKg;
+    const rojoLimite = rangos.rojo_desde * cantidadKg;
+
     const rangosSimplificados = {
-        verde_hasta: rangos.verde_hasta,
-        amarillo_hasta: rangos.amarillo_hasta,
-        rojo_desde: rangos.rojo_desde,
-        huella_media: rangos.huella_media_kg_co2_por_kg
+        verde_hasta: verdeLimite,
+        amarillo_hasta: amarilloLimite,
+        rojo_desde: rojoLimite,
+        huella_media: rangos.huella_media_kg_co2_por_kg * cantidadKg,
     };
 
-    if (co2Calculado <= rangos.verde_hasta) {
-        logger.debug('✅ Producto clasificado como VERDE', {
-            subcategoria,
-            co2Calculado,
-            umbral: rangos.verde_hasta
-        });
-
+    if (co2Total <= verdeLimite) {
+        logger.debug('✅ Producto clasificado como VERDE', { subcategoria, co2Total, umbral: verdeLimite });
         return {
             nivel: 'verde',
             mensaje: 'Bajo impacto ambiental',
-            co2Calculado,
+            co2Calculado: co2Total,
             rangos: rangosSimplificados,
-            fuentes: rangos.fuentes
+            fuentes: rangos.fuentes,
         };
     }
 
-    if (co2Calculado <= rangos.amarillo_hasta) {
-        logger.debug('⚠️ Producto clasificado como AMARILLO', {
-            subcategoria,
-            co2Calculado,
-            umbral: rangos.amarillo_hasta
-        });
-
+    if (co2Total <= amarilloLimite) {
+        logger.debug('⚠️ Producto clasificado como AMARILLO', { subcategoria, co2Total, umbral: amarilloLimite });
         return {
             nivel: 'amarillo',
             mensaje: 'Impacto moderado',
-            co2Calculado,
+            co2Calculado: co2Total,
             rangos: rangosSimplificados,
-            fuentes: rangos.fuentes
+            fuentes: rangos.fuentes,
         };
     }
 
-    logger.debug('🔴 Producto clasificado como ROJO', {
-        subcategoria,
-        co2Calculado,
-        umbral: rangos.rojo_desde
-    });
-
+    // rojo (supera amarillo)
+    logger.debug('🔴 Producto clasificado como ROJO', { subcategoria, co2Total, umbral: rojoLimite });
     return {
         nivel: 'rojo',
         mensaje: 'Alto impacto ambiental',
-        co2Calculado,
+        co2Calculado: co2Total,
         rangos: rangosSimplificados,
-        fuentes: rangos.fuentes
+        fuentes: rangos.fuentes,
     };
 }
 
-/**
- * Obtiene todas las subcategorías disponibles
- * @returns Array de nombres de subcategorías
- */
+
 export function getSubcategoriasDisponibles(): string[] {
     return Object.keys(tablaMaestra.subcategorias);
 }
 
-/**
- * Busca subcategoría por nombre parcial (fuzzy match)
- * @param nombreParcial - Nombre parcial de subcategoría
- * @returns Subcategorías que coinciden
- */
 export function buscarSubcategoria(nombreParcial: string): string[] {
     const nombreNormalizado = nombreParcial.toLowerCase();
 

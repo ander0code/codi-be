@@ -1,8 +1,5 @@
 import logger from '@/config/logger.js';
 
-/**
- * Mapeo de nombres de supermercados a colecciones de Qdrant
- */
 const SUPERMERCADO_TO_COLLECTION: Record<string, string> = {
     'wong': 'wong',
     'vivanda': 'vivanda',
@@ -15,9 +12,6 @@ const SUPERMERCADO_TO_COLLECTION: Record<string, string> = {
 
 const COLECCION_POR_DEFECTO = 'tottus';
 
-/**
- * Patrones de búsqueda para cada supermercado
- */
 const PATRONES_SUPERMERCADOS: Record<string, RegExp[]> = {
     'wong': [
         /\bwong\b/i,
