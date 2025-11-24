@@ -43,6 +43,7 @@ model Usuarios {
   Id            String   @id @default(uuid()) @db.Uuid
   Nombre        String   @db.VarChar(80)
   Apellido      String   @db.VarChar(80)
+  Dni           String?  @unique @db.Char(8)
   Correo        String   @unique @db.Citext
   contrasena    String?  @db.Text
   googleId      String?  @unique
