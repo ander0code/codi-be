@@ -107,6 +107,7 @@ async function findSimilarProduct(
             confianza: mejorMatch.scoreCombinado,
             categoria: categoria,
             subcategoria: subcategoria,
+            marca: payload.marca || null,
             marcaId: undefined,
             factorCo2: huella_categoria,
             esLocal: payload.esLocal || false,

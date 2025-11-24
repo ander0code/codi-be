@@ -24,7 +24,7 @@ async function createBoleta(data: {
                 UrlImagen: data.urlImagen,
             },
         });
-        
+
         logger.info('✅ Boleta creada en DB', { boletaId: boleta.Id });
         return boleta;
     } catch (error) {
@@ -57,12 +57,12 @@ async function createBoletaItems(boletaId: string, items: Array<{
                 Coincidido: true,
             })),
         });
-        
-        logger.info('✅ Productos de boleta creados', { 
-            boletaId, 
-            cantidad: productosCreados.count 
+
+        logger.info('✅ Productos de boleta creados', {
+            boletaId,
+            cantidad: productosCreados.count
         });
-        
+
         return productosCreados;
     } catch (error) {
         logger.error('❌ Error creando productos de boleta', { boletaId, error });
@@ -144,7 +144,7 @@ async function updatePuntosVerdes(usuarioId: string, puntos: number) {
                 },
             },
         });
-        
+
         logger.info('✅ Puntos verdes actualizados', { usuarioId, puntos });
     } catch (error) {
         logger.error('❌ Error actualizando puntos verdes', { usuarioId, error });
@@ -200,23 +200,102 @@ async function getProductosByBoletaId(boletaId: string) {
     try {
         const productos = await prisma.productos.findMany({
             where: { BoletaId: boletaId },
-            select: { 
-                Id: true, 
+            select: {
+                Id: true,
                 NombreProducto: true,
                 FactorCo2PorUnidad: true,
                 Cantidad: true,
             },
         });
 
-        logger.info('✅ Productos obtenidos de boleta', { 
-            boletaId, 
-            cantidad: productos.length 
+        logger.info('✅ Productos obtenidos de boleta', {
+            boletaId,
+            cantidad: productos.length
         });
 
         return productos;
     } catch (error) {
         logger.error('❌ Error obteniendo productos de boleta', { boletaId, error });
         throw error;
+    }
+}
+
+/**
+ * Busca o crea una marca en la BD
+ */
+async function findOrCreateMarca(nombreMarca: string | null | undefined): Promise<string | undefined> {
+    if (!nombreMarca || nombreMarca === 'Sin marca') return undefined;
+
+    try {
+        const marca = await prisma.marcas.upsert({
+            where: { Nombre: nombreMarca },
+            update: {},
+            create: { Nombre: nombreMarca },
+        });
+
+        return marca.Id;
+    } catch (error) {
+        logger.warn('⚠️ Error creando/buscando marca', { nombreMarca, error });
+        return undefined;
+    }
+}
+
+/**
+ * Busca o crea una categoría en la BD
+ */
+async function findOrCreateCategoria(nombreCategoria: string | null | undefined): Promise<string | undefined> {
+    if (!nombreCategoria || nombreCategoria === 'Sin categoría') return undefined;
+
+    try {
+        const categoria = await prisma.categorias.upsert({
+            where: { Nombre: nombreCategoria },
+            update: {},
+            create: { Nombre: nombreCategoria },
+        });
+
+        return categoria.Id;
+    } catch (error) {
+        logger.warn('⚠️ Error creando/buscando categoría', { nombreCategoria, error });
+        return undefined;
+    }
+}
+
+/**
+ * Busca o crea una subcategoría en la BD
+ */
+async function findOrCreateSubcategoria(
+    nombreSubcategoria: string | null | undefined,
+    categoriaId: string | undefined
+): Promise<string | undefined> {
+    if (!nombreSubcategoria || nombreSubcategoria === 'Sin subcategoría' || nombreSubcategoria === 'Sin categoría') {
+        return undefined;
+    }
+
+    try {
+        // Buscar subcategoría existente
+        const existing = await prisma.subcategorias.findFirst({
+            where: {
+                Nombre: nombreSubcategoria,
+                CategoriaId: categoriaId || null,
+            },
+        });
+
+        if (existing) {
+            return existing.Id;
+        }
+
+        // Crear nueva subcategoría
+        const subcategoria = await prisma.subcategorias.create({
+            data: {
+                Nombre: nombreSubcategoria,
+                CategoriaId: categoriaId,
+            },
+        });
+
+        return subcategoria.Id;
+    } catch (error) {
+        logger.warn('⚠️ Error creando/buscando subcategoría', { nombreSubcategoria, error });
+        return undefined;
     }
 }
 
@@ -228,4 +307,7 @@ export const BoletasRepository = {
     getProductosByBoletaId,
     getBoletaById,
     updatePuntosVerdes,
+    findOrCreateMarca,
+    findOrCreateCategoria,
+    findOrCreateSubcategoria,
 };

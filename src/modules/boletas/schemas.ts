@@ -21,6 +21,7 @@ export const ProductoClasificadoSchema = ProductoExtraidoSchema.extend({
     productoId: z.uuid().optional(),
     categoria: z.string(),
     subcategoria: z.string().optional(),
+    marca: z.string().optional(),
     marcaId: z.uuid().optional(),
     factorCo2: z.number().nonnegative(),
     esLocal: z.boolean().default(false),

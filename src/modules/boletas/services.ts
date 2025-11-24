@@ -103,7 +103,7 @@ async function matchProductos(
       const co2Calculado = match.factorCo2 * cantidadEnKg;
 
       const subcategoria = match.subcategoria || match.categoria;
-      const validacion = validarCO2(subcategoria, co2Calculado);
+      const validacion = validarCO2(subcategoria, match.factorCo2, cantidadEnKg);
 
       logger.debug('✅ Producto matched y validado', {
         nombre: productoOCR.nombre,
@@ -130,7 +130,7 @@ async function matchProductos(
       });
 
       const co2Calculado = 5.0 * productoOCR.cantidad;
-      const validacion = validarCO2("Sin categoría", co2Calculado);
+      const validacion = validarCO2("Sin categoría", 5.0, productoOCR.cantidad);
 
       productosClasificados.push({
         ...productoOCR,
@@ -167,12 +167,21 @@ function analizarBoleta(
   const co2Promedio = co2Total / totalProductos;
 
   let tipoAmbiental: "VERDE" | "AMARILLO" | "ROJO";
-  if (porcentajeVerde >= 60) {
-    tipoAmbiental = "VERDE";
-  } else if (porcentajeVerde >= 30) {
-    tipoAmbiental = "AMARILLO";
+  if (totalProductos < 5) {
+    // Boletas con menos de 5 productos nunca se clasifican como VERDE
+    if (porcentajeVerde >= 30) {
+      tipoAmbiental = "AMARILLO";
+    } else {
+      tipoAmbiental = "ROJO";
+    }
   } else {
-    tipoAmbiental = "ROJO";
+    if (porcentajeVerde >= 60) {
+      tipoAmbiental = "VERDE";
+    } else if (porcentajeVerde >= 30) {
+      tipoAmbiental = "AMARILLO";
+    } else {
+      tipoAmbiental = "ROJO";
+    }
   }
 
   const esReciboVerde = tipoAmbiental === "VERDE";
@@ -254,18 +263,32 @@ async function procesarBoleta(
       urlImagen: fileName,
     });
 
-    await BoletasRepository.createBoletaItems(
-      boleta.Id,
-      productosClasificados.map((p) => ({
-        nombreProducto: p.nombre,
-        cantidad: p.cantidad,
-        precioUnitario: p.precio,
-        factorCo2: p.factorCo2,
-        categoriaId: undefined,
-        subcategoriaId: undefined,
-        marcaId: p.marcaId,
-      }))
+    // Resolver IDs de categorías, subcategorías y marcas
+    const productosConIds = await Promise.all(
+      productosClasificados.map(async (p) => {
+        const marcaId = p.marcaId
+          ? p.marcaId
+          : await BoletasRepository.findOrCreateMarca(p.marca || null);
+
+        const categoriaId = await BoletasRepository.findOrCreateCategoria(p.categoria);
+        const subcategoriaId = await BoletasRepository.findOrCreateSubcategoria(
+          p.subcategoria,
+          categoriaId
+        );
+
+        return {
+          nombreProducto: p.nombre,
+          cantidad: p.cantidad,
+          precioUnitario: p.precio,
+          factorCo2: p.factorCo2,
+          categoriaId,
+          subcategoriaId,
+          marcaId,
+        };
+      })
     );
+
+    await BoletasRepository.createBoletaItems(boleta.Id, productosConIds);
 
 
 
@@ -451,10 +474,7 @@ async function getBoletaRecommendations(
             co2Original: producto.factorCo2,
             co2Recomendado: alternativa.co2,
             porcentajeMejora,
-            tipoRecomendacion:
-              alternativa.tienda === boleta.NombreTienda
-                ? ("ALTERNATIVA_MISMA_TIENDA" as const)
-                : ("ALTERNATIVA_OTRA_TIENDA" as const),
+            tipoRecomendacion: alternativa.tipo,
             scoreSimilitud: alternativa.scoreSimilitud,
           });
 
@@ -476,10 +496,7 @@ async function getBoletaRecommendations(
               porcentaje: porcentajeMejora,
               co2Ahorrado,
             },
-            tipo:
-              alternativa.tienda === boleta.NombreTienda
-                ? "ALTERNATIVA_MISMA_TIENDA"
-                : "ALTERNATIVA_OTRA_TIENDA",
+            tipo: alternativa.tipo,
             scoreSimilitud: alternativa.scoreSimilitud,
           });
         }
