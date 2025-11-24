@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { 
     registerController, 
     loginController, 
-    refreshTokenController
+    refreshTokenController,
+    getUserByDniController // ✅ NUEVO
 } from './controller.js';
 import { oauthSuccessController } from './oauth.controller.js';
-import { googleLoginController } from './google-oauth.controller.js'; // ✅ NUEVO
+import { googleLoginController } from './google-oauth.controller.js';
 
 const router = Router();
 
@@ -19,11 +20,13 @@ router.post('/refresh-token', refreshTokenController);
 // ============================================
 // AUTENTICACIÓN OAUTH
 // ============================================
-
-// ✅ NUEVO: Endpoint para aplicación móvil
 router.post('/google', googleLoginController);
-
-// OAuth Web (mantener para web)
 router.get('/oauth/success', oauthSuccessController);
+
+// ============================================
+// CONSULTAS DE USUARIOS
+// ============================================
+// ✅ NUEVO: Obtener datos básicos del usuario por DNI
+router.get('/user/dni/:dni', getUserByDniController);
 
 export default router;

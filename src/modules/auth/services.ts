@@ -1,11 +1,17 @@
-
 import type { ServiceResponse } from '@/types/service.js';
 import { AuthRepository } from './repository.js';
 import { hashPassword, comparePassword } from '@/lib/hash.js';
 import { signToken, signRefreshToken, verifyToken } from '@/lib/jwt.js';
 import logger from '@/config/logger.js';
-import { AuthError, ConflictError } from '@/config/errors/errors.js';
-import type { RegisterInput, LoginInput, RefreshTokenInput, AuthResponse } from './schemas.js';
+import { AuthError, ConflictError, NotFoundError } from '@/config/errors/errors.js';
+import type { 
+    RegisterInput, 
+    LoginInput, 
+    RefreshTokenInput, 
+    AuthResponse,
+    GetUserByDniParams,
+    UserBasicInfo 
+} from './schemas.js';
 
 async function register(input: RegisterInput): Promise<ServiceResponse<AuthResponse>> {
     const existingUser = await AuthRepository.findUserByEmail(input.email);
@@ -106,8 +112,25 @@ async function refreshToken(input: RefreshTokenInput): Promise<ServiceResponse<A
     }
 }
 
+// ✅ NUEVO: Obtener datos básicos del usuario por DNI
+async function getUserByDni(params: GetUserByDniParams): Promise<ServiceResponse<UserBasicInfo>> {
+    const user = await AuthRepository.findUserByDni(params.dni);
+
+    if (!user) {
+        throw new NotFoundError('Usuario no encontrado con el DNI proporcionado');
+    }
+
+    logger.info('Usuario obtenido por DNI', { dni: params.dni });
+
+    return {
+        message: 'Usuario obtenido exitosamente',
+        data: user,
+    };
+}
+
 export const AuthService = {
     register,
     login,
-    refreshToken
+    refreshToken,
+    getUserByDni, // ✅ NUEVO
 };

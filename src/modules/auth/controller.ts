@@ -2,7 +2,12 @@ import type { Request, Response } from 'express';
 import { AuthService } from './services.js';
 import { customParse } from '../../lib/zod.js';
 import { ValidationError } from '../../config/errors/errors.js';
-import { RegisterSchema, LoginSchema, RefreshTokenSchema } from './schemas.js';
+import { 
+    RegisterSchema, 
+    LoginSchema, 
+    RefreshTokenSchema,
+    GetUserByDniParamsSchema // ✅ NUEVO
+} from './schemas.js';
 
 export async function registerController(req: Request, res: Response) {
     const validation = customParse(RegisterSchema, req.body);
@@ -31,5 +36,19 @@ export async function refreshTokenController(req: Request, res: Response) {
     }
 
     const { data, message } = await AuthService.refreshToken(validation.data);
+    res.success(data, message);
+}
+
+// ✅ NUEVO: Controlador para obtener usuario por DNI
+export async function getUserByDniController(req: Request, res: Response) {
+    const validation = customParse(GetUserByDniParamsSchema, { 
+        dni: req.params.dni 
+    });
+
+    if (!validation.success) {
+        throw new ValidationError(validation.message);
+    }
+
+    const { data, message } = await AuthService.getUserByDni(validation.data);
     res.success(data, message);
 }
