@@ -38,6 +38,21 @@ export const GoogleLoginSchema = z.object({
     idToken: z.string().min(1, 'El idToken de Google es requerido'),
 });
 
+// ✅ NUEVO: Schema para obtener usuario por DNI
+export const GetUserByDniParamsSchema = z.object({
+    dni: z.string()
+        .min(8, 'El DNI debe tener al menos 8 caracteres')
+        .max(12, 'El DNI no puede tener más de 12 caracteres')
+        .regex(/^\d+$/, 'El DNI debe contener solo números'),
+});
+
+// ✅ NUEVO: Schema para la respuesta de datos básicos del usuario
+export const UserBasicInfoSchema = z.object({
+    nombre: z.string(),
+    apellido: z.string(),
+    dni: z.string(),
+});
+
 // Exportar tipos para usarlos en el código
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
@@ -45,3 +60,5 @@ export type UserResponse = z.infer<typeof UserResponseSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
 export type GoogleLoginInput = z.infer<typeof GoogleLoginSchema>;
+export type GetUserByDniParams = z.infer<typeof GetUserByDniParamsSchema>;
+export type UserBasicInfo = z.infer<typeof UserBasicInfoSchema>;

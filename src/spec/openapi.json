@@ -297,6 +297,110 @@
         }
       }
     },
+    "/auth/user/dni/{dni}": {
+      "get": {
+        "summary": "Obtener datos básicos de usuario por DNI",
+        "description": "Consulta la información básica de un usuario utilizando su DNI.",
+        "tags": [
+          "Auth - Tradicional"
+        ],
+        "parameters": [
+          {
+            "name": "dni",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{8}$",
+              "minLength": 8,
+              "example": "12345678"
+            },
+            "description": "Documento Nacional de Identidad del usuario (solo números, 8 dígitos)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuario encontrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Usuario obtenido exitosamente"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserBasicInfo"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "message": "Usuario obtenido exitosamente",
+                  "data": {
+                    "nombre": "Juan",
+                    "apellido": "Pérez",
+                    "dni": "12345678"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación - DNI inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_format": {
+                    "summary": "Formato inválido",
+                    "value": {
+                      "success": false,
+                      "message": "dni: El DNI debe contener solo números"
+                    }
+                  },
+                  "too_short": {
+                    "summary": "DNI muy corto",
+                    "value": {
+                      "success": false,
+                      "message": "dni: El DNI debe tener al menos 8 caracteres"
+                    }
+                  },
+                  "too_long": {
+                    "summary": "DNI muy largo",
+                    "value": {
+                      "success": false,
+                      "message": "dni: El DNI no puede tener más de 12 caracteres"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado con el DNI proporcionado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Usuario no encontrado con el DNI proporcionado"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/google": {
       "post": {
         "summary": "🆕 Login con Google (Aplicación Móvil)",
@@ -521,7 +625,7 @@
     "/auth/signin": {
       "get": {
         "summary": "🔗 Iniciar flujo OAuth con Google (Web)",
-        "description": "**SOLO PARA WEB - NO LLAMAR DESDE APPS MÓVILES:** Este endpoint redirige al usuario a la página de autorización de Google. Debe ser usado desde el navegador con `window.location.href` o `window.open()`.\n\n**Uso desde Frontend Web:**\n```javascript\nwindow.open('/auth/signin?provider=google', 'googleAuth', 'width=500,height=600');\n```\n\n**NO devuelve JSON** - solo redirecciona (HTTP 302).\n\n**📱 Para apps móviles:** Usar [`POST /auth/google`](src/modules/auth/router.ts ) en su lugar.",
+        "description": "**SOLO PARA WEB - NO LLAMAR DESDE APPS MÓVILES:** Este endpoint redirige al usuario a la página de autorización de Google. Debe ser usado desde el navegador con `window.location.href` o `window.open()`.\n\n**Uso desde Frontend Web:**\n```javascript\nwindow.open('/auth/signin?provider=google', 'googleAuth', 'width=500,height=600');\n```\n\n**NO devuelve JSON** - solo redirecciona (HTTP 302).\n\n**📱 Para apps móviles:** Usar `POST /auth/google` en su lugar.",
         "tags": [
           "Auth - OAuth (Interno Web)"
         ],
@@ -1585,6 +1689,33 @@
         },
         "required": [
           "refreshToken"
+        ]
+      },
+      "UserBasicInfo": {
+        "type": "object",
+        "description": "Información básica pública del usuario (sin datos sensibles)",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "example": "Juan",
+            "description": "Nombre del usuario"
+          },
+          "apellido": {
+            "type": "string",
+            "example": "Pérez",
+            "description": "Apellido del usuario"
+          },
+          "dni": {
+            "type": "string",
+            "pattern": "^\\d{8,12}$",
+            "example": "12345678",
+            "description": "Documento Nacional de Identidad"
+          }
+        },
+        "required": [
+          "nombre",
+          "apellido",
+          "dni"
         ]
       },
       "InicioUltimaBoleta": {

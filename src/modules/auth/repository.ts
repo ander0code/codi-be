@@ -1,5 +1,5 @@
 import prisma from '@/lib/clients/prisma.js';
-import type { RegisterInput, UserResponse } from './schemas.js';
+import type { RegisterInput, UserResponse, UserBasicInfo } from './schemas.js';
 
 async function findUserByEmail(email: string): Promise<(UserResponse & { contrasena: string | null }) | null> {
     const user = await prisma.usuarios.findUnique({
@@ -23,7 +23,7 @@ async function createUser(data: RegisterInput & { passwordHash: string }): Promi
             Apellido: data.apellido,
             Correo: data.email,
             contrasena: data.passwordHash,
-            ProveedorAuth: 'email', // <-- aquí
+            ProveedorAuth: 'email',
         },
     });
     return {
@@ -31,10 +31,9 @@ async function createUser(data: RegisterInput & { passwordHash: string }): Promi
         nombre: user.Nombre,
         apellido: user.Apellido,
         email: user.Correo,
-        proveedorAuth: user.ProveedorAuth ?? undefined, // <-- aquí
+        proveedorAuth: user.ProveedorAuth ?? undefined,
     };
 }
-
 
 async function findUserByGoogleId(googleId: string): Promise<UserResponse | null> {
     const user = await prisma.usuarios.findUnique({
@@ -56,32 +55,28 @@ async function findOrCreateGoogleUser(data: {
     apellido: string;
     proveedorAuth: string;
 }): Promise<UserResponse> {
-    // Primero intentar encontrar por googleId
     let user = await prisma.usuarios.findUnique({
         where: { googleId: data.googleId },
     });
 
-    // Si no existe, verificar si hay un usuario con ese email
     if (!user) {
         user = await prisma.usuarios.findUnique({
             where: { Correo: data.email },
         });
 
-        // Si existe usuario con ese email pero sin googleId, vincular la cuenta
         if (user) {
             user = await prisma.usuarios.update({
                 where: { Id: user.Id },
                 data: { googleId: data.googleId },
             });
         } else {
-            // Si no existe ningún usuario, crear uno nuevo
             user = await prisma.usuarios.create({
                 data: {
                     Nombre: data.nombre,
                     Apellido: data.apellido,
                     Correo: data.email,
                     googleId: data.googleId,
-                    contrasena: null, // Usuario OAuth no necesita contraseña
+                    contrasena: null,
                     ProveedorAuth: data.proveedorAuth,
                 },
             });
@@ -97,9 +92,30 @@ async function findOrCreateGoogleUser(data: {
     };
 }
 
+// ✅ NUEVO: Buscar usuario por DNI y retornar solo datos básicos
+async function findUserByDni(dni: string): Promise<UserBasicInfo | null> {
+    const user = await prisma.usuarios.findUnique({
+        where: { Dni: dni },
+        select: {
+            Nombre: true,
+            Apellido: true,
+            Dni: true,
+        },
+    });
+
+    if (!user) return null;
+
+    return {
+        nombre: user.Nombre,
+        apellido: user.Apellido,
+        dni: user.Dni ?? '',
+    };
+}
+
 export const AuthRepository = {
     findUserByEmail,
     createUser,
     findUserByGoogleId,
     findOrCreateGoogleUser,
+    findUserByDni, // ✅ NUEVO
 };
