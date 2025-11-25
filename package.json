@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tsx watch src/index.ts ",
-		"build": "tsc && tsc-alias",
+		"build": "prisma generate && tsc && tsc-alias",
 		"start": "node dist/index.js",
 		"test": "jest",
 		"typecheck": "tsc --noEmit",

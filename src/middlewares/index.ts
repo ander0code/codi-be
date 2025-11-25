@@ -38,10 +38,11 @@ export const configureMiddlewares = (app: express.Application): void => {
 	);
 	app.use(
 		cors({
-			origin: process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3000', 'http://localhost:5173'],
-			credentials: true,
-			methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-			allowedHeaders: ['Content-Type', 'Authorization'],
+			origin: process.env.ALLOWED_ORIGINS?.split(',') ?? '*', // Permite todos los orígenes (necesario para apps móviles)
+			credentials: process.env.ALLOWED_ORIGINS ? true : false, // Solo credentials si hay orígenes específicos
+			methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+			allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+			exposedHeaders: ['Content-Length', 'Content-Type'],
 		})
 	);
 
