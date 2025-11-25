@@ -49,16 +49,15 @@ async function matchProductos(
   productosOCR: ProductoExtraido[],
   collectionName: string
 ): Promise<ProductoClasificado[]> {
-  const productosClasificados: ProductoClasificado[] = [];
-
-  for (const productoOCR of productosOCR) {
+  // 🚀 OPTIMIZACIÓN #1: Paralelizar matching de productos
+  // Procesa todos los productos simultáneamente en lugar de secuencialmente
+  const matchPromises = productosOCR.map(async (productoOCR) => {
     const validarCO2Flag = true;
     const match = await ProductMatcher.findSimilarProduct(
       productoOCR.nombre,
       collectionName,
       validarCO2Flag
     );
-
 
     if (match) {
       let cantidadEnKg: number;
@@ -116,13 +115,13 @@ async function matchProductos(
         nivel: validacion.nivel
       });
 
-      productosClasificados.push({
+      return {
         ...match,
         precio: productoOCR.precio,
         cantidad: cantidadEnKg,
         confianza: match.confianza,
         validacion,
-      });
+      };
     } else {
       logger.warn("⚠️ Producto no encontrado en Qdrant", {
         nombre: productoOCR.nombre,
@@ -132,17 +131,18 @@ async function matchProductos(
       const co2Calculado = 5.0 * productoOCR.cantidad;
       const validacion = validarCO2("Sin categoría", 5.0, productoOCR.cantidad);
 
-      productosClasificados.push({
+      return {
         ...productoOCR,
         categoria: "Sin categoría",
         factorCo2: 5.0,
         esLocal: false,
         tieneEmpaqueEcologico: false,
         validacion,
-      });
+      };
     }
-  }
+  });
 
+  const productosClasificados = await Promise.all(matchPromises);
   return productosClasificados;
 }
 function analizarBoleta(
