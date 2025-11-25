@@ -9,6 +9,7 @@ import { configureMiddlewares, errorHandler } from './middlewares/index.js';
 import router from './routes.js';
 
 const app: Express = express();
+app.set('trust proxy', 1); // Confía en el primer proxy (Nginx)
 
 // Middlewares
 configureMiddlewares(app);
