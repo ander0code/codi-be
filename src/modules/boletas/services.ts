@@ -1,6 +1,6 @@
 import type { ServiceResponse } from "@/types/service.js";
 import { BoletasRepository } from "./repository.js";
-import { TesseractService } from "./ocr/tesseract.service.js";
+import { VisionService } from "./ocr/vision.service.js";
 import { ProductMatcher } from "./matching/product-matcher.js";
 import { SupermarketDetector } from "./ai/supermarket-detector.js";
 import { DeepSeekClientService } from "@/lib/clients/deepseek.js";
@@ -213,8 +213,8 @@ async function procesarBoleta(
 ): Promise<ServiceResponse<ProcesarBoletaResponse>> {
   try {
     logger.info("🚀 Iniciando procesamiento de boleta", { userId, fileName });
-    logger.info("📸 Paso 1: Extrayendo texto con OCR...");
-    const textoOCR = await TesseractService.extractText(imageBuffer);
+    logger.info("📸 Paso 1: Extrayendo texto con OCR (Google Vision)...");
+    const textoOCR = await VisionService.extractText(imageBuffer);
 
     logger.info("📝 Texto extraído del OCR (completo):", {
       caracteres: textoOCR.length,
@@ -232,7 +232,7 @@ async function procesarBoleta(
     const collectionName = SupermarketDetector.detectSupermercado(textoOCR);
     logger.info(`✅ Colección seleccionada: ${collectionName}`);
 
-    const productosOCR = TesseractService.parseProductosFromText(textoOCR);
+    const productosOCR = VisionService.parseProductosFromText(textoOCR);
 
     if (productosOCR.length === 0) {
       throw new ValidationError("No se detectaron productos en la imagen");
@@ -277,13 +277,20 @@ async function procesarBoleta(
         );
 
         return {
+          // ✅ DATOS DE LA BOLETA (PRIMORDIALES - de OCR)
           nombreProducto: p.nombre,
           cantidad: p.cantidad,
-          precioUnitario: p.precio,
+          unidad: p.unidad,
+          precioUnitario: p.precioUnitario || (p.precio / p.cantidad), // De OCR o calculado
+          precioTotal: p.precio, // Precio total de la boleta
+
+          // ✅ DATOS DE QDRANT (ENRIQUECIMIENTO - solo para CO2, categoría, marca)
           factorCo2: p.factorCo2,
           categoriaId,
           subcategoriaId,
           marcaId,
+          coincidido: !!p.productoId, // Si encontró match en Qdrant
+          puntajeCoincidencia: undefined, // TODO: Agregar score de similitud si está disponible
         };
       })
     );

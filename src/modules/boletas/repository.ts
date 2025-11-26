@@ -36,11 +36,15 @@ async function createBoleta(data: {
 async function createBoletaItems(boletaId: string, items: Array<{
     nombreProducto: string;
     cantidad: number;
+    unidad?: string;
     precioUnitario: number;
+    precioTotal?: number;
     factorCo2: number;
     categoriaId?: string;
     subcategoriaId?: string;
     marcaId?: string;
+    coincidido?: boolean;
+    puntajeCoincidencia?: number;
 }>) {
     try {
         const productosCreados = await prisma.productos.createMany({
@@ -48,13 +52,15 @@ async function createBoletaItems(boletaId: string, items: Array<{
                 BoletaId: boletaId,
                 NombreProducto: item.nombreProducto,
                 Cantidad: new Prisma.Decimal(item.cantidad),
+                Unidad: item.unidad,
                 PrecioUnitario: new Prisma.Decimal(item.precioUnitario),
-                PrecioTotal: new Prisma.Decimal(item.precioUnitario * item.cantidad),
+                PrecioTotal: item.precioTotal ? new Prisma.Decimal(item.precioTotal) : new Prisma.Decimal(item.precioUnitario * item.cantidad),
                 FactorCo2PorUnidad: new Prisma.Decimal(item.factorCo2),
                 CategoriaId: item.categoriaId,
                 SubcategoriaId: item.subcategoriaId,
                 MarcaId: item.marcaId,
-                Coincidido: true,
+                Coincidido: item.coincidido ?? true,
+                PuntajeCoincidencia: item.puntajeCoincidencia ? new Prisma.Decimal(item.puntajeCoincidencia) : null,
             })),
         });
 

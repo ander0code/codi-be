@@ -114,4 +114,6 @@ src/lib/prisma/migrations/
 prisma/migrations/
 
 *.tsbuildinfo
-.eslintcache
+.eslintcachegen-lang-client-*.json
+
+credentials.json

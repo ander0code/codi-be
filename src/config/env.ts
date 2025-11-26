@@ -7,20 +7,20 @@ const envSchema = z.object({
     PORT: z.string().default('3000'),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
-    
+
     // Database
     DATABASE_URL: z.string(),
 
     // Google OAuth
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
-    
+
     // Auth
     JWT_SECRET: z.string(),
     JWT_EXPIRES_IN: z.string().default('7d'),
     BCRYPT_SALT_ROUNDS: z.string().transform(Number).default(10),
     JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
-    
+
     // LLM APIs
     DEEPSEEK_API_KEY: z.string(),
     OPENAI_API_KEY: z.string(),
@@ -28,11 +28,12 @@ const envSchema = z.object({
     // Qdrant (sin collectionName)
     QDRANT_URL: z.string().default('http://localhost:6333'),
     QDRANT_API_KEY: z.string().optional(),
-    
-    
+
+
     // OCR
     OCR_LANGUAGE: z.string().default('spa'),
-    MAX_FILE_SIZE: z.string().transform(Number) // .default('10485760'), 10MB
+    MAX_FILE_SIZE: z.string().transform(Number), // .default('10485760'), 10MB
+    GOOGLE_CLOUD_VISION_API_KEY: z.string(),
 
 });
 
@@ -42,7 +43,7 @@ export const env = {
     port: _env.PORT,
     nodeEnv: _env.NODE_ENV,
     logLevel: _env.LOG_LEVEL,
-    
+
     database: {
         url: _env.DATABASE_URL,
     },
@@ -56,7 +57,7 @@ export const env = {
         bcryptSaltRounds: _env.BCRYPT_SALT_ROUNDS,
         refreshExpiresIn: _env.JWT_REFRESH_EXPIRES_IN,
     },
-    
+
     llm: {
         deepseekApiKey: _env.DEEPSEEK_API_KEY,
         openaiApiKey: _env.OPENAI_API_KEY,
@@ -65,9 +66,10 @@ export const env = {
         url: _env.QDRANT_URL,
         apiKey: _env.QDRANT_API_KEY,
     },
-    
+
     ocr: {
         language: _env.OCR_LANGUAGE,
         maxFileSize: _env.MAX_FILE_SIZE,
+        googleVisionApiKey: _env.GOOGLE_CLOUD_VISION_API_KEY,
     },
 };
