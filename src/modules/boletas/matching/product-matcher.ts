@@ -2,6 +2,7 @@ import { qdrantClient, QdrantClientService } from "@/lib/clients/qdrant.js";
 import { EmbeddingsService } from "./embeddings.service.js";
 import { AdvancedMatcherService } from "./advanced-matcher.service.js";
 import { SubcategoryInferenceService } from "../ai/subcategory-inference.service.js";
+import { SubcategoryNormalizer } from "../validation/subcategory-normalizer.service.js";
 import logger from "@/config/logger.js";
 import type { ProductoClasificado } from "../schemas.js";
 
@@ -83,7 +84,11 @@ async function findSimilarProduct(
         const payload = mejorMatch.payload as Record<string, any>;
 
         const categoria = payload.categoria || 'Sin categoría';
-        const subcategoria = payload.subcategoria || categoria;
+        const subcategoriaOriginal = payload.subcategoria || categoria;
+
+        // Normalizar subcategoría usando mapeo_subcategorias.json
+        const subcategoriaNormalizada = SubcategoryNormalizer.normalizarSubcategoria(subcategoriaOriginal);
+
         const huella_categoria = payload.huella_categoria || payload.co2_estimado || payload.co2e_estimado || 5.0;
 
         logger.info('✅ Producto encontrado con búsqueda híbrida', {
@@ -94,7 +99,8 @@ async function findSimilarProduct(
             scoreFuzzy: Math.round(mejorMatch.scoreFuzzy * 100) / 100,
             scoreCombinado: Math.round(mejorMatch.scoreCombinado * 100) / 100,
             categoria: categoria,
-            subcategoria: subcategoria,
+            subcategoriaOriginal: subcategoriaOriginal,
+            subcategoriaNormalizada: subcategoriaNormalizada,
             huella_categoria: huella_categoria,
         });
 
@@ -106,7 +112,7 @@ async function findSimilarProduct(
             unidad: 'kg',
             confianza: mejorMatch.scoreCombinado,
             categoria: categoria,
-            subcategoria: subcategoria,
+            subcategoria: subcategoriaNormalizada, // ✅ Usar subcategoría normalizada
             marca: payload.marca || null,
             marcaId: undefined,
             factorCo2: huella_categoria,

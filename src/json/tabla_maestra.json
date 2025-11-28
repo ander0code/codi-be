@@ -1292,6 +1292,182 @@
       "rojo_desde": 4.5,
       "fuentes": ["Calculado"],
       "notas": "Leche × 1.1 fermentación"
+    },
+    "Quesos Blandos": {
+      "huella_media_kg_co2_por_kg": 18.0,
+      "rango_min": 10.0,
+      "rango_max": 25.0,
+      "verde_hasta": 12.6,
+      "amarillo_hasta": 21.6,
+      "rojo_desde": 21.6,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Base Quesos genérico (21 kg) x 0.85. Menor maduración = menor impacto. Ej: ricotta, cottage, mozzarella fresca",
+      "calculo_detallado": "Poore reporta 21 kg promedio quesos. Quesos frescos tienen ~15% menos emisiones por menor tiempo maduración"
+    },
+    
+    "Quesos Semiduros": {
+      "huella_media_kg_co2_por_kg": 21.0,
+      "rango_min": 15.0,
+      "rango_max": 27.0,
+      "verde_hasta": 14.7,
+      "amarillo_hasta": 31.5,
+      "rojo_desde": 31.5,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "IGUAL que tu Quesos genérico. Ej: Gouda, Edam, Cheddar joven",
+      "calculo_detallado": "Poore & Nemecek 2018 Fig. 1: Cheese median 21 kg CO2/kg"
+    },
+    
+    "Quesos Duros": {
+      "huella_media_kg_co2_por_kg": 24.0,
+      "rango_min": 18.0,
+      "rango_max": 30.0,
+      "verde_hasta": 16.8,
+      "amarillo_hasta": 36.0,
+      "rojo_desde": 36.0,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "IGUAL que tu Quesos del Mundo. Mayor maduración. Ej: Parmesano, Manchego, Gruyère",
+      "calculo_detallado": "Poore P90 quesos: ~27 kg. Madurados largos llegan a 30 kg"
+    },
+    
+    "Quesos Procesados": {
+      "huella_media_kg_co2_por_kg": 19.0,
+      "rango_min": 14.0,
+      "rango_max": 24.0,
+      "verde_hasta": 13.3,
+      "amarillo_hasta": 28.5,
+      "rojo_desde": 28.5,
+      "fuentes": ["Calculado desde Poore & Nemecek 2018"],
+      "notas": "Base queso (21) x 0.9 (menos maduración pero + procesamiento industrial). Ej: queso americano, fundido",
+      "calculo_detallado": "Menos leche que queso natural pero más energía industrial. Net: -10%"
+    },
+    
+    "Jamones Madurados": {
+      "huella_media_kg_co2_por_kg": 11.0,
+      "rango_min": 8.0,
+      "rango_max": 16.0,
+      "verde_hasta": 7.7,
+      "amarillo_hasta": 16.5,
+      "rojo_desde": 16.5,
+      "fuentes": ["Calculado desde Klimato 2024"],
+      "notas": "Base cerdo (7.0) x 1.5 por curado largo + pérdida agua. Ej: Serrano, Ibérico, Parma",
+      "calculo_detallado": "Klimato cerdo 7.07 kg. Factor 1.5 por: (1) Curado 12-36 meses energía, (2) Pérdida 30-40% peso → más kg cerdo/kg jamón"
+    },
+    
+    "Salames y Salchichones": {
+      "huella_media_kg_co2_por_kg": 10.0,
+      "rango_min": 7.0,
+      "rango_max": 14.0,
+      "verde_hasta": 7.0,
+      "amarillo_hasta": 15.0,
+      "rojo_desde": 15.0,
+      "fuentes": ["Calculado desde Klimato 2024"],
+      "notas": "Base cerdo (7.0) x 1.4 por curado + especias. Similar a tu Chorizos (9.5)",
+      "calculo_detallado": "Klimato cerdo 7.07 kg. Factor 1.4 por curado medio (menor que jamón) + condimentos"
+    },
+    
+    "Enrollados": {
+      "huella_media_kg_co2_por_kg": 8.0,
+      "rango_min": 5.0,
+      "rango_max": 12.0,
+      "verde_hasta": 5.6,
+      "amarillo_hasta": 12.0,
+      "rojo_desde": 12.0,
+      "fuentes": ["Calculado desde Poore & Nemecek 2018"],
+      "notas": "Masa harina (1.3) 30% + relleno carne promedio (6.25) 70%. Congelado x 1.15",
+      "calculo_detallado": "(Pan 1.3 x 0.3) + ((Cerdo 7 + Pollo 5.5)/2 x 0.7) x 1.15 congelación = ~8 kg"
+    },
+    
+    "Tortillas y Masas": {
+      "huella_media_kg_co2_por_kg": 1.4,
+      "rango_min": 1.0,
+      "rango_max": 2.0,
+      "verde_hasta": 0.98,
+      "amarillo_hasta": 2.1,
+      "rojo_desde": 2.1,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Base harina (1.1) x 1.25 procesamiento. Similar a tu Pasta (1.4)",
+      "calculo_detallado": "Poore wheat 1.1 kg base. Tortillas/masas: horneado ligero +25%"
+    },
+    
+    "Panetones": {
+      "huella_media_kg_co2_por_kg": 3.8,
+      "rango_min": 2.5,
+      "rango_max": 5.5,
+      "verde_hasta": 2.66,
+      "amarillo_hasta": 5.7,
+      "rojo_desde": 5.7,
+      "fuentes": ["Calculado desde múltiples - Poore & Nemecek 2018"],
+      "notas": "Harina 40% + mantequilla 25% + huevos 15% + azúcar 20%. Alto contenido grasa",
+      "calculo_detallado": "(1.1 x 0.4) + (10.8 x 0.25) + (4.5 x 0.15) + (2.0 x 0.2) = 3.79 ≈ 3.8 kg"
+    },
+    
+    "Repostería": {
+      "huella_media_kg_co2_por_kg": 4.0,
+      "rango_min": 2.5,
+      "rango_max": 6.0,
+      "verde_hasta": 2.8,
+      "amarillo_hasta": 6.0,
+      "rojo_desde": 6.0,
+      "fuentes": ["Calculado - igual que Pastelería"],
+      "notas": "IGUAL que tu Pastelería. Insumos para repostería: harina, azúcar, mantequilla",
+      "calculo_detallado": "Ya existe como 'Pastelería' con 4.0 kg. Repostería = productos similares"
+    },
+    
+    "Comidas Instantáneas": {
+      "huella_media_kg_co2_por_kg": 2.2,
+      "rango_min": 1.5,
+      "rango_max": 3.5,
+      "verde_hasta": 1.54,
+      "amarillo_hasta": 3.3,
+      "rojo_desde": 3.3,
+      "fuentes": ["Calculado desde Poore & Nemecek 2018"],
+      "notas": "Base pasta/arroz (1.5 promedio) x 1.5 procesamiento industrial intensivo + aditivos",
+      "calculo_detallado": "(Pasta 1.4 + Arroz 1.56)/2 = 1.48. Factor 1.5 por deshidratación + condimentos"     
+    },
+    
+    "Bebidas Funcionales": {
+      "huella_media_kg_co2_por_kg": 1.0,
+      "rango_min": 0.6,
+      "rango_max": 1.8,
+      "verde_hasta": 0.7,
+      "amarillo_hasta": 1.5,
+      "rojo_desde": 1.5,
+      "fuentes": ["Estimado desde base bebidas"],
+      "notas": "Base agua (0.25) + azúcar (2.0) + suplementos. Ej: Gatorade, Red Bull, Sporade",
+      "calculo_detallado": "Base bebida genérica 0.7 kg + electrolitos/vitaminas sintéticas +30% = ~1.0 kg"
+    },
+
+    "PACKS": {
+      "huella_media_kg_co2_por_kg": 5.0,
+      "rango_min": 2.0,
+      "rango_max": 15.0,
+      "verde_hasta": 3.5,
+      "amarillo_hasta": 7.5,
+      "rojo_desde": 7.5,
+      "fuentes": ["Calculado"],
+      "notas": "Promedio ponderado productos múltiples. Huella real depende de contenido específico del pack"
+    },
+  
+    "ALIMENTOS_ORGANICOS": {
+      "huella_media_kg_co2_por_kg": 0.7,
+      "rango_min": 0.3,
+      "rango_max": 1.5,
+      "verde_hasta": 0.49,
+      "amarillo_hasta": 1.05,
+      "rojo_desde": 1.05,
+      "fuentes": ["Poore & Nemecek 2018"],
+      "notas": "Productos vegetales orgánicos certificados. Similar a 'Orgánicos y Verduras Baby' existente"
+    },
+    
+    "PRODUCTOS_ORGANICOS": {
+      "huella_media_kg_co2_por_kg": 3.0,
+      "rango_min": 1.0,
+      "rango_max": 6.0,
+      "verde_hasta": 2.1,
+      "amarillo_hasta": 4.5,
+      "rojo_desde": 4.5,
+      "fuentes": ["Estimado"],
+      "notas": "Orgánicos procesados (desayunos, snacks). Promedio categoría"
     }
   }
 }

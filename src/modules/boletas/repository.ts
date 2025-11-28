@@ -305,6 +305,54 @@ async function findOrCreateSubcategoria(
     }
 }
 
+/**
+ * Busca una tienda en la BD por nombre normalizado
+ * NO crea la tienda si no existe, solo busca
+ * 
+ * @param nombreTienda - Nombre normalizado de la tienda (ej: 'Plaza Vea', 'Tottus')
+ * @returns ID de la tienda si existe, undefined si no existe
+ */
+async function findOrCreateTienda(nombreTienda: string): Promise<string | undefined> {
+    if (!nombreTienda) return undefined;
+
+    try {
+        // Buscar tienda existente por nombre exacto
+        const tienda = await prisma.tiendas.findUnique({
+            where: { Nombre: nombreTienda },
+        });
+
+        if (tienda) {
+            logger.info('✅ Tienda encontrada en DB', { tienda: nombreTienda, id: tienda.Id });
+            return tienda.Id;
+        }
+
+        // Si no existe, buscar por similitud (case-insensitive)
+        const tiendaSimilar = await prisma.tiendas.findFirst({
+            where: {
+                Nombre: {
+                    equals: nombreTienda,
+                    mode: 'insensitive',
+                },
+            },
+        });
+
+        if (tiendaSimilar) {
+            logger.info('✅ Tienda encontrada por similitud', {
+                buscado: nombreTienda,
+                encontrado: tiendaSimilar.Nombre,
+                id: tiendaSimilar.Id,
+            });
+            return tiendaSimilar.Id;
+        }
+
+        logger.warn('⚠️ Tienda no encontrada en DB', { tienda: nombreTienda });
+        return undefined;
+    } catch (error) {
+        logger.error('❌ Error buscando tienda', { nombreTienda, error });
+        return undefined;
+    }
+}
+
 
 export const BoletasRepository = {
     createBoleta,
@@ -316,4 +364,6 @@ export const BoletasRepository = {
     findOrCreateMarca,
     findOrCreateCategoria,
     findOrCreateSubcategoria,
+    findOrCreateTienda,
+
 };

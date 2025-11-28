@@ -3,6 +3,7 @@ import { BoletasRepository } from "./repository.js";
 import { VisionService } from "./ocr/vision.service.js";
 import { ProductMatcher } from "./matching/product-matcher.js";
 import { SupermarketDetector } from "./ai/supermarket-detector.js";
+import { StoreNormalizer } from "./ai/store-normalizer.service.js";
 import { DeepSeekClientService } from "@/lib/clients/deepseek.js";
 import { clasificarImpactoProducto } from "./validation/impactClassifier.js";
 import { validarCO2 } from "./validation/tablaMaestra.js";
@@ -230,7 +231,8 @@ async function procesarBoleta(
 
     logger.info("🏪 Paso 2: Detectando supermercado con patrones...");
     const collectionName = SupermarketDetector.detectSupermercado(textoOCR);
-    logger.info(`✅ Colección seleccionada: ${collectionName}`);
+    const nombreTiendaNormalizado = StoreNormalizer.normalizarNombreTienda(collectionName);
+    logger.info(`✅ Colección: ${collectionName}, Tienda normalizada: ${nombreTiendaNormalizado}`);
 
     const productosOCR = VisionService.parseProductosFromText(textoOCR);
 
@@ -254,9 +256,14 @@ async function procesarBoleta(
     let sugerencias: string[] = [];
 
     logger.info("💾 Paso 5: Guardando en base de datos...");
+
+    // Buscar tienda en DB
+    const tiendaId = await BoletasRepository.findOrCreateTienda(nombreTiendaNormalizado);
+
     const boleta = await BoletasRepository.createBoleta({
       usuarioId: userId,
-      nombreTienda: collectionName,
+      tiendaId: tiendaId, // ✅ Relacionar con tienda si existe
+      nombreTienda: nombreTiendaNormalizado, // ✅ Guardar nombre normalizado
       fechaBoleta: new Date(),
       total: productosClasificados.reduce((sum, p) => sum + p.precio, 0),
       tipoAmbiental: analisis.tipoAmbiental as BoletaTipoAmbiental,

@@ -230,12 +230,12 @@ model PromocionesUsuarios {
 
 model Recomendaciones {
   Id                 String @id @default(uuid())
-  BoletaId           String
-  ProductoOriginalId String
+  BoletaId           String @db.Uuid
+  ProductoOriginalId String @db.Uuid
 
   ProductoRecomendadoNombre      String
-  ProductoRecomendadoMarcaId     String?
-  ProductoRecomendadoCategoriaId String?
+  ProductoRecomendadoMarcaId     String? @db.Uuid
+  ProductoRecomendadoCategoriaId String? @db.Uuid
   TiendaOrigen                   String
 
   Co2Original      Decimal @db.Decimal(10, 4)
