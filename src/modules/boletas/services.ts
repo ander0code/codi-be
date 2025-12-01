@@ -8,6 +8,7 @@ import { DeepSeekClientService } from "@/lib/clients/deepseek.js";
 import { clasificarImpactoProducto } from "./validation/impactClassifier.js";
 import { validarCO2 } from "./validation/tablaMaestra.js";
 import { normalizarCantidadAKg } from "./validation/normalizador-unidades.js";
+import { calcularHashImagen } from "./utils/hash.js";
 import { ValidationError, NotFoundError } from "@/config/errors/errors.js";
 import logger from "@/config/logger.js";
 import type { BoletaTipoAmbiental } from "@prisma/client";
@@ -50,8 +51,6 @@ async function matchProductos(
   productosOCR: ProductoExtraido[],
   collectionName: string
 ): Promise<ProductoClasificado[]> {
-  // 🚀 OPTIMIZACIÓN #1: Paralelizar matching de productos
-  // Procesa todos los productos simultáneamente en lugar de secuencialmente
   const matchPromises = productosOCR.map(async (productoOCR) => {
     const validarCO2Flag = true;
     const match = await ProductMatcher.findSimilarProduct(
@@ -119,7 +118,8 @@ async function matchProductos(
       return {
         ...match,
         precio: productoOCR.precio,
-        cantidad: cantidadEnKg,
+        cantidad: productoOCR.cantidad,
+        unidad: productoOCR.unidad || 'kg',
         confianza: match.confianza,
         validacion,
       };
@@ -169,7 +169,6 @@ function analizarBoleta(
 
   let tipoAmbiental: "VERDE" | "AMARILLO" | "ROJO";
   if (totalProductos < 5) {
-    // Boletas con menos de 5 productos nunca se clasifican como VERDE
     if (porcentajeVerde >= 30) {
       tipoAmbiental = "AMARILLO";
     } else {
@@ -214,8 +213,41 @@ async function procesarBoleta(
 ): Promise<ServiceResponse<ProcesarBoletaResponse>> {
   try {
     logger.info("🚀 Iniciando procesamiento de boleta", { userId, fileName });
-    logger.info("📸 Paso 1: Extrayendo texto con OCR (Google Vision)...");
+
+    logger.info("� Verificando duplicados...");
+
+    const hashImagen = calcularHashImagen(imageBuffer);
+    logger.debug("Hash de imagen calculado", { hashImagen: hashImagen.substring(0, 16) + "..." });
+
+    logger.info("📸 Extrayendo texto con OCR (Google Vision)...");
     const textoOCR = await VisionService.extractText(imageBuffer);
+
+    const { serie, correlativo } = VisionService.extraerIdentificadorBoleta(textoOCR);
+    logger.info("📋 Identificadores extraídos", { serie, correlativo });
+
+    const verificacion = await BoletasRepository.verificarBoletaDuplicada(
+      userId,
+      hashImagen,
+      serie,
+      correlativo
+    );
+
+    if (verificacion.esDuplicada) {
+      const mensajeError = verificacion.motivo === 'hash'
+        ? 'Esta imagen ya fue procesada anteriormente'
+        : 'Esta boleta ya fue registrada (puede ser una foto diferente de la misma boleta)';
+
+      logger.warn("🚫 Boleta duplicada detectada", {
+        motivo: verificacion.motivo,
+        boletaExistente: verificacion.boletaExistente?.Id,
+        serie: verificacion.boletaExistente?.Serie,
+        correlativo: verificacion.boletaExistente?.Correlativo
+      });
+
+      throw new ValidationError(mensajeError);
+    }
+
+    logger.info("✅ Boleta no duplicada, continuando procesamiento");
 
     logger.info("📝 Texto extraído del OCR (completo):", {
       caracteres: textoOCR.length,
@@ -253,24 +285,23 @@ async function procesarBoleta(
     logger.info("📊 Paso 4: Analizando impacto ambiental...");
     const analisis = analizarBoleta(productosClasificados, collectionName);
 
-    let sugerencias: string[] = [];
-
     logger.info("💾 Paso 5: Guardando en base de datos...");
 
-    // Buscar tienda en DB
     const tiendaId = await BoletasRepository.findOrCreateTienda(nombreTiendaNormalizado);
 
     const boleta = await BoletasRepository.createBoleta({
       usuarioId: userId,
-      tiendaId: tiendaId, // ✅ Relacionar con tienda si existe
-      nombreTienda: nombreTiendaNormalizado, // ✅ Guardar nombre normalizado
+      tiendaId: tiendaId,
+      nombreTienda: nombreTiendaNormalizado,
       fechaBoleta: new Date(),
       total: productosClasificados.reduce((sum, p) => sum + p.precio, 0),
       tipoAmbiental: analisis.tipoAmbiental as BoletaTipoAmbiental,
       urlImagen: fileName,
+      hashImagen,
+      serie,
+      correlativo,
     });
 
-    // Resolver IDs de categorías, subcategorías y marcas
     const productosConIds = await Promise.all(
       productosClasificados.map(async (p) => {
         const marcaId = p.marcaId
@@ -284,51 +315,26 @@ async function procesarBoleta(
         );
 
         return {
-          // ✅ DATOS DE LA BOLETA (PRIMORDIALES - de OCR)
           nombreProducto: p.nombre,
           cantidad: p.cantidad,
           unidad: p.unidad,
-          precioUnitario: p.precioUnitario || (p.precio / p.cantidad), // De OCR o calculado
-          precioTotal: p.precio, // Precio total de la boleta
-
-          // ✅ DATOS DE QDRANT (ENRIQUECIMIENTO - solo para CO2, categoría, marca)
+          precioUnitario: p.precioUnitario || (p.precio / p.cantidad),
+          precioTotal: p.precio,
           factorCo2: p.factorCo2,
           categoriaId,
           subcategoriaId,
           marcaId,
-          coincidido: !!p.productoId, // Si encontró match en Qdrant
-          puntajeCoincidencia: undefined, // TODO: Agregar score de similitud si está disponible
+          coincidido: !!p.productoId,
+          puntajeCoincidencia: undefined,
         };
       })
     );
 
     await BoletasRepository.createBoletaItems(boleta.Id, productosConIds);
 
-
-
     if (analisis.esReciboVerde) {
       await BoletasRepository.updatePuntosVerdes(userId, 1);
       logger.info("✅ Recibo verde detectado - Punto agregado");
-    }
-
-    if (generateSuggestions) {
-      logger.info("💡 Generando sugerencias ecológicas con IA...");
-
-      const productosConCO2 = productosClasificados.map(p => ({
-        nombre: p.nombre,
-        co2: p.factorCo2 * p.cantidad,
-        nivel: p.validacion?.nivel
-      }));
-
-      sugerencias = await DeepSeekClientService.generateSuggestions(
-        productosConCO2,
-        {
-          co2Total: analisis.co2Total,
-          tipoAmbiental: analisis.tipoAmbiental
-        }
-      );
-    } else {
-      logger.info("⏭️ Sugerencias omitidas (no solicitadas)");
     }
 
     logger.info("🎉 Boleta procesada exitosamente", { boletaId: boleta.Id });
@@ -339,7 +345,6 @@ async function procesarBoleta(
         boletaId: boleta.Id,
         analisis,
         productos: productosClasificados,
-        sugerencias,
       },
     };
   } catch (error) {
@@ -451,18 +456,35 @@ async function getBoletaRecommendations(
     const productosConIds = await BoletasRepository.getProductosByBoletaId(boleta.Id);
     const recomendacionesParaGuardar = [];
 
+    logger.info(`📊 Analizando ${productosConIds.length} productos para recomendaciones`);
+
     for (const productoDb of productosConIds) {
-      if (Number(productoDb.FactorCo2PorUnidad) > 3.0) {
+      const co2Producto = Number(productoDb.FactorCo2PorUnidad);
+
+      logger.info(`🔍 Producto: ${productoDb.NombreProducto} - CO2: ${co2Producto}`);
+
+      if (co2Producto > 2.0) {
+        const categoriaReal = productoDb.Categoria?.Nombre || productoDb.Subcategoria?.Nombre || "Sin categoría";
+        const subcategoriaReal = productoDb.Subcategoria?.Nombre || "Sin categoría";
+
+        logger.info(`✅ Producto califica para recomendaciones (CO2 > 2.0)`, {
+          nombre: productoDb.NombreProducto,
+          co2: co2Producto,
+          categoria: categoriaReal,
+          subcategoria: subcategoriaReal
+        });
+
         const producto: ProductoClasificado = {
           nombre: productoDb.NombreProducto || "Producto",
           precio: 0,
           cantidad: Number(productoDb.Cantidad),
-          unidad: "kg",
+          unidad: productoDb.Unidad || "kg",
           confianza: 1.0,
-          categoria: "Sin categoría",
-          subcategoria: "Sin categoría",
-          marcaId: undefined,
-          factorCo2: Number(productoDb.FactorCo2PorUnidad),
+          categoria: categoriaReal,
+          subcategoria: subcategoriaReal,
+          marcaId: productoDb.MarcaId || undefined,
+          marca: productoDb.Marca?.Nombre || undefined,
+          factorCo2: co2Producto,
           esLocal: false,
           tieneEmpaqueEcologico: false,
         };
@@ -472,6 +494,8 @@ async function getBoletaRecommendations(
           boleta.NombreTienda || "tottus",
           true
         );
+
+        logger.info(`📋 Alternativas encontradas: ${alternativas.length}`);
 
         for (const alternativa of alternativas) {
           const porcentajeMejora =

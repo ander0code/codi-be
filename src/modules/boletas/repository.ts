@@ -3,6 +3,82 @@ import { Prisma } from '@prisma/client';
 import logger from '@/config/logger.js';
 import type { BoletaTipoAmbiental } from '@prisma/client';
 
+async function verificarBoletaDuplicada(
+    userId: string,
+    hashImagen: string,
+    serie: string | null,
+    correlativo: string | null
+): Promise<{
+    esDuplicada: boolean;
+    motivo?: 'hash' | 'identificador';
+    boletaExistente?: any;
+}> {
+
+    const duplicadoPorHash = await prisma.boletas.findFirst({
+        where: {
+            UsuarioId: userId,
+            HashImagen: hashImagen
+        },
+        select: {
+            Id: true,
+            Serie: true,
+            Correlativo: true,
+            CreadoEn: true
+        }
+    });
+
+    if (duplicadoPorHash) {
+        logger.warn('🚫 Boleta duplicada detectada por hash de imagen', {
+            boletaId: duplicadoPorHash.Id,
+            hashImagen
+        });
+
+        return {
+            esDuplicada: true,
+            motivo: 'hash',
+            boletaExistente: duplicadoPorHash
+        };
+    }
+
+    if (serie && correlativo) {
+        const duplicadoPorIdentificador = await prisma.boletas.findFirst({
+            where: {
+                UsuarioId: userId,
+                Serie: serie,
+                Correlativo: correlativo
+            },
+            select: {
+                Id: true,
+                Serie: true,
+                Correlativo: true,
+                CreadoEn: true
+            }
+        });
+
+        if (duplicadoPorIdentificador) {
+            logger.warn('🚫 Boleta duplicada detectada por identificador', {
+                boletaId: duplicadoPorIdentificador.Id,
+                serie,
+                correlativo
+            });
+
+            return {
+                esDuplicada: true,
+                motivo: 'identificador',
+                boletaExistente: duplicadoPorIdentificador
+            };
+        }
+    }
+
+    logger.info('✅ Boleta no duplicada, puede procesarse', {
+        hashImagen,
+        serie,
+        correlativo
+    });
+
+    return { esDuplicada: false };
+}
+
 async function createBoleta(data: {
     usuarioId: string;
     nombreTienda?: string;
@@ -11,6 +87,9 @@ async function createBoleta(data: {
     total: number;
     tipoAmbiental: BoletaTipoAmbiental;
     urlImagen?: string;
+    hashImagen?: string;
+    serie?: string | null;
+    correlativo?: string | null;
 }) {
     try {
         const boleta = await prisma.boletas.create({
@@ -22,6 +101,9 @@ async function createBoleta(data: {
                 Total: new Prisma.Decimal(data.total),
                 TipoAmbiental: data.tipoAmbiental,
                 UrlImagen: data.urlImagen,
+                HashImagen: data.hashImagen,
+                Serie: data.serie,
+                Correlativo: data.correlativo,
             },
         });
 
@@ -211,6 +293,23 @@ async function getProductosByBoletaId(boletaId: string) {
                 NombreProducto: true,
                 FactorCo2PorUnidad: true,
                 Cantidad: true,
+                Unidad: true,
+                MarcaId: true,
+                Marca: {
+                    select: {
+                        Nombre: true
+                    }
+                },
+                Categoria: {
+                    select: {
+                        Nombre: true
+                    }
+                },
+                Subcategoria: {
+                    select: {
+                        Nombre: true
+                    }
+                },
             },
         });
 
@@ -226,9 +325,6 @@ async function getProductosByBoletaId(boletaId: string) {
     }
 }
 
-/**
- * Busca o crea una marca en la BD
- */
 async function findOrCreateMarca(nombreMarca: string | null | undefined): Promise<string | undefined> {
     if (!nombreMarca || nombreMarca === 'Sin marca') return undefined;
 
@@ -246,9 +342,6 @@ async function findOrCreateMarca(nombreMarca: string | null | undefined): Promis
     }
 }
 
-/**
- * Busca o crea una categoría en la BD
- */
 async function findOrCreateCategoria(nombreCategoria: string | null | undefined): Promise<string | undefined> {
     if (!nombreCategoria || nombreCategoria === 'Sin categoría') return undefined;
 
@@ -266,9 +359,6 @@ async function findOrCreateCategoria(nombreCategoria: string | null | undefined)
     }
 }
 
-/**
- * Busca o crea una subcategoría en la BD
- */
 async function findOrCreateSubcategoria(
     nombreSubcategoria: string | null | undefined,
     categoriaId: string | undefined
@@ -278,7 +368,6 @@ async function findOrCreateSubcategoria(
     }
 
     try {
-        // Buscar subcategoría existente
         const existing = await prisma.subcategorias.findFirst({
             where: {
                 Nombre: nombreSubcategoria,
@@ -290,7 +379,6 @@ async function findOrCreateSubcategoria(
             return existing.Id;
         }
 
-        // Crear nueva subcategoría
         const subcategoria = await prisma.subcategorias.create({
             data: {
                 Nombre: nombreSubcategoria,
@@ -305,18 +393,10 @@ async function findOrCreateSubcategoria(
     }
 }
 
-/**
- * Busca una tienda en la BD por nombre normalizado
- * NO crea la tienda si no existe, solo busca
- * 
- * @param nombreTienda - Nombre normalizado de la tienda (ej: 'Plaza Vea', 'Tottus')
- * @returns ID de la tienda si existe, undefined si no existe
- */
 async function findOrCreateTienda(nombreTienda: string): Promise<string | undefined> {
     if (!nombreTienda) return undefined;
 
     try {
-        // Buscar tienda existente por nombre exacto
         const tienda = await prisma.tiendas.findUnique({
             where: { Nombre: nombreTienda },
         });
@@ -325,8 +405,6 @@ async function findOrCreateTienda(nombreTienda: string): Promise<string | undefi
             logger.info('✅ Tienda encontrada en DB', { tienda: nombreTienda, id: tienda.Id });
             return tienda.Id;
         }
-
-        // Si no existe, buscar por similitud (case-insensitive)
         const tiendaSimilar = await prisma.tiendas.findFirst({
             where: {
                 Nombre: {
@@ -353,8 +431,8 @@ async function findOrCreateTienda(nombreTienda: string): Promise<string | undefi
     }
 }
 
-
 export const BoletasRepository = {
+    verificarBoletaDuplicada,
     createBoleta,
     createBoletaItems,
     createRecomendaciones,

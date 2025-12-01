@@ -110,7 +110,13 @@ model Boletas {
   MetodoPago      String?             @db.VarChar(50)
   UrlImagen       String?             @db.Text
   TipoAmbiental   BoletaTipoAmbiental @default(AMARILLO)
-  CreadoEn        DateTime            @default(now()) @db.Timestamptz(6)
+
+  // Campos para detección de duplicados
+  HashImagen  String? @db.VarChar(64) // SHA-256 de la imagen
+  Serie       String? @db.VarChar(10) // Serie de la boleta (ej: BV12)
+  Correlativo String? @db.VarChar(20) // Correlativo (ej: 00035036)
+
+  CreadoEn DateTime @default(now()) @db.Timestamptz(6)
 
   Usuario         Usuarios          @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
   Tienda          Tiendas?          @relation(fields: [TiendaId], references: [Id])
@@ -118,6 +124,8 @@ model Boletas {
   Recomendaciones Recomendaciones[] // ✅ AGREGAR ESTA LÍNEA
 
   @@index([UsuarioId, FechaBoleta(sort: Desc)])
+  @@index([UsuarioId, HashImagen])
+  @@index([UsuarioId, Serie, Correlativo])
   @@index([TiendaId])
 }
 

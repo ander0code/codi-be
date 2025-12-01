@@ -16,9 +16,6 @@ interface ProductoRecomendado {
     esEco?: boolean;
 }
 
-/**
- * Busca productos eco/orgánicos en la misma categoría
- */
 async function buscarProductosEco(
     embedding: number[],
     tienda: string,
@@ -86,9 +83,6 @@ async function buscarProductosEco(
     }
 }
 
-/**
- * Busca productos de marcas sostenibles (bajo CO2 promedio)
- */
 async function buscarMarcasSostenibles(
     embedding: number[],
     tienda: string,
@@ -165,148 +159,84 @@ async function findAlternatives(
     tiendaOriginal: string,
     buscarOtrasTiendas = true
 ): Promise<ProductoRecomendado[]> {
-    // Use subcategoria when categoria is missing or placeholder
     const effectiveCategory = producto.categoria && producto.categoria !== 'Sin categoría'
         ? producto.categoria
         : (producto.subcategoria ?? '');
-    // Marca may be null; keep undefined if not present
-    const effectiveMarca = producto.marca ?? undefined;
+
     try {
         const embedding = await EmbeddingsService.generateProductEmbedding(producto.nombre);
         const alternativas: ProductoRecomendado[] = [];
 
-        // 1️⃣ PRIORIDAD: Buscar productos eco/orgánicos en la misma tienda
-        logger.debug(`🌱 Buscando productos eco/orgánicos para "${producto.nombre}"...`);
-        const productosEco = await buscarProductosEco(
-            embedding,
-            tiendaOriginal,
-            effectiveCategory,
-            producto.factorCo2
-        );
+        const todasLasTiendas = ['tottus', 'vivanda', 'plazavea', 'wong'];
 
-        if (productosEco.length > 0) {
-            logger.info(`✅ Encontrados ${productosEco.length} productos eco en ${tiendaOriginal}`);
-            alternativas.push(...productosEco);
-        }
+        const tiendaNormalizada = tiendaOriginal.toLowerCase();
 
-        // 2️⃣ Buscar marcas sostenibles
-        if (alternativas.length < 3) {
-            logger.debug(`🏷️ Buscando marcas sostenibles...`);
-            const marcasSostenibles = await buscarMarcasSostenibles(
-                embedding,
-                tiendaOriginal,
-                effectiveCategory,
-                producto.factorCo2,
-                effectiveMarca
-            );
+        const tiendasOrdenadas = [
+            tiendaNormalizada,
+            ...todasLasTiendas.filter(t => t !== tiendaNormalizada)
+        ];
 
-            if (marcasSostenibles.length > 0) {
-                logger.info(`✅ Encontradas ${marcasSostenibles.length} marcas sostenibles`);
-                alternativas.push(...marcasSostenibles);
-            }
-        }
+        logger.info(`🔍 Buscando alternativas para "${producto.nombre}"`, {
+            co2Original: producto.factorCo2,
+            categoria: effectiveCategory,
+            subcategoria: producto.subcategoria,
+            tiendaOriginal: tiendaOriginal,
+            tiendaNormalizada: tiendaNormalizada,
+            tiendas: tiendasOrdenadas
+        });
 
-        // 3️⃣ Buscar alternativas normales en la misma tienda
-        if (alternativas.length < 3) {
-            logger.debug(`🔍 Buscando alternativas normales en ${tiendaOriginal}...`);
-            const resultsMismaTienda = await qdrantClient.search(tiendaOriginal, {
-                vector: embedding,
-                limit: 10,
-                with_payload: true,
-                score_threshold: 0.60,
-                filter: {
-                    must: [
-                        {
-                            key: 'categoria_principal',
-                            match: { value: producto.categoria },
-                        },
-                    ],
-                },
-            });
+        for (const tienda of tiendasOrdenadas) {
+            if (alternativas.length >= 5) break;
 
-            for (const match of resultsMismaTienda) {
-                const payload = match.payload as Record<string, any>;
-                const co2 = payload.co2_estimado || payload.co2e_estimado || 0;
+            try {
+                logger.info(`  🏪 Buscando en tienda: ${tienda}...`);
 
-                if (co2 < producto.factorCo2 && co2 > 0) {
-                    alternativas.push({
-                        nombre: payload.nombre || 'Producto sin nombre',
-                        co2,
-                        marca: payload.marca || null,
-                        categoria: payload.categoria_principal || producto.categoria,
-                        tienda: tiendaOriginal,
-                        scoreSimilitud: match.score,
-                        tipo: 'ALTERNATIVA_MISMA_TIENDA',
-                    });
-                }
-            }
-        }
+                const results = await qdrantClient.search(tienda, {
+                    vector: embedding,
+                    limit: 20,
+                    with_payload: true,
+                    score_threshold: 0.50,
+                });
 
-        // 4️⃣ Buscar en otras tiendas si es necesario
-        if (buscarOtrasTiendas && alternativas.length < 3) {
-            logger.debug(`🏪 Buscando en otras tiendas...`);
-            const otrasTiendas = ['tottus', 'wong', 'vivanda', 'plazavea', 'metro'].filter(
-                t => t !== tiendaOriginal
-            );
+                logger.info(`  📊 Resultados en ${tienda}: ${results.length} productos encontrados`);
 
-            for (const tienda of otrasTiendas) {
-                if (alternativas.length >= 5) break;
+                for (const match of results) {
+                    if (alternativas.length >= 5) break;
 
-                try {
-                    const resultsOtraTienda = await qdrantClient.search(tienda, {
-                        vector: embedding,
-                        limit: 5,
-                        with_payload: true,
-                        score_threshold: 0.65,
-                        filter: {
-                            must: [
-                                {
-                                    key: 'categoria_principal',
-                                    match: { value: producto.categoria },
-                                },
-                            ],
-                        },
-                    });
+                    const payload = match.payload as Record<string, any>;
+                    const co2 = payload.co2_estimado || payload.co2e_estimado || 0;
 
-                    for (const match of resultsOtraTienda) {
-                        const payload = match.payload as Record<string, any>;
-                        const co2 = payload.co2_estimado || payload.co2e_estimado || 0;
+                    if (co2 > 0 && co2 < producto.factorCo2) {
+                        alternativas.push({
+                            nombre: payload.nombre || 'Producto sin nombre',
+                            co2,
+                            marca: payload.marca || null,
+                            categoria: payload.categoria_principal || effectiveCategory,
+                            tienda,
+                            scoreSimilitud: match.score,
+                            tipo: tienda === tiendaOriginal
+                                ? 'ALTERNATIVA_MISMA_TIENDA'
+                                : 'ALTERNATIVA_OTRA_TIENDA',
+                        });
 
-                        if (co2 < producto.factorCo2 && co2 > 0) {
-                            alternativas.push({
-                                nombre: payload.nombre || 'Producto sin nombre',
-                                co2,
-                                marca: payload.marca || null,
-                                categoria: payload.categoria_principal || producto.categoria,
-                                tienda,
-                                scoreSimilitud: match.score,
-                                tipo: 'ALTERNATIVA_OTRA_TIENDA',
-                            });
-                        }
+                        logger.debug(`  ✅ ${payload.nombre} - CO2: ${co2} (${tienda})`);
                     }
-                } catch (error) {
-                    logger.debug(`⚠️ Colección ${tienda} no disponible`);
                 }
+            } catch (error) {
+                logger.debug(`⚠️ Error buscando en ${tienda}:`, error);
+                continue;
             }
         }
 
-        // Ordenar por: 1) Productos eco primero, 2) Menor CO2
-        alternativas.sort((a, b) => {
-            if (a.esEco && !b.esEco) return -1;
-            if (!a.esEco && b.esEco) return 1;
-            return a.co2 - b.co2;
-        });
+        alternativas.sort((a, b) => a.co2 - b.co2);
 
-        logger.info(`✅ Total de alternativas encontradas: ${alternativas.length}`, {
-            eco: alternativas.filter(a => a.tipo === 'PRODUCTO_ECO_EQUIVALENTE').length,
-            marcasSostenibles: alternativas.filter(a => a.tipo === 'MARCA_SOSTENIBLE').length,
-            mismaTienda: alternativas.filter(a => a.tipo === 'ALTERNATIVA_MISMA_TIENDA').length,
-            otraTienda: alternativas.filter(a => a.tipo === 'ALTERNATIVA_OTRA_TIENDA').length,
-        });
+        const mejoresAlternativas = alternativas.slice(0, 5);
 
-        return alternativas.slice(0, 5);
+        logger.info(`✅ Encontradas ${mejoresAlternativas.length} alternativas para "${producto.nombre}"`);
+
+        return mejoresAlternativas;
     } catch (error) {
-        logger.error('❌ Error buscando alternativas', { producto: producto.nombre, error });
+        logger.error(`❌ Error buscando alternativas para "${producto.nombre}":`, error);
         return [];
     }
 }

@@ -786,23 +786,12 @@
             "$ref": "#/components/schemas/ProductoClasificado"
           },
           "description": "Listado de productos extraídos y clasificados de la boleta"
-        },
-        "sugerencias": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "example": "Prioriza productos locales y de temporada"
-          },
-          "description": "Sugerencias ecológicas personalizadas generadas por IA",
-          "minItems": 3,
-          "maxItems": 3
         }
       },
       "required": [
         "boletaId",
         "analisis",
-        "productos",
-        "sugerencias"
+        "productos"
       ]
     },
     "GetRecommendationsResponse": {

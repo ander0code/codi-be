@@ -11,8 +11,8 @@ export const GetBoletaParamsSchema = z.object({
 
 export const ProductoExtraidoSchema = z.object({
     nombre: z.string().min(2, 'El nombre del producto es muy corto'),
-    precio: z.number().positive('El precio debe ser positivo'), // Precio TOTAL
-    precioUnitario: z.number().positive().optional(), // Precio por unidad (opcional)
+    precio: z.number().positive('El precio debe ser positivo'),
+    precioUnitario: z.number().positive().optional(),
     cantidad: z.number().positive().default(1),
     unidad: z.string().default('kg'),
     confianza: z.number().min(0).max(1),
@@ -54,7 +54,6 @@ export const ProcesarBoletaResponseSchema = z.object({
     boletaId: z.uuid(),
     analisis: AnalisisBoletaSchema,
     productos: z.array(ProductoClasificadoSchema),
-    sugerencias: z.array(z.string()),
 });
 
 export const ProductoDetalleSchema = z.object({
