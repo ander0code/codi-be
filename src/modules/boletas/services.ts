@@ -26,6 +26,21 @@ import type {
 
 import { RecommendationsService } from "./recommendations/recommendations.service.js";
 
+/**
+ * Obtiene la URL del logo de la tienda
+ */
+function obtenerLogoTienda(tienda: string): string {
+  const logos: Record<string, string> = {
+    'tottus': 'https://static.wikia.nocookie.net/logopedia/images/0/0b/Tottus_logo_apilado_sin_HIPERMERCADO_2006.svg/revision/latest/scale-to-width-down/250?cb=20210325031309&path-prefix=es',
+    'wong': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Wong_Logo.svg/2560px-Wong_Logo.svg.png',
+    'vivanda': 'https://seeklogo.com/images/V/vivanda-logo-D62E6F0684-seeklogo.com.png',
+    'plazavea': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Plaza_Vea_logo.svg/2560px-Plaza_Vea_logo.svg.png',
+    'metro': 'https://seeklogo.com/images/M/metro-logo-C4C0B8C1E5-seeklogo.com.png'
+  };
+
+  return logos[tienda.toLowerCase()] || '';
+}
+
 function esProductoVerde(
   producto: ProductoClasificado,
   supermercado: string
@@ -435,6 +450,8 @@ async function getBoletaRecommendations(
             marca: rec.Marca?.Nombre ?? null,
             categoria: rec.Categoria?.Nombre ?? null,
             tienda: rec.TiendaOrigen,
+            logoTienda: obtenerLogoTienda(rec.TiendaOrigen),
+            precio: null,
             co2: Number(rec.Co2Recomendado),
           },
           mejora: {
@@ -528,6 +545,8 @@ async function getBoletaRecommendations(
               marca: alternativa.marca,
               categoria: alternativa.categoria,
               tienda: alternativa.tienda,
+              logoTienda: alternativa.logoTienda,  // Logo de la tienda
+              precio: alternativa.precio,  // Precio del producto
               co2: alternativa.co2,
             },
             mejora: {

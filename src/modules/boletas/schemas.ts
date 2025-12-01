@@ -80,6 +80,8 @@ export const RecomendacionItemSchema = z.object({
         marca: z.string().nullable(),
         categoria: z.string().nullable(),
         tienda: z.string(),
+        logoTienda: z.string(),
+        precio: z.number().nullable(),
         co2: z.number(),
     }),
     mejora: z.object({

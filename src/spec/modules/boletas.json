@@ -509,6 +509,18 @@
               "example": "Plaza Vea",
               "description": "Nombre normalizado de la tienda donde está disponible el producto (Tottus, Wong, Vivanda, Plaza Vea, Metro)"
             },
+            "logoTienda": {
+              "type": "string",
+              "example": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Plaza_Vea_logo.svg/2560px-Plaza_Vea_logo.svg.png",
+              "description": "URL del logo de la tienda"
+            },
+            "precio": {
+              "type": "number",
+              "format": "float",
+              "nullable": true,
+              "example": 5.90,
+              "description": "Precio del producto recomendado en soles (PEN)"
+            },
             "co2": {
               "type": "number",
               "format": "float",
@@ -521,6 +533,8 @@
             "marca",
             "categoria",
             "tienda",
+            "logoTienda",
+            "precio",
             "co2"
           ]
         },

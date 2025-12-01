@@ -11,6 +11,8 @@ interface ProductoRecomendado {
     marca: string | null;
     categoria: string;
     tienda: string;
+    logoTienda: string;  // URL del logo de la tienda
+    precio: number | null;  // Precio del producto recomendado
     scoreSimilitud: number;
     tipo: TipoRecomendacion;
     esEco?: boolean;
@@ -29,6 +31,21 @@ function normalizarNombreTienda(tienda: string): string {
     };
 
     return mapeo[tienda.toLowerCase()] || tienda;
+}
+
+/**
+ * Obtiene la URL del logo de la tienda
+ */
+function obtenerLogoTienda(tienda: string): string {
+    const logos: Record<string, string> = {
+        'tottus': 'https://static.wikia.nocookie.net/logopedia/images/0/0b/Tottus_logo_apilado_sin_HIPERMERCADO_2006.svg/revision/latest/scale-to-width-down/250?cb=20210325031309&path-prefix=es',
+        'wong': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Wong_Logo.svg/2560px-Wong_Logo.svg.png',
+        'vivanda': 'https://seeklogo.com/images/V/vivanda-logo-D62E6F0684-seeklogo.com.png',
+        'plazavea': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Plaza_Vea_logo.svg/2560px-Plaza_Vea_logo.svg.png',
+        'metro': 'https://seeklogo.com/images/M/metro-logo-C4C0B8C1E5-seeklogo.com.png'
+    };
+
+    return logos[tienda.toLowerCase()] || '';
 }
 
 async function buscarProductosEco(
@@ -84,6 +101,8 @@ async function buscarProductosEco(
                     marca: payload.marca || null,
                     categoria: payload.categoria_principal || categoria,
                     tienda,
+                    logoTienda: obtenerLogoTienda(tienda),
+                    precio: payload.precio || null,
                     scoreSimilitud: match.score,
                     tipo: 'PRODUCTO_ECO_EQUIVALENTE',
                     esEco: true,
@@ -157,6 +176,8 @@ async function buscarMarcasSostenibles(
                 marca,
                 categoria: mejorProducto.payload.categoria_principal || categoria,
                 tienda,
+                logoTienda: obtenerLogoTienda(tienda),
+                precio: mejorProducto.payload.precio || null,
                 scoreSimilitud: mejorProducto.score,
                 tipo: 'MARCA_SOSTENIBLE',
             });
@@ -248,6 +269,8 @@ async function findAlternatives(
                                 marca: payload.marca || null,
                                 categoria: payload.categoria_principal || effectiveCategory,
                                 tienda: normalizarNombreTienda(tienda), // Normalizar nombre de tienda
+                                logoTienda: obtenerLogoTienda(tienda), // Logo de la tienda
+                                precio: payload.precio || null, // Precio del producto
                                 scoreSimilitud: match.score,
                                 tipo: tienda === tiendaNormalizada
                                     ? 'ALTERNATIVA_MISMA_TIENDA'
