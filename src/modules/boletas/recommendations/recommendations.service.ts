@@ -16,6 +16,21 @@ interface ProductoRecomendado {
     esEco?: boolean;
 }
 
+/**
+ * Normaliza el nombre de la tienda para mostrar en la UI
+ */
+function normalizarNombreTienda(tienda: string): string {
+    const mapeo: Record<string, string> = {
+        'tottus': 'Tottus',
+        'wong': 'Wong',
+        'vivanda': 'Vivanda',
+        'plazavea': 'Plaza Vea',
+        'metro': 'Metro'
+    };
+
+    return mapeo[tienda.toLowerCase()] || tienda;
+}
+
 async function buscarProductosEco(
     embedding: number[],
     tienda: string,
@@ -206,20 +221,43 @@ async function findAlternatives(
                     const payload = match.payload as Record<string, any>;
                     const co2 = payload.co2_estimado || payload.co2e_estimado || 0;
 
+                    // Solo agregar si tiene menor CO2 que el original
                     if (co2 > 0 && co2 < producto.factorCo2) {
-                        alternativas.push({
-                            nombre: payload.nombre || 'Producto sin nombre',
-                            co2,
-                            marca: payload.marca || null,
-                            categoria: payload.categoria_principal || effectiveCategory,
-                            tienda,
-                            scoreSimilitud: match.score,
-                            tipo: tienda === tiendaOriginal
-                                ? 'ALTERNATIVA_MISMA_TIENDA'
-                                : 'ALTERNATIVA_OTRA_TIENDA',
-                        });
+                        const nombreRecomendado = payload.nombre || 'Producto sin nombre';
 
-                        logger.debug(`  ✅ ${payload.nombre} - CO2: ${co2} (${tienda})`);
+                        // FILTRAR DUPLICADOS: Evitar recomendar el mismo producto con diferente peso
+                        // Ej: Si el original es "MAIZ POP CORN 1KG", no recomendar "MAIZ POP CORN 500G"
+                        const nombreOriginalBase = producto.nombre
+                            .replace(/\d+(\.\d+)?\s*(kg|g|ml|l|un)/gi, '')
+                            .trim()
+                            .toLowerCase();
+
+                        const nombreRecomendadoBase = nombreRecomendado
+                            .replace(/\d+(\.\d+)?\s*(kg|g|ml|l|un)/gi, '')
+                            .trim()
+                            .toLowerCase();
+
+                        // Si los nombres base son muy similares, es el mismo producto
+                        const esMismoProducto = nombreOriginalBase.includes(nombreRecomendadoBase) ||
+                            nombreRecomendadoBase.includes(nombreOriginalBase);
+
+                        if (!esMismoProducto) {
+                            alternativas.push({
+                                nombre: nombreRecomendado,
+                                co2,
+                                marca: payload.marca || null,
+                                categoria: payload.categoria_principal || effectiveCategory,
+                                tienda: normalizarNombreTienda(tienda), // Normalizar nombre de tienda
+                                scoreSimilitud: match.score,
+                                tipo: tienda === tiendaNormalizada
+                                    ? 'ALTERNATIVA_MISMA_TIENDA'
+                                    : 'ALTERNATIVA_OTRA_TIENDA',
+                            });
+
+                            logger.debug(`  ✅ ${nombreRecomendado} - CO2: ${co2} (${tienda})`);
+                        } else {
+                            logger.debug(`  ⏭️ Omitido (mismo producto): ${nombreRecomendado}`);
+                        }
                     }
                 }
             } catch (error) {
@@ -228,13 +266,15 @@ async function findAlternatives(
             }
         }
 
+        // Ordenar por menor CO2 primero
         alternativas.sort((a, b) => a.co2 - b.co2);
 
-        const mejoresAlternativas = alternativas.slice(0, 5);
+        // RETORNAR SOLO LA MEJOR ALTERNATIVA (la de menor CO2)
+        const mejorAlternativa = alternativas.length > 0 ? [alternativas[0]] : [];
 
-        logger.info(`✅ Encontradas ${mejoresAlternativas.length} alternativas para "${producto.nombre}"`);
+        logger.info(`✅ Encontradas ${alternativas.length} alternativas, retornando la mejor`);
 
-        return mejoresAlternativas;
+        return mejorAlternativa;
     } catch (error) {
         logger.error(`❌ Error buscando alternativas para "${producto.nombre}":`, error);
         return [];

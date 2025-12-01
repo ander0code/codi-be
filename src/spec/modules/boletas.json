@@ -230,7 +230,7 @@
     "/boletas/{boletaId}/recommendations": {
       "get": {
         "summary": "Obtener recomendaciones de productos alternativos",
-        "description": "Genera o retorna recomendaciones de productos alternativos con menor huella de carbono para una boleta específica. Si las recomendaciones ya fueron generadas, las retorna de la base de datos (rápido). Si no existen, las genera usando búsqueda vectorial en Qdrant y las guarda para futuras consultas (puede tardar ~5 segundos la primera vez).",
+        "description": "Genera o retorna recomendaciones de productos alternativos con menor huella de carbono para una boleta específica. Retorna SOLO LA MEJOR alternativa por cada producto (la de menor CO2), filtra duplicados del mismo producto en diferente peso, y normaliza nombres de tiendas (Tottus, Plaza Vea, Wong, Vivanda). Si las recomendaciones ya fueron generadas, las retorna de la base de datos (rápido). Si no existen, las genera usando búsqueda vectorial en Qdrant y las guarda para futuras consultas (puede tardar ~5 segundos la primera vez).",
         "tags": [
           "Boletas"
         ],
@@ -506,8 +506,8 @@
             },
             "tienda": {
               "type": "string",
-              "example": "tottus",
-              "description": "Tienda donde está disponible (tottus, wong, vivanda, plazavea, metro)"
+              "example": "Plaza Vea",
+              "description": "Nombre normalizado de la tienda donde está disponible el producto (Tottus, Wong, Vivanda, Plaza Vea, Metro)"
             },
             "co2": {
               "type": "number",
@@ -582,8 +582,8 @@
         "totalRecomendaciones": {
           "type": "integer",
           "format": "int32",
-          "example": 5,
-          "description": "Cantidad total de recomendaciones generadas para la boleta"
+          "example": 3,
+          "description": "Cantidad total de recomendaciones (1 por cada producto con CO2 > 2.0)"
         },
         "co2TotalAhorrable": {
           "type": "number",
