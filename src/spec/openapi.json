@@ -1426,7 +1426,36 @@
                             "factorCo2": 4.2,
                             "categoria": "Lácteos y Frescos",
                             "subcategoria": "Leches",
-                            "marca": "Gloria"
+                            "marca": "Gloria",
+                            "rangosAmbientales": {
+                              "subcategoria": "Leches",
+                              "huella_media_kg_co2_por_kg": 3.2,
+                              "rango_min": 1.34,
+                              "rango_max": 8.9,
+                              "rangos": {
+                                "verde": {
+                                  "min": 0,
+                                  "max": 2.24,
+                                  "label": "Bajo impacto"
+                                },
+                                "amarillo": {
+                                  "min": 2.24,
+                                  "max": 4.8,
+                                  "label": "Impacto moderado"
+                                },
+                                "rojo": {
+                                  "min": 4.8,
+                                  "max": null,
+                                  "label": "Alto impacto"
+                                }
+                              },
+                              "tuPosicion": {
+                                "valor": 4.2,
+                                "zona": "AMARILLO",
+                                "porcentajeEnZona": 76.6,
+                                "mensaje": "Este producto tiene un impacto ambiental moderado"
+                              }
+                            }
                           }
                         ],
                         "analisis": {
@@ -2433,6 +2462,179 @@
             "nullable": true,
             "example": "Gloria",
             "description": "Nombre de la marca del producto"
+          },
+          "rangosAmbientales": {
+            "type": "object",
+            "nullable": true,
+            "description": "Rangos ambientales de la subcategoría y posición del producto en la escala verde/amarillo/rojo. Permite visualizar dónde se encuentra el producto respecto a los límites de impacto ambiental de su categoría.",
+            "properties": {
+              "subcategoria": {
+                "type": "string",
+                "example": "Leches",
+                "description": "Nombre de la subcategoría"
+              },
+              "huella_media_kg_co2_por_kg": {
+                "type": "number",
+                "format": "float",
+                "example": 3.2,
+                "description": "Huella de carbono promedio de la subcategoría en kg CO2 por kg de producto"
+              },
+              "rango_min": {
+                "type": "number",
+                "format": "float",
+                "example": 1.34,
+                "description": "Valor mínimo de CO2 posible en esta subcategoría"
+              },
+              "rango_max": {
+                "type": "number",
+                "format": "float",
+                "example": 8.9,
+                "description": "Valor máximo de CO2 posible en esta subcategoría"
+              },
+              "rangos": {
+                "type": "object",
+                "description": "Definición de los rangos verde, amarillo y rojo para esta subcategoría",
+                "properties": {
+                  "verde": {
+                    "type": "object",
+                    "description": "Rango de bajo impacto ambiental",
+                    "properties": {
+                      "min": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0,
+                        "description": "Límite inferior del rango verde"
+                      },
+                      "max": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2.24,
+                        "description": "Límite superior del rango verde"
+                      },
+                      "label": {
+                        "type": "string",
+                        "example": "Bajo impacto",
+                        "description": "Etiqueta descriptiva del rango"
+                      }
+                    },
+                    "required": [
+                      "min",
+                      "max",
+                      "label"
+                    ]
+                  },
+                  "amarillo": {
+                    "type": "object",
+                    "description": "Rango de impacto ambiental moderado",
+                    "properties": {
+                      "min": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2.24,
+                        "description": "Límite inferior del rango amarillo"
+                      },
+                      "max": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4.8,
+                        "description": "Límite superior del rango amarillo"
+                      },
+                      "label": {
+                        "type": "string",
+                        "example": "Impacto moderado",
+                        "description": "Etiqueta descriptiva del rango"
+                      }
+                    },
+                    "required": [
+                      "min",
+                      "max",
+                      "label"
+                    ]
+                  },
+                  "rojo": {
+                    "type": "object",
+                    "description": "Rango de alto impacto ambiental",
+                    "properties": {
+                      "min": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4.8,
+                        "description": "Límite inferior del rango rojo"
+                      },
+                      "max": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true,
+                        "example": null,
+                        "description": "Límite superior del rango rojo (null = sin límite superior)"
+                      },
+                      "label": {
+                        "type": "string",
+                        "example": "Alto impacto",
+                        "description": "Etiqueta descriptiva del rango"
+                      }
+                    },
+                    "required": [
+                      "min",
+                      "max",
+                      "label"
+                    ]
+                  }
+                },
+                "required": [
+                  "verde",
+                  "amarillo",
+                  "rojo"
+                ]
+              },
+              "tuPosicion": {
+                "type": "object",
+                "description": "Posición exacta del producto en la escala ambiental",
+                "properties": {
+                  "valor": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 3.2,
+                    "description": "Valor de CO2 del producto en kg CO2 por kg"
+                  },
+                  "zona": {
+                    "type": "string",
+                    "enum": [
+                      "VERDE",
+                      "AMARILLO",
+                      "ROJO"
+                    ],
+                    "example": "AMARILLO",
+                    "description": "Zona en la que se encuentra el producto"
+                  },
+                  "porcentajeEnZona": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 37.5,
+                    "description": "Porcentaje de posición dentro de la zona (0-100)"
+                  },
+                  "mensaje": {
+                    "type": "string",
+                    "example": "Este producto tiene un impacto ambiental moderado",
+                    "description": "Mensaje educativo personalizado según la zona"
+                  }
+                },
+                "required": [
+                  "valor",
+                  "zona",
+                  "porcentajeEnZona",
+                  "mensaje"
+                ]
+              }
+            },
+            "required": [
+              "subcategoria",
+              "huella_media_kg_co2_por_kg",
+              "rango_min",
+              "rango_max",
+              "rangos",
+              "tuPosicion"
+            ]
           }
         },
         "required": [

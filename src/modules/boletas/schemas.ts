@@ -66,6 +66,38 @@ export const ProductoDetalleSchema = z.object({
     categoria: z.string().nullable(),
     subcategoria: z.string().nullable(),
     marca: z.string().nullable(),
+    rangosAmbientales: z.object({
+        subcategoria: z.string(),
+        huella_media_kg_co2_por_kg: z.number(),
+        rango_min: z.number(),
+        rango_max: z.number(),
+        rangos: z.object({
+            verde: z.object({
+                min: z.number(),
+                max: z.number(),
+                label: z.string(),
+                color: z.string(),
+            }),
+            amarillo: z.object({
+                min: z.number(),
+                max: z.number(),
+                label: z.string(),
+                color: z.string(),
+            }),
+            rojo: z.object({
+                min: z.number(),
+                max: z.number().nullable(),
+                label: z.string(),
+                color: z.string(),
+            }),
+        }),
+        tuPosicion: z.object({
+            valor: z.number(),
+            zona: z.enum(['VERDE', 'AMARILLO', 'ROJO']),
+            porcentajeEnZona: z.number(),
+            mensaje: z.string(),
+        }),
+    }).nullable(),
 });
 
 export const RecomendacionItemSchema = z.object({

@@ -9,6 +9,7 @@ import { clasificarImpactoProducto } from "./validation/impactClassifier.js";
 import { validarCO2 } from "./validation/tablaMaestra.js";
 import { normalizarCantidadAKg } from "./validation/normalizador-unidades.js";
 import { calcularHashImagen } from "./utils/hash.js";
+import { obtenerRangosAmbientales } from "./validation/rangos-ambientales.js";
 import { ValidationError, NotFoundError } from "@/config/errors/errors.js";
 import logger from "@/config/logger.js";
 import type { BoletaTipoAmbiental } from "@prisma/client";
@@ -376,17 +377,42 @@ async function getBoletaDetalle(
     throw new NotFoundError("Boleta no encontrada");
   }
 
-  const productos: ProductoDetalle[] = boleta.Items.map((item) => ({
-    id: item.Id,
-    nombre: item.NombreProducto,
-    cantidad: Number(item.Cantidad),
-    precioUnitario: Number(item.PrecioUnitario),
-    precioTotal: Number(item.PrecioTotal),
-    factorCo2: Number(item.FactorCo2PorUnidad),
-    categoria: item.Categoria?.Nombre ?? null,
-    subcategoria: item.Subcategoria?.Nombre ?? null,
-    marca: item.Marca?.Nombre ?? null,
-  }));
+  const productos: ProductoDetalle[] = boleta.Items.map((item) => {
+    const cantidad = Number(item.Cantidad);
+    const factorCo2 = Number(item.FactorCo2PorUnidad);
+    const subcategoria = item.Subcategoria?.Nombre ?? null;
+
+    // Calcular CO2 por kg para obtener rangos
+    const unidad = item.Unidad || 'kg';
+    let co2PorKg = factorCo2;
+
+    // Si la unidad no es kg, intentar normalizar
+    if (unidad.toLowerCase() !== 'kg') {
+      // Si es en gramos, convertir
+      if (unidad.toLowerCase() === 'g') {
+        co2PorKg = factorCo2 * 1000; // Convertir a kg
+      }
+      // Para otras unidades, usar el factor directamente
+    }
+
+    // Obtener rangos ambientales
+    const rangosAmbientales = subcategoria
+      ? obtenerRangosAmbientales(subcategoria, co2PorKg)
+      : null;
+
+    return {
+      id: item.Id,
+      nombre: item.NombreProducto,
+      cantidad,
+      precioUnitario: Number(item.PrecioUnitario),
+      precioTotal: Number(item.PrecioTotal),
+      factorCo2,
+      categoria: item.Categoria?.Nombre ?? null,
+      subcategoria,
+      marca: item.Marca?.Nombre ?? null,
+      rangosAmbientales,
+    };
+  });
 
   const totalProductos = productos.length;
   const co2Total = productos.reduce(
@@ -411,8 +437,9 @@ async function getBoletaDetalle(
     },
   };
 
-  logger.info("Detalle de boleta obtenido", {
+  logger.info("Detalle de boleta obtenido con rangos ambientales", {
     boletaId: params.boletaId,
+    productosConRangos: productos.filter(p => p.rangosAmbientales !== null).length,
   });
 
   return {
