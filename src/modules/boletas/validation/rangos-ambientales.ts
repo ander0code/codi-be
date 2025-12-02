@@ -16,19 +16,16 @@ export interface RangosAmbientales {
             min: number;
             max: number;
             label: string;
-            color: string;
         };
         amarillo: {
             min: number;
             max: number;
             label: string;
-            color: string;
         };
         rojo: {
             min: number;
             max: number | null;
             label: string;
-            color: string;
         };
     };
     tuPosicion: {
@@ -91,20 +88,17 @@ export function obtenerRangosAmbientales(
             verde: {
                 min: 0,
                 max: datosSubcategoria.verde_hasta,
-                label: 'Bajo impacto',
-                color: '#22c55e'
+                label: 'Bajo impacto'
             },
             amarillo: {
                 min: datosSubcategoria.verde_hasta,
                 max: datosSubcategoria.amarillo_hasta,
-                label: 'Impacto moderado',
-                color: '#eab308'
+                label: 'Impacto moderado'
             },
             rojo: {
                 min: datosSubcategoria.rojo_desde,
                 max: null,
-                label: 'Alto impacto',
-                color: '#ef4444'
+                label: 'Alto impacto'
             }
         },
         tuPosicion: {

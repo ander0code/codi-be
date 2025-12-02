@@ -504,16 +504,22 @@ async function getBoletaRecommendations(
 
     for (const productoDb of productosConIds) {
       const co2Producto = Number(productoDb.FactorCo2PorUnidad);
+      const subcategoriaReal = productoDb.Subcategoria?.Nombre || "Sin categoría";
 
-      logger.info(`🔍 Producto: ${productoDb.NombreProducto} - CO2: ${co2Producto}`);
+      logger.info(`🔍 Producto: ${productoDb.NombreProducto} - CO2: ${co2Producto}`)
 
-      if (co2Producto > 2.0) {
+      // Obtener clasificación ambiental del producto
+      const rangosAmbientales = obtenerRangosAmbientales(subcategoriaReal, co2Producto);
+      const zona = rangosAmbientales?.tuPosicion.zona;
+
+      // Solo generar recomendaciones para productos AMARILLO o ROJO
+      if (zona === 'AMARILLO' || zona === 'ROJO') {
         const categoriaReal = productoDb.Categoria?.Nombre || productoDb.Subcategoria?.Nombre || "Sin categoría";
-        const subcategoriaReal = productoDb.Subcategoria?.Nombre || "Sin categoría";
 
-        logger.info(`✅ Producto califica para recomendaciones (CO2 > 2.0)`, {
+        logger.info(`✅ Producto califica para recomendaciones (Zona: ${zona})`, {
           nombre: productoDb.NombreProducto,
           co2: co2Producto,
+          zona,
           categoria: categoriaReal,
           subcategoria: subcategoriaReal
         });

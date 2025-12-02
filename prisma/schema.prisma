@@ -233,7 +233,6 @@ model PromocionesUsuarios {
   Usuario   Usuarios    @relation(fields: [UsuarioId], references: [Id], onDelete: Cascade)
   Promocion Promociones @relation(fields: [PromocionId], references: [Id], onDelete: Cascade)
 
-  @@unique([UsuarioId, PromocionId])
 }
 
 model Recomendaciones {

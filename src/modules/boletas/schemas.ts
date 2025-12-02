@@ -76,19 +76,16 @@ export const ProductoDetalleSchema = z.object({
                 min: z.number(),
                 max: z.number(),
                 label: z.string(),
-                color: z.string(),
             }),
             amarillo: z.object({
                 min: z.number(),
                 max: z.number(),
                 label: z.string(),
-                color: z.string(),
             }),
             rojo: z.object({
                 min: z.number(),
                 max: z.number().nullable(),
                 label: z.string(),
-                color: z.string(),
             }),
         }),
         tuPosicion: z.object({
