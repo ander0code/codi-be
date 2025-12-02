@@ -4,23 +4,66 @@ import { hashPassword, comparePassword } from '@/lib/hash.js';
 import { signToken, signRefreshToken, verifyToken } from '@/lib/jwt.js';
 import logger from '@/config/logger.js';
 import { AuthError, ConflictError, NotFoundError } from '@/config/errors/errors.js';
-import type { 
-    RegisterInput, 
-    LoginInput, 
-    RefreshTokenInput, 
+import { validateDniInReniec } from '@/lib/clients/reniec.js';
+import type {
+    RegisterInput,
+    LoginInput,
+    RefreshTokenInput,
     AuthResponse,
     GetUserByDniParams,
-    UserBasicInfo 
+    UserBasicInfo
 } from './schemas.js';
 
 async function register(input: RegisterInput): Promise<ServiceResponse<AuthResponse>> {
+    // 1. Validar DNI en RENIEC y obtener datos
+    logger.info('Validando DNI en RENIEC', { dni: input.dni });
+    const reniecValidation = await validateDniInReniec(input.dni);
+
+    if (!reniecValidation.isValid || !reniecValidation.data) {
+        logger.warn('DNI no válido en RENIEC', {
+            dni: input.dni,
+            error: reniecValidation.error
+        });
+
+        // Lanzar error específico según el tipo de fallo
+        if (reniecValidation.statusCode === 404) {
+            throw new NotFoundError('El DNI no se encuentra registrado en RENIEC');
+        } else if (reniecValidation.statusCode === 400) {
+            throw new AuthError('El formato del DNI es inválido');
+        } else {
+            throw new AuthError(reniecValidation.error || 'No se pudo validar el DNI en RENIEC');
+        }
+    }
+
+    // Obtener nombres desde RENIEC
+    const { nombres, apellidoPaterno, apellidoMaterno } = reniecValidation.data;
+
+    logger.info('DNI validado exitosamente en RENIEC', {
+        dni: input.dni,
+        nombreCompleto: reniecValidation.data.nombreCompleto
+    });
+
+    // 2. Verificar que el email no esté registrado
     const existingUser = await AuthRepository.findUserByEmail(input.email);
     if (existingUser) {
         throw new ConflictError('El correo electrónico ya está registrado');
     }
 
+    // 3. Verificar que el DNI no esté registrado
+    const existingDni = await AuthRepository.findUserByDni(input.dni);
+    if (existingDni) {
+        throw new ConflictError('El DNI ya está registrado');
+    }
+
+    // 4. Crear el usuario con datos de RENIEC
     const passwordHash = await hashPassword(input.password);
-    const user = await AuthRepository.createUser({ ...input, passwordHash });
+    const user = await AuthRepository.createUser({
+        dni: input.dni,
+        nombre: nombres,
+        apellido: `${apellidoPaterno} ${apellidoMaterno}`.trim(),
+        email: input.email,
+        passwordHash
+    });
 
     const payload = {
         id: user.id,
@@ -32,7 +75,13 @@ async function register(input: RegisterInput): Promise<ServiceResponse<AuthRespo
     const token = signToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    logger.info('Usuario registrado', { userId: user.id, email: user.email });
+    logger.info('Usuario registrado exitosamente con datos de RENIEC', {
+        userId: user.id,
+        email: user.email,
+        dni: input.dni,
+        nombreCompleto: reniecValidation.data.nombreCompleto,
+        validadoReniec: true
+    });
 
     return {
         message: 'Usuario registrado exitosamente',

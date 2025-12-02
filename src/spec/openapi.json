@@ -118,7 +118,7 @@
     "/auth/register": {
       "post": {
         "summary": "Registrar un nuevo usuario",
-        "description": "Crea una nueva cuenta de usuario y devuelve los datos del usuario junto con un token JWT de autenticación.",
+        "description": "Crea una nueva cuenta de usuario validando el DNI en RENIEC. Los nombres y apellidos se obtienen automáticamente de RENIEC usando el DNI, por lo que solo se requiere DNI, email y contraseña. El sistema autocompleta los datos personales desde la base de datos oficial de RENIEC.",
         "tags": [
           "Auth - Tradicional"
         ],
@@ -157,21 +157,81 @@
             }
           },
           "400": {
-            "description": "Error de validación",
+            "description": "Error de validación - Datos inválidos o formato de DNI incorrecto",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_dni_format": {
+                    "summary": "Formato de DNI inválido",
+                    "value": {
+                      "success": false,
+                      "message": "dni: El DNI debe tener exactamente 8 dígitos"
+                    }
+                  },
+                  "validation_error": {
+                    "summary": "Error de validación general",
+                    "value": {
+                      "success": false,
+                      "message": "Error de validación en los datos proporcionados"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "DNI no encontrado en RENIEC",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "El DNI no se encuentra registrado en RENIEC"
                 }
               }
             }
           },
           "409": {
-            "description": "Correo ya registrado",
+            "description": "Correo o DNI ya registrado",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "email_exists": {
+                    "summary": "Correo ya registrado",
+                    "value": {
+                      "success": false,
+                      "message": "El correo electrónico ya está registrado"
+                    }
+                  },
+                  "dni_exists": {
+                    "summary": "DNI ya registrado",
+                    "value": {
+                      "success": false,
+                      "message": "El DNI ya está registrado"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error del servidor o servicio de RENIEC no disponible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "No se pudo validar el DNI en RENIEC"
                 }
               }
             }
@@ -1558,21 +1618,20 @@
       },
       "AuthRegisterInput": {
         "type": "object",
+        "description": "Datos para registro de usuario. Los nombres y apellidos se obtienen automáticamente de RENIEC.",
         "properties": {
-          "nombre": {
+          "dni": {
             "type": "string",
-            "example": "Juan",
-            "minLength": 3
-          },
-          "apellido": {
-            "type": "string",
-            "example": "Perez",
-            "minLength": 3
+            "pattern": "^\\d{8}$",
+            "minLength": 8,
+            "maxLength": 8,
+            "example": "72794164",
+            "description": "DNI del usuario (8 dígitos). Debe estar registrado en RENIEC. Los nombres se autocompletan desde RENIEC."
           },
           "email": {
             "type": "string",
             "format": "email",
-            "example": "juan.perez@example.com"
+            "example": "max@example.com"
           },
           "password": {
             "type": "string",
@@ -1582,8 +1641,7 @@
           }
         },
         "required": [
-          "nombre",
-          "apellido",
+          "dni",
           "email",
           "password"
         ]

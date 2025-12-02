@@ -16,9 +16,10 @@ async function findUserByEmail(email: string): Promise<(UserResponse & { contras
     };
 }
 
-async function createUser(data: RegisterInput & { passwordHash: string }): Promise<UserResponse> {
+async function createUser(data: Omit<RegisterInput, 'password'> & { nombre: string; apellido: string; passwordHash: string }): Promise<UserResponse> {
     const user = await prisma.usuarios.create({
         data: {
+            Dni: data.dni,
             Nombre: data.nombre,
             Apellido: data.apellido,
             Correo: data.email,

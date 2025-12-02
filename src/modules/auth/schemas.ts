@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
 // Schema para el registro de un nuevo usuario
+// Los nombres se obtienen automáticamente de RENIEC usando el DNI
 export const RegisterSchema = z.object({
-    nombre: z.string().min(3, 'El nombre es requerido'),
-    apellido: z.string().min(3, 'El apellido es requerido'),
+    dni: z.string()
+        .length(8, 'El DNI debe tener exactamente 8 dígitos')
+        .regex(/^\d+$/, 'El DNI debe contener solo números'),
     email: z.email('Debe ser un correo electrónico válido'),
     password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 });
