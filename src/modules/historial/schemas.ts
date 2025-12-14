@@ -17,7 +17,7 @@ export const ResumenActividadSchema = z.object({
 
 // Schema para compra reciente
 export const CompraRecienteSchema = z.object({
-    id: z.string().uuid(), // ✅ AGREGADO: ID de la boleta
+    id: z.string().uuid(),
     fechaBoleta: z.date().nullable(),
     logoTienda: z.string().nullable(),
     nombreTienda: z.string().nullable(),
@@ -38,7 +38,6 @@ export type ResumenActividad = z.infer<typeof ResumenActividadSchema>;
 export type CompraReciente = z.infer<typeof CompraRecienteSchema>;
 export type HistorialResponse = z.infer<typeof HistorialResponseSchema>;
 
-// Tipos auxiliares para el repository
 export type BoletaConDetalles = {
     Id: string; 
     FechaBoleta: Date | null;
